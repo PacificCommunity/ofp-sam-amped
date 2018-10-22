@@ -1,0 +1,11 @@
+Ideas of things to add
+----------------------
+
+1. 'Circle of doom' HCR that recreates the Majuro / Kobe circle of doom. e.g. fish at catch = Chigh until F < Fmsy, then fish at catch = Clow until F > Fmsy, and so on.
+2. More exercises for Measuring Performance to explore how PIs can be used to compare HCRs and trade-offs. e.g. run pairs of different HCRs and look at catch vs catch stability, catch vs CPUE etc.
+3. Reduce number of PIs in Introduction to Uncertainty (no effort or CPUE variability)
+4. Update link to Source on Information page
+5. Fix catch history (under-, over-exploited) and life history.
+6. Random seed setter?
+7. Add link to tutorials (hosted somewhere or HTML versions in tutorials folder)
+
