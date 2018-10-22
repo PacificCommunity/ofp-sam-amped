@@ -1,0 +1,174 @@
+---
+title: "Using the *Introduction to HCRs* Shiny app"
+author: "Finlay Scott - OFP, SPC"
+date: "2018-10-10"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
+
+<!--use render()-->
+<!-- render("tutorials/measuringPerformance.Rmd", output_format = "all")-->
+
+# Introduction to HCRs
+
+This is a very quick overview of the *Introduction to HCRs* Shiny app.
+
+# Quick overview
+
+To get started double-click on the **IntroHCR** file in the AMPED directory.
+A black window *should* appear, followed by the app opening in a browser window.
+If this does not happen, something has gone wrong. Sorry...
+
+If things have gone well you should see three plotting windows and a blue arrow.
+Your plots might look slightly different due to variations in the historic catches.
+
+<!-- Tried inserting image using appshot from webshot but it looked pretty crappy-->
+
+<!-- Insert image -->
+![](figures/introHCR_start.png)
+
+The two plots on the left-hand side show the history of the catch and SB/SBF=0. At the moment, there are only 10 years of history from 1990 to 1999.
+
+The HCR is shown in the top-right panel.
+The shape of the HCR is determined by 4 parameters: *Blim*, *Belbow*, *Cmin* and *Cmax*.
+
+The purpose of this particular HCR is to set the catch limit in the following year. The HCR uses the current estimated value of SB/SBF=0 to set the catch limit in the following year.
+
+The shape of the HCR is that when the estimated SB/SBF=0 is greater than *Belbow* the catch limit is set at *Cmax*.
+When SB/SBF=0 is less than *Blim* the catch limit is set at *Cmin*.
+When SB/SBF=0 is betwen *Blim* and *Belbow*, the catch limit is set according to the slope.
+The controls for the HCR are on the left-hand side of the screen.
+
+The way the HCR operates can be seen by following the blue arrow from the SB/SBF=0 plot to the HCR plot at the bottom right of the screen. The current estimated value of SB/SBF=0 is shown on the HCR plot as the blue dashed vertical line.
+The catch limit in the following year is set by reading the corresponding catch limit from the shape of the HCR.
+This is shown by the blue dashed horizontal line on the HCR plot and also the catch limit.
+
+## Projecting through time
+
+We can see how the HCR works by projecting the stock forward by a year.
+The catch limit that has been set by the HCR is shown by the blue dashed horizontal line on the catch plot.
+As we go forward in time, the stock is fished by this catch limit and the population abundance responds accordingly.
+The new estimate of the current level of SB/SBF=0 is then used by the HCR to set the catch limit in the following year.
+
+To see this in action, set the parameters of the HCR to: *Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140 (these are the initial values). Press the **Advance** buton. You should see that the catch in the next year (year 2000) hits the previous catch limt (where the blue dashed line was), the SB/SBF=0 plot updates by a year as a result of being fished, and the HCR uses the new estimate of SB/SBF=0 to set the catch limit in the next year.
+
+Keep pressing the **Advance** button and you should see the cycle of how the HCR sets the catch limit, the catch limit affects the stock abundance, and the stock abundance is used by the HCR.
+You should see that eventually the system settles down to a steady catch limit and stock abundance.
+
+<!-- Insert image -->
+![](figures/introHCR_HCR1.png)
+
+## Try other HCRs
+
+The parameters of the HCR that we just tried are: *Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140.
+<!--  Final catch = 100 Final B = 0.4 When does it settle: 10 yrs-->
+
+Try setting up a different HCR. Change *Belbow* to be 0.3 and *Cmax* to 120. Keep the other parameters the same.
+You should see that the HCR plot has been updated to show the new shape of the HCR.
+This HCR has lower maximum catches than the first HCR and responds more slowly (the catches don't start decreasing until SB/SBF=0 is less than 0.3)
+
+Repeatedly press the **Advance** button and follow the evolution of the stock.
+Note how the behaviour and final values are different to the initial example.
+
+<!-- figure-->
+![](figures/introHCR_HCR2.png)
+
+As another example set *Belbow* to 0.7 and *Cmax* to 160. This means that the maximum catches will be higher than the other examples. The HCR will respond more quickly to changes in the stock abundance and the catches will start to decrease when SB/SBF=0 falls below 0.7.
+Again, follow the new evolution of the stock and catch limits by repeatedly pressing the **Advance** button and note the behaviour and final values.
+
+<!-- figure-->
+![](figures/introHCR_HCR3.png)
+
+You should have seen that different parameterisations of the HCR lead to different stock dynamics and final settled values.
+
+# Introducing uncertainty
+
+In the real world, fisheries have a lot of uncertainty associated with them.
+However, the projections we have run so far have not considered uncertainty.
+This means that the outcome of the projections will always be the same (they are *deterministic* simulations).
+
+In this Shiny app we can include two sources of uncertainty: variability in the biological productivity and estimation error.
+Both of these sources of uncertainty can affect the dynamics of the fishery and the performance of the HCR.
+
+Click on the **Show variability option** to show the uncertainty options.
+
+## Biological productivity variability
+
+Biological productivity variability reflects the natural variability in the stock dynamics, for example through variability in the recruitment, growth and natural mortality. Fisheries managers have no control over this source of uncertainty.
+As such it is very important than an adopted HCR is robust to this uncertainty.
+
+We saw in the previous examples without uncertainty that eventually the stock abundance settles down and is perfectly flat.
+What happens we include natural variability?
+
+Set the HCR parameters back to their original values (*Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10, *Cmax* = 140).
+Increase the **Biological productivity variability** to 0.2 and project forward through time using the **Advance** button.
+
+<!-- figure-->
+![](figures/introHCR_Bnoise.png)
+
+You should see that the SB/SBF=0 now bounces around and is not perfectly flat. As the HCR is driven by the estimate of SB/SBF=0, it means the the catch limit set by the HCR also bounces around. This then goes onto affect the stock and so on.
+
+If you press the **Reset** button and run the projection again you should see that you get a different trajectory (uncertainty in action!).
+
+
+## Estimation error
+
+In the real world we do not know the true stock abundance. This means that the HCR is not driven by the true value of SB/SBF=0. Instead it is driven by an *estimated* value.
+For example, it can be estimated by using a stock assessment model.
+The catch limit that is then set by the HCR is therefore based on estimated values of the stock abundance, not the true values.
+The difference between the estimated and true value of SB/SBF=0 is called the estimation error and it can have an important impact on the performance of a HCR.
+
+Here estimation error can be set using two ways: variability and bias. These can be combined.
+
+To demonstrate these turn the **Biological productivty variability** back to 0 and increase the **Estimation error variability** to 0.04 (leave **bias** as 0 for now).
+Project the stock forward several times using the **Advance** button.
+
+<!-- figure-->
+![](figures/introHCR_Enoise.png)
+
+You should see that the SB/SBF=0 plot now shows two lines. The black one is the *true* abundance and the blue one is the *estimated* abundance. It is the estimated abundance that is used by the HCR to set the catch limit.
+You should see that the stock and catch bounce around. This variability is not caused by any biological variability (you have turned that off) but from the HCR using the *estimated* value of SB/SBF=0 to set the catch limit. The catch limit, of course, affects the *real* stock abundance.
+
+Now turn the **Estimation error variability** back to 0 and set the **Estimation error bias** to 0.1.
+This means that the estimated value of SB/SBF=0 is always 10% higher than the true value, i.e. we are always overestimating the stock abduncance.
+Project forward and see what happens. Is the final value of the true SB/SBF=0 higher or lower than when there is no bias?
+
+<!-- figure-->
+![](figures/introHCR_Ebias.png)
+
+
+## Combining uncertainty
+
+Now turn on all the sources of uncertainty.
+Set **Biological productivity variability** to 0.2, **Estimation error variability** to 0.04 and the **Estimation error bias** to 0.1.
+Keep the HCR values the same as the initial values (*Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140).
+
+Project this forward. How are the results different to the first projection we ran which had the same HCR parameters but no uncertainty?
+
+![](figures/introHCR_end.png)
+
+If you have the time and enthusiasm, you can rerun the other two HCRs we looked at with the uncertainty turned on to see how they perform.
+
+# Summary
+
+A HCR is a rule for setting fishing opportunities.
+In this example the input to the rule is *estimated* stock abundance (SB/SBF=0) and the output is the catch limit in the following year.
+Different HCR parameterisations give different performances.
+
+Uncertainty is a big concern in fisheries management.
+Here we looked at biological and estimation uncertainty. We have seen that they can change the performance of the fishery.
+It is very important that an HCR is robust to uncertainty.
+A HCR that performs well in the absence of uncertainty may not perform as well when uncertainty is present.
+
+How do we know which HCR to use? How do we consider uncertainty?
+See the next tutorial!
+
+<!--
+(By the way We haven't considered time lags yet...)
+-->
+
+
+
+

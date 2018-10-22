@@ -1,0 +1,276 @@
+# Copyright 2018 OFP SPC MSE Team. Distributed under the GPL 3
+# Maintainer: Finlay Scott, OFP SPC
+
+# Load packages ----
+library(shiny)
+library(tidyr) # Could Try to avoid it and reduce weight of packages
+library(dplyr) # Just used for bind_rows() at the moment - change data structure of PIs to avoid this
+library(ggplot2)
+library(RColorBrewer)
+
+# Source helpers ----
+source("../R/funcs.R")
+source("../R/plots.R")
+source("../R/modules.R")
+
+# Add constant catch option (to illustrate stochasticity with no HCR)
+# User interface ----
+#ui <- fluidPage(
+  #theme = "bootstrap.css", 
+ui <- navbarPage(
+  title="Investigating uncertainty",
+  tabPanel("Investigating uncertainty",
+  sidebarLayout(
+    sidebarPanel(width=3,
+      br(),
+      img(src = "spc.png", height = 100),
+      br(),
+      br(),
+      # HCR options
+      # Use same MP module as the Intro to HCRs - nice!
+      #mp_params_setterUI("mpparams", mp_visible=c("Constant catch","Threshold catch")),
+      mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort")),
+      br(),
+      tags$span(title="Run the projection for one more iteration.",
+        actionButton("project", "Run projection")
+      ),
+      tags$span(title="Reset the projection.",
+        actionButton("reset", "Reset")
+      ),
+      br(),
+      # Stochasticity options
+      # Use same stochasticity module as the Intro to HCRs - nice!
+      stoch_params_setterUI("stoch", init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=FALSE)
+    ),
+    mainPanel(width=9,
+      # Column 1 - 2 rows
+      # I want the height of these two rows to be the same as the height of the 3 rows in the previous column
+      column(6,
+        fluidRow(
+          tags$span(title="The HCR. The blue points show the inputs and outputs from all years of the the last iteration. The grey points show the inputs and outputs from all years from all iterations. This enables you to see which parts of the HCR shape are most used.",
+            plotOutput("plothcr")
+          )
+        ),
+        fluidRow(
+          #div(tableOutput("hcrpis"), style = "font-size:100%"),
+          tags$span(title="The number of iterations run so far.",
+          textOutput("itercount")),
+          checkboxInput("show_pis", label = "Show performance indicators", value=FALSE),
+          conditionalPanel(condition="input.show_pis == true",
+            tags$span(title="A table of various performance indicators calculated over the short-, medium- and long- term. The value is the median. The values in the brackets are the 20th and 80th percentiles respectively. See the information tab for more details", tableOutput("hcrpis"), style = "font-size:100%")
+          )
+        )
+      ),
+      # Column 3 - has 3 rows
+      column(6,
+        fluidRow(
+          tags$span(title="Plot of SB/SBF=0. The black line shows the 'true' biomass in the current iteration. The blue line shows the estimated biomass in the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
+            plotOutput("plotbiomasshisto",height="250px")
+          )
+        ),
+        fluidRow(
+          tags$span(title="Plot of the catch. The black line shows the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
+            plotOutput("plotcatchhisto",height="250px")
+          )
+        ),
+        fluidRow(
+          tags$span(title="Plot of the CPUE relative to the CPUE in the year 2000. The black line shows the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
+            plotOutput("plotrelcpuehisto",height="250px")
+          )
+        )
+      )
+    )
+  )), 
+  # Tab for choosing stock parameters, stock history, no. iterations etc
+  tabPanel("Settings",
+    sidebarLayout(
+      sidebarPanel(width=3,
+        br(),
+        img(src = "spc.png", height = 100),
+        br(),
+        br()
+      ),
+      mainPanel(width=9,
+        fluidRow(column=12,
+          #stoch_params_setterUI("stoch", init_prod_sigma=0.15, init_est_sigma=0.03, init_est_bias=0.0),
+          stock_params_setterUI("stock"),
+          # Total number of years (including historical years)
+          numericInput("nyears", "Number of years", value = 30, min=20, max=100, step=1)
+        )
+      )
+    )
+  ),
+  tabPanel("Information",
+    sidebarLayout(
+      sidebarPanel(width=3,
+        br(),
+        img(src = "spc.png", height = 100),
+        br(),
+        br(),
+        maintainer_and_licence()
+        #tags$footer("test")
+      ),
+      mainPanel(width=9,
+        h1("Instructions"),
+        #h2("Variability"),
+        p("Variability can be included in the projection in two ways: through variability in the stock productivity and through the estimated level of stock biomass being different to the true level of the stock biomass. These options are initially turned off. The options can be seen by clicking on the ", strong("Show variability options"), "box."),
+        p("Biological productivity variability represents the variability of the natural procesess of the stock, for example growth and natural mortality. Increasing the variability will increase the 'bumpiness' of the stock trajectory. As biological variability is always encountered in fisheries it is essential that a selected HCR is robust to the variability."),
+        p("Estimation error simulates the difference between the true level of the stock biomass and the estimated level. Unfortunately, the true abundance of a fish stock is never known. Instead, estimates of abundance are made, for example using stock assessment models. The HCR uses the estimated biomass, not the true biomass. This means that the catch limit that is set by the HCR is based on estimated biomass. If the biomass is estimated poorly the resulting catch limit set by the HCR may not be appropriate."),
+        p("Here, estimation error is modelled using two different processes: random error and consistent bias (positive or negative). The bias represents situations where the biomass is consistently over or under estimated.")
+        #p("When estimation error is active the biomass plot shows two lines. The black line shows the true biomass, the blue line shwows the estimated biomass. It is the blue line that feeds the HCR. Increasing the estiamation bias and variability will increase the difference between these lines.")
+      )
+    )
+  )
+
+)
+
+server <- function(input, output,session) {
+  
+  # Globals (for the moment)
+  #initial_year <- 1990
+  #last_historical_timestep <- 10
+  #historical_timesteps <- 1:last_historical_timestep
+  # How to reset all this  
+  # Globals for testing - make them reactive later?
+  # Bit dodgy having niters here as it will not reflect the actual niters
+  # Maybe have iter outside of app_params
+  # Here niters is the initial number of iters in a new stock object when reset is triggered
+  app_params <- list(initial_year = 1990, last_historical_timestep = 10)
+  app_params$historical_timesteps = 1:app_params$last_historical_timestep
+  quantiles <- c(0.20, 0.80)
+  # Where to put these Ref Pts?
+  # MSY = r K / 4
+  # BMSY = K / 2
+  # FMSY = r/2
+  # Aus tiger prawn
+  # Modules for the stochasticity and MP parameters!
+  pitemp <- reactiveVal(NULL)
+
+  get_stoch_params <- callModule(stoch_params_setter, "stoch") 
+  get_lh_params <- callModule(stock_params_setter, "stock") 
+  # Join these together into a single object to be passed to the funcs - bit clumsy as I will have to do this in all the servers
+  get_stock_params <- reactive({
+    sp <- get_stoch_params()
+    lh <- get_lh_params()
+    out <- c(sp, lh)
+    return(out)
+  })
+
+  #get_stock_params <- callModule(stoch_params_setter, "stoch") 
+  get_mp_params <- callModule(mp_params_setter, "mpparams") 
+  
+  # The stock
+  stock <- create_stock()
+  # Initialise it  - do as one step?
+  # Stock is reactive so passed by reference?
+  niters <- 1 # We have 1 initial iter. More are added to it but this is accounted for using the iter() function
+  # Use isolate else error (function tries to be reactive to changes in get_stock_params() and stock itself
+  isolate(reset_stock(stock=stock, stock_params = get_stock_params(), mp_params=get_mp_params(), app_params=app_params, initial_biomass=get_stock_params()$b0, nyears=input$nyears, niters=niters))
+  
+  # Set iter as a reactive value. If this changes, it triggers other stuff
+  iter <- reactiveVal(0) 
+  
+  # Reset 
+  observe({
+    req(input$nyears)
+    # If any of the following change the observer gets triggered
+    mp_params <- get_mp_params()
+    input$reset
+    #timestep(app_params$last_historical_timestep)
+    stock_params <- get_stock_params() # The output is stored here because we need it for the reset_stock() function
+    # Reset iterations
+    iter(0)
+    pitemp(NULL)
+    # Need isolate here because calling reset_stock() causes stock to change which triggers this observe() resulting
+    # in an infinite loop
+    isolate(reset_stock(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, initial_biomass=stock_params$b0, nyears=input$nyears, niters=niters))
+  })
+  
+  # Project works by binding new rows (iterations) to the existing ones
+  # Project all timesteps
+  observeEvent(input$project, {
+    iter(iter() + 1)
+    # If nrow stock < iter, add a row biomass, biomass_obs and catch
+    # This new will contain the values for the new iteration
+    if (nrow(stock$biomass) < iter()){
+      # rbind is dropping dimnames - really annoying - so hack
+      dnames <-names(dimnames(stock$biomass)) 
+      stock$biomass <- rbind(stock$biomass,stock$biomass[1,])
+      #stock$biomass_obs <- rbind(stock$biomass_obs,stock$biomass_obs[1,])
+      stock$hcr_ip<- rbind(stock$hcr_ip,stock$hcr_ip[1,])
+      stock$hcr_op<- rbind(stock$hcr_op,stock$hcr_op[1,])
+      stock$catch <- rbind(stock$catch,stock$catch[1,])
+      stock$effort <- rbind(stock$effort,stock$effort[1,])
+      # Bit hacky but rbind is dropping the dimnames names
+      names(dimnames(stock$biomass)) <- dnames 
+      names(dimnames(stock$effort)) <- dnames 
+      names(dimnames(stock$hcr_ip)) <- dnames 
+      names(dimnames(stock$hcr_op)) <- dnames 
+      names(dimnames(stock$catch)) <- dnames 
+    }
+    # Pass in current iter
+    # project() takes entire stock
+    # Here we only want one iteration - subset out using fancy lapply with [ operator
+
+    stock_iter <- lapply(reactiveValuesToList(stock), '[', iter(),,drop=FALSE) 
+    out <-  project(stock_iter,
+                    timesteps=c((app_params$last_historical_timestep+1),dim(stock$biomass)[2]),
+                    stock_params=get_stock_params(),
+                    mp_params=get_mp_params(),
+                    app_params=app_params)
+    stock$biomass[iter(),] <- out$biomass
+    stock$effort[iter(),] <- out$effort
+    stock$hcr_ip[iter(),] <- out$hcr_ip
+    stock$hcr_op[iter(),] <- out$hcr_op
+    stock$catch[iter(),] <- out$catch
+
+    # Get summary PIs 
+    piqs <- get_summary_pis(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params,
+                            quantiles=c(0.01,quantiles, 0.99)) # Quantiles expecting length 4
+    pitemp(piqs)
+  })
+  
+  # Call the HCR plot function
+  output$plothcr <- renderPlot({
+    plot_hcr(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params)
+  })
+  
+  output$plotbiomasshisto <- renderPlot({
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", quantiles=quantiles)
+  })
+
+  output$plotcatchhisto <- renderPlot({
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", quantiles=quantiles)
+  })
+
+  output$plotrelcpuehisto <- renderPlot({
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, quantiles=quantiles)
+  })
+
+  output$itercount <- renderText({
+    paste("Number of iterations: ", iter(), sep="")
+  })
+
+
+  output$hcrpis <- renderTable({
+    # Don't print table unless project has been pressed
+    #if (show_table() == 0){
+    if (is.null(pitemp())){
+      return()}
+    # Use pitemp() to fill table
+    current_pi_table(pitemp())
+    },
+    rownames = TRUE,
+    caption= "Performance indicators",
+    auto=TRUE
+  )
+
+  # Termination script - needed when running from bat file
+  session$onSessionEnded(function() {
+      stopApp()
+  })
+  
+}
+
+# Run the app
+shinyApp(ui, server)
