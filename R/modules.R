@@ -7,48 +7,6 @@
 # Option of separating the stochasticity and stock parameters into two modules
 # Just means combining the two lists of values before dispatching them to the functions
 
-## Combining the stoch and stock options
-## Gets fiddly and possibly restrictive - abandon
-## Module for the biological process variability
-#stoch_params_setterUI <- function(id, init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, choose_stock=FALSE){
-#  ns <- NS(id)
-#  show_var <- checkboxInput(ns("show_var"), label = "Show variability options", value = FALSE)
-#  vars <- conditionalPanel(condition="input.show_var == true", ns=ns,
-#      numericInput(ns("biol_prod_sigma"), label = "Biological productivity variability", value = init_prod_sigma, min=0, max=1, step=0.05),
-#      numericInput(ns("biol_est_sigma"), label = "Estimation error variability", value = init_est_sigma, min=0, max=1, step=0.01),
-#      numericInput(ns("biol_est_bias"), label = "Estimation error bias", value = init_est_bias, min=-0.5, max=0.5, step=0.05)
-#    )
-#  stock_option <- NULL
-#  if (choose_stock == TRUE){
-#    stock_option <- radioButtons("stock_choice", h3("Stock choice"),
-#                        choices = list("Fast growth" = 1, "Medium growth" = 2,
-#                                       "Slow growth" = 3),selected = 2)
-#  }
-#  out <- tagList(show_var, vars, stock_option)
-#  return(out)
-#}
-#
-##stoch_params_setter<- function(input, output, session, stock_params){
-#stoch_params_setter<- function(input, output, session){
-#  get_stock_params <- reactive({
-#    browser()
-#
-#    # Stock option is fixed
-#    if (is.null(input$stock_choice))
-#
-#    out <- list(
-#      r = 0.32, k = 49275, b0 = 37050, p = 1,
-#      q = 1, # q is catchability so that CPUE = q * B. With effort creep this can change with time
-#      lrp=0.2, trp=0.5, # These are SB/SBF=0 based reference points - inline with WCPFC tuna stocks
-#      biol_prod_sigma=input$biol_prod_sigma,
-#      biol_est_sigma=input$biol_est_sigma,
-#      biol_est_bias=input$biol_est_bias
-#    )
-#    return(out)
-#  })
-#  return(get_stock_params)
-#}
-
 # Module for the stochasticity options 
 stoch_params_setterUI <- function(id, init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=TRUE){
   ns <- NS(id)
@@ -58,7 +16,7 @@ stoch_params_setterUI <- function(id, init_prod_sigma=0.0, init_est_sigma=0.0, i
         numericInput(ns("biol_prod_sigma"), label = "Biological productivity variability", value = init_prod_sigma, min=0, max=1, step=0.05)
       ),
       tags$span(title="Simulating the difference between the 'true' biomass and the 'estimated' biomass used by the HCR by applying randomly generated noise", 
-        numericInput(ns("biol_est_sigma"), label = "Estimation error variability", value = init_est_sigma, min=0, max=1, step=0.01)
+        numericInput(ns("biol_est_sigma"), label = "Estimation error variability", value = init_est_sigma, min=0, max=1, step=0.05)
       ),
       tags$span(title="Simulating the difference between the 'true' biomass and the 'estimated' biomass used by the HCR by applying a continuous bias (positive or negative)", 
         numericInput(ns("biol_est_bias"), label = "Estimation error bias", value = init_est_bias, min=-0.5, max=0.5, step=0.05)

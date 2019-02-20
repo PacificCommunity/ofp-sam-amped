@@ -10,8 +10,8 @@ maintainer_and_licence <- function(){
     tags$p("Amazing Management Procedures Exploration Device"),
     #tags$p(strong("A"),"mazing", strong("M"), "anagement ", strong("P"),"rocedure ", strong("E"),"xploration ",  strong("D"),"evice"),
     tags$footer(
-      tags$p("version 0.1.0 Rupert Trousers"),
-      tags$p("Copyright 2018 OFP SPC MSE Team."),
+      tags$p("version 0.2.0 Drayton Manored"),
+      tags$p("Copyright 2019 OFP SPC MSE Team."),
       tags$p("Distributed under the GPL 3"),
       tags$a("Soure code", href="https://github.com/PacificCommunity/ofp-sam-mse-popmodel-Shiny/tree/master/AMPED")
     )
@@ -67,7 +67,10 @@ get_catch_history <- function(stock_params, app_params, niters){
   out <- array(NA,dim=c(niters, app_params$last_historical_timestep))
   out[] <- rep(catch, each=niters)
   # Sling a load of noise on it
+  # Set seed so that the initial noise is always the same
+  set.seed(666)
   out <- out * rlnorm(prod(dim(out)),meanlog=0,sdlog=0.1)
+  # Or don't include noise in initial period
   return(out)
 }
 
@@ -152,6 +155,8 @@ get_timeseries <- function(stock=stock, stock_params=stock_params, app_params=ap
 
 # Observation error is a combination of bias and lognormally distributed noise
 estimation_error <- function(input, sigma, bias){
+  # Transform sigma - it means we can set the parameter as a similar scale to the biol var sigma
+  sigma <- sigma / 5
   est_variability <- rlnorm(length(input),meanlog=0,sdlog=sigma) 
   output <- input * est_variability * (1 + bias)
   return(output)
