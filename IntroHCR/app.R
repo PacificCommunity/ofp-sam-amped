@@ -26,7 +26,7 @@ ui <- navbarPage(
         br(),
         br(),
         #mp_params_setterUI("mpparams", mp_visible=c("Constant catch","Threshold catch"), init_thresh_max_catch=140),
-        mp_params_setterUI("mpparams", mp_visible=c("Threshold catch","Constant catch"), init_thresh_max_catch=140),
+        mp_params_setterUI("mpparams", mp_visible=c("Threshold catch","Constant catch"), init_thresh_max_catch=140, init_thresh_belbow=0.5),
         #mp_params_setterUI("mpparams", mp_visible=c("Threshold catch"), init_thresh_max_catch=140),
         br(),
         # Buttons
@@ -119,7 +119,7 @@ server <- function(input, output,session) {
 
 # How to reset all this  
   # Globals for testing - make them reactive later?
-  app_params <- list(initial_year = 1990, last_historical_timestep = 10)
+  app_params <- list(initial_year = 2009, last_historical_timestep = 10)
   app_params$historical_timesteps = 1:app_params$last_historical_timestep
   # Aus tiger prawn
   # MSY = r K / 4
@@ -223,7 +223,7 @@ server <- function(input, output,session) {
   })
 
   output$plotcatch <- renderPlot({
-    plot_catch(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, timestep=timestep(), main="Catch")
+    plot_catch(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, timestep=timestep(), main="Catch", add_grid=TRUE)
   })
 
   output$plothcr <- renderPlot({
@@ -232,7 +232,7 @@ server <- function(input, output,session) {
 
 
   output$plotbiomass <- renderPlot({
-    plot_biomass(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), timestep=timestep()+1, main="SB / SBF=0")
+    plot_biomass(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), timestep=timestep()+1, main="SB / SBF=0", add_grid=TRUE)
   })
 
   output$plotarrow <- renderPlot({

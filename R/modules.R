@@ -94,7 +94,7 @@ stock_params_setter <- function(input, output, session){
 
 # Modules for setting the MP parameters
 # Bit fiddly with the conditional panels inside a module
-mp_params_setterUI <- function(id, mp_visible=NULL, init_thresh_max_catch=140){
+mp_params_setterUI <- function(id, mp_visible=NULL, init_thresh_max_catch=110, init_thresh_belbow=0.5){
   ns <- NS(id)
   all_hcrs <- c("Constant catch" = "constant_catch",
                 "Constant effort" = "constant_effort",
@@ -130,7 +130,7 @@ mp_params_setterUI <- function(id, mp_visible=NULL, init_thresh_max_catch=140){
   # Blim and Belbow used by threshold catch and threshold effort # || JavaScript OR
   tctepars <- conditionalPanel("input.hcr_type == 'threshold_catch' || input.hcr_type == 'threshold_effort' ", ns=ns,
     tags$span(title="The biomass levels that determine the shape of the HCR.",
-      sliderInput(ns("blim_belbow"), "Blim and Belbow:", min = 0, max = 1, value = c(0.2,0.5), step = 0.01))
+      sliderInput(ns("blim_belbow"), "Blim and Belbow:", min = 0, max = 1, value = c(0.2, init_thresh_belbow), step = 0.01))
   )
   tcpars <- conditionalPanel("input.hcr_type == 'threshold_catch'", ns=ns,
     tags$span(title="The minimum and maximum catch limit levels output from the HCR.",

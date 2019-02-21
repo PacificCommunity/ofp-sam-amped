@@ -70,6 +70,8 @@ get_catch_history <- function(stock_params, app_params, niters){
   # Set seed so that the initial noise is always the same
   set.seed(666)
   out <- out * rlnorm(prod(dim(out)),meanlog=0,sdlog=0.1)
+  # Set a proper random seed
+  set.seed(as.numeric(Sys.time()))
   # Or don't include noise in initial period
   return(out)
 }

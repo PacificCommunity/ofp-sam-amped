@@ -176,7 +176,7 @@ draw_ribbon <- function(x, y, quantiles){
 
 # Biomass / K
 # Plot 'true' and only plot observed if model based MP
-plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, ...){
+plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # True bk
   bk_true <- stock$biomass / stock_params[["k"]]
@@ -185,6 +185,9 @@ plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_las
   # Add LRP and TRP
   lines(x=c(years[1], years[length(years)]),y=c(stock_params[["lrp"]],stock_params[["lrp"]]), lty=ref_lty, lwd=ref_lwd, col=ref_col)
   lines(x=c(years[1], years[length(years)]),y=c(stock_params[["trp"]],stock_params[["trp"]]), lty=ref_lty, lwd=ref_lwd, col=ref_col)
+  if (add_grid){
+    grid()
+  }
   # Get last iteration 
   last_iter <- dim(bk_true)[1]
 
@@ -224,13 +227,16 @@ plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_las
 
 # If we have timestep we also need app_params
 # quantiles of length 2
-plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, ...){
+plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Set Ylim - use same as HCR plot
   ymax <- get_catch_ymax(stock$catch, mp_params)
   yrange <- c(0, ymax)
   # Empty axis
   plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Catch", xlab="Year", xaxs="i", yaxs="i",...)
+  if (add_grid){
+    grid()
+  }
   # Get last iteration 
   last_iter <- dim(stock$catch)[1]
 
