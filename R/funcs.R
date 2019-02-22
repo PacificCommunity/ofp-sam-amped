@@ -350,7 +350,7 @@ transform_upside_down_pis <- function(x){
 
 # Get pis by year and iter
 # Stick into a single data.frame
-get_pis <- function(stock, stock_params, mp_params, app_params){
+get_pis <- function(stock, stock_params, mp_params, app_params, pi_choices = NULL){
   rel_year <- app_params$initial_year + app_params$last_historical_timestep - 1
   bkm <- stock$biomass / stock_params$k
   # B/K
@@ -389,9 +389,17 @@ get_pis <- function(stock, stock_params, mp_params, app_params){
   problrp <- apply(bkm > stock_params$lrp,2,mean)
   # A bit of mucking about to get a data.frame
   problrp <- cbind(pi="problrp", iter=1, as.data.frame(t(problrp)), name="Prob. SB > LRP")
-
+  
+  # pi_choices is a character string of these objects
   # Put altogether and reshape
-  out <- rbind(bk, problrp, catch, diffcatch, releffort, diffeffort, relcpue, diffcpue)
+  if (is.null(pi_choices)){
+    out <- rbind(bk, problrp, catch, diffcatch, releffort, diffeffort, relcpue, diffcpue)
+  }
+  # Else only bind together the chosen pis
+  else{
+    out <- do.call(rbind, lapply(pi_choices,function(x) get(x)))
+  }
+  
   # Use tidyr or something else to put into a single df
   out <- gather(out, key="year", value="value", -iter, -pi, -name)
 
@@ -421,7 +429,7 @@ get_time_periods <- function(app_params, nyears){
 }
 
 # Calc the PIs
-get_summary_pis <- function(stock, stock_params, mp_params, app_params, quantiles){
+get_summary_pis <- function(stock, stock_params, mp_params, app_params, quantiles, ...){
   years <- dimnames(stock$biomass)$year
   # Average them over years? S, M, L?
   # Average over years - then calc quantiles
@@ -430,7 +438,7 @@ get_summary_pis <- function(stock, stock_params, mp_params, app_params, quantile
   medium_term <- years[time_periods[["medium_term"]]]
   long_term <- years[time_periods[["long_term"]]]
 
-  pis <- get_pis(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params)
+  pis <- get_pis(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, ...)
   pis <- pis[pis$year %in% c(short_term, medium_term, long_term),]
 
   # Add timeperiod column - as.data.frame to use stringsAsFactors

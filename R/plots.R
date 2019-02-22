@@ -278,7 +278,7 @@ plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep
 }
 
 # Relative CPUE
-plot_relcpue <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, ...){
+plot_relcpue <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   cpue <- stock$catch / stock$effort
   rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
@@ -291,6 +291,9 @@ plot_relcpue <- function(stock, stock_params, mp_params, app_params=NULL, timest
   plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Relative CPUE", xlab="Year", xaxs="i", yaxs="i",...)
   # Add 1 line
   lines(x=years,y=rep(1,length(years)), lty=2)
+  if (add_grid){
+    grid()
+  }
   # Get last iteration 
   last_iter <- dim(stock$catch)[1]
 
