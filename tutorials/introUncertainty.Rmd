@@ -1,63 +1,88 @@
 ---
-title: "Using the *Introduction to uncertainty* Shiny app"
+title: "Introduction to Uncertainty and Performance Indicators with *AMPED*"
 author: "Finlay Scott - OFP, SPC"
-date: "2018-10-10"
+date: "2019-21-02"
 output:
   html_document:
     keep_md: yes
-  pdf_document: default
+  pdf_document:
+    includes:
+      in_header: mystyle.sty
+fontsize: 12pt
 ---
 
 <!--use render()-->
 <!-- render("tutorials/measuringPerformance.Rmd", output_format = "all")-->
 
-# Introducing uncertainty
+# Introduction
 
-In the previous tutorial (*Introduction to HCRs*) we ran projections by going forward one step at a time.
-This hopefully allowed us to see the basic ideas of how a HCR worked.
-We also looked at two sources of uncertainty (*biological productivity variability* and *estimation error*) and saw how they can affect the performance of a HCR.
+The previous tutorial (*Introduction to HCRs*) introduced Harvest Control Rules (HCRs) and how they can be used to set future fishing opportunities.
+This hopefully allowed us to see the basic ideas of how a HCR worked and we saw that different HCRs can perform differently.
+
+In the previous tutorial we also looked at two sources of uncertainty (*biological productivity variability* and *estimation error*) and saw that they can affect the performance of a HCR.
+As fisheries management is affected by many sources of uncertainty, it is very important to understand how an HCR performs under uncertainty.
+
+We also started to look at comparing the performance of different HCRs.
+This is a key element of the harvest strategy approach.
+We look at here in more detail and start consider how the performance of a HCR can be measured.
+
+In the previous tutorial we ran projections by stepping forward one year at a time.
 In this tutorial we build on this by running full projections with uncertainty.
 
-Start by double-clicking on the **IntroUncertainty** file in the AMPED directory.
+# Starting Up
+
+Start by double-clicking on the **IntroUncertainty** file in the *AMPED* directory.
 A black window *should* appear, followed by the app opening in a browser window.
 If this does not happen, something has gone wrong. Sorry...
 
-# Simple introduction
-
-The layout of the app should show the HCR with three time series plots of SB/SBF=0, catch and CPUE (relative to the CPUE in 1999). The parameters of the HCR can be set using the controls on the left-hand side.
+The layout of the app should show the HCR in the middle, with three time series plots of SB/SBF=0, catch and CPUE (relative to the CPUE in 1999) on the right-hand side and the control buttons on the left-hand side.
+There should already be 10 years of catch, SB/SBF=0 and CPUE data in the plots.
 
 <!-- Insert image -->
 ![](figures/introUncertainty_start.png)
 
-The initial values of the HCR parameters are: *Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140.
-Click on the **Run projection** button to perform a 20 year projection (from 2000 to 2020).
+The initial values of the HCR parameters should be: *Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140.
+If they are not you can set them using the controls in the left panel.
+
+# Run a Projection
+
+In the previous tutorial, when you clicked the **Advance** button, you projected forward by a single year.
+This meant that to run a full projection you had to keep pressing the **Advance** button.
+
+In this tutorial, when you run a projection you will project forward from 2019 to 2039 with a single button press.
+The HCR is applied in each year of your projection, and the corresponding catch limit used.
+It's exactly the same as what we were doing before, it's just that now it happens automatically without you having to press the **Advance** button lots of times.
+
+Try this now by pressing the **Run projection** button in the left panel to perform a 20 year projection (from 2019 to 2039).
 
 <!-- Insert image -->
 ![](figures/introUncertainty1.png)
 
-You should see that the time series plots now show the time series until 2020.
-The HCR plot should show blue points on the parts of the HCR that were active during the projection.
+You should see that the time series plots now show the full time series until 2039.
+The HCR was applied in each year of the projection and the HCR plot has blue points on it to show which bits were used during the projection.
 
-Click **Run projection** again. Nothing seems to happen except weird bars at the end of the time series plots.
+Click **Run projection** again. Nothing seems to happen except weird bars appearing at the end of the time series plots.
 You may notice that the **Number of iterations** counter under the HCR plot also increased by one.
 Keep clicking **Run projection**. Nothing much happens. This is boring.
 
 What is happening?
 Each time you click **Run projection** we are running a new projection.
-However, we have no uncertainty in the projection so the result is exactly the same.
+However, we have no uncertainty in the projection so we just running exactly the same projection over and over again with the same result.
 
 This is not very interesting.
 
-# Turn on the variability
+# Introducing Uncertainty
 
-We introduced uncertainty in the previous tutorial (*Introduction to HCRs*). In this app there are two sources of uncertainty: *Biological productivity variability* and *Estimation error*.
+We want to know how well our HCR is going to perform under uncertainty.
+We introduced uncertainty in the previous tutorial (*Introduction to HCRs*). As in the previous tutorial here we have two sources of uncertainty: *Biological productivity variability* and *Estimation error*.
 
 Click on the **Show variability options** to show the uncertainty options.
-Set **Biological productivity variability** to 0.2,  **Estimation error variability** to 0.04 and leave **Estimation error bias** at 0.
+Set **Biological productivity variability** to 0.2,  **Estimation error variability** to 0.2 and leave **Estimation error bias** at 0.
 Keep the HCR parameters the same.
 
 Click **Run projection**. You should see that now your projection is bumpy.
-Click **Run projection** again. You should get another time series but it is different to the previous one (the previous one is in grey, the new one in black).
+Click **Run projection** again. You should get another time series but it is different to the previous one (the previous one is now in grey, the new one in black).
+
 This second projection has the same stock and the same HCR as the first one but the outcome is different.
 The difference is a result of the uncertainty in the biological productivity and the estimation error.
 The different projections are known as iterations.
@@ -71,77 +96,187 @@ These histograms will fill in the more projections you run.
 
 Keep clicking **Run projection** until you get 30 or more iterations.
 You can see the distribution of the final values of the projection start to settle down.
-This means that we are starting to capture the uncertainty in our projected values.
-As you keep clicking this distribution will settle down. When this happens we are more certain about the impact of uncertainty and get estimates of the distributions of values.
+This means that we are starting to undertand how uncertainty affects the performance of the HCR.
+This is very important when it comes to selecting a HCR for a fishery.
+An HCR must be robust to uncertainty, otherwise it will not perform as well as expected.
 
 <!-- Insert image -->
 ![](figures/introUncertainty2.png)
 
-
-When testing a HCR through simulation we don't run just one projection, we run lots of them.
-How many depends on the sources of uncertainty, the life history of the stock etc. We need the distribution to settle down.
+The histograms tell us how certain we are about the future. If the histogram is wide, then there is a wide spread of values and we are not certain about what will happen. If the histogram is narrow then we have more confidence in the projection.
+This is important because sometimes it is better to choose an HCR that results in a lower value of catch but with more certainty, than an HCR that may give higher catches but with less certainty.
 
 These types of projections with uncertainty are different to running a single deterministic (non-random) projection. 
-If we want to understand how uncertainty may affect the performance of a HCR in the real world, running a deterministic projection is not enough.
+If we want to understand how uncertainty may affect the performance of a HCR in the real world, running a deterministic projection without uncertainty is not enough.
 
-We need to select a HCR that is robust to the uncertainty.
-The big question is how to choose HCR a preferred HCR?
-
-You need some way of comparing performance. So how do you mention performance?
-
-# Introducing performance indicators
+# Exercise
 
 Press the **Reset** button.
-We are interested in measuring how well the HCR is performing.
-To do this we can use Performance Indicators (PIs) to measure different metrics. Lots of different PIs are available that measure different things, for example, catch levels, changes in effort, probability of SB/SBF=0 being above the LRP etc. 
-The PIs should relate to the management objectives for the fishery and allow you to measure how well the fishery is performing in relation to those objectives. Some HCRs will perform well for some PIs and poorly for others. This is where the ideas of prioritising PIs and evaluating trade-offs come in.
+Use the same HCR parameters as above (*Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140).
+Use the same uncertainty setttings as above (*Biological productivity variability* = 0.2, *Estimation error variability* = 0.2, *Estimation error bias* = 0).
+
+Run 50 iterations by pressing the **Run projection** button 50 times. 
+
+Looking at the histograms at the end of the time series plots, write down the range of the values (the minimum and maximum) of SB/SBF=0, catch and CPUE and the average value (where the peak of the histogram is) in the table below.
+These values will only be approximate because it is quite hard to read accurately from the plot.
+
+For example, having just run this on my machine, I get SB/SBF=0 ranging approximately from 0.3 to 0.5, with an average value of 0.4.
+
+<!--
+SB/SBF=0 0.3-0.5, average of 0.4
+Catch, 50 - 140, average 100
+CPUE, 0.4-0.8, average 0.6
+-->
+
+Now try a different HCR.
+Set these parameters: *Blim* = 0.2, *Belbow* = 0.3, *Cmin* = 10 and *Cmax* = 130 in the panel on the left.
+Keep the same uncertainty settings.
+Run 50 iterations of this HCR by pressing the **Run projection** button 50 times and note down the range and average values of SB/SBF=0, catch and CPUE.
+
+<!--
+SB/SBF= 0.2-0.3, average of 0.25
+Catch, 40-100, average 60
+CPUE  0.4-0.6, average 0.5
+-->
+
+Finally, try this HCR: *Blim* = 0.2, *Belbow* = 0.7, *Cmin* = 10 and *Cmax* = 150, project for 50 iterations and note down the values.
+
+<!--
+SB/SBF= 0.4-0.6, average of 0.5
+Catch, 70-140, average 110
+CPUE 0.6-0.9 , average 0.75
+-->
+
+\begin{table}[H]
+\begin{tabular}{| c | C{3.5cm} | C{3.5cm} | C{3.5cm} |}
+\hline
+& Catch & SB/SBF=0 & CPUE \\ \hline
+HCR 1   &             &                &       \\ 
+\footnotesize{(\textit{Belbow}=0.5, \textit{Cmax}=140)}    &             &                &\\
+&&&\\ 
+&&&\\ 
+&&&\\ 
+&&&\\ 
+&&&\\ \hline
+HCR 2   &             &                &       \\ 
+\footnotesize{(\textit{Belbow}=0.3, \textit{Cmax}=130)}    &             &                &\\
+&&&\\ 
+&&&\\ 
+&&&\\ 
+&&&\\ 
+&&&\\ \hline
+HCR 3   &             &                &       \\ 
+\footnotesize{(\textit{Belbow}=0.8, \textit{Cmax}=150)}    &             &                &\\
+&&&\\ 
+&&&\\ 
+&&&\\ 
+&&&\\ 
+&&&\\ \hline
+\end{tabular}
+\end{table}
 
 
+
+Looking at the values you have written down, which of these two HCRs would you choose?
+You should consider not only the average value, but also the range of values.
+
+# Introducing Performance Indicators
+
+In the exercise above, we compared the values of catch, SB/SBF=0 and CPUE in the final year to choose a preferred HCR.
+We used these metrics as *performance indicators* (PIs) for comparing the performance.
+
+Lots of different PIs are available that measure different things, for example, catch levels, changes in effort, probability of SB/SBF=0 being above the LRP etc. 
+
+When comparing HCRs, the chosen PIs should relate to the management objectives for the fishery.  This allows you to measure how well the fishery is performing in relation to those objectives. Some HCRs will perform well for some PIs and poorly for others. This is where the ideas of prioritising PIs and evaluating trade-offs come in.
+
+In the previous exercise we only looked at the values of catch, SB/SBF=0 and CPUE in the final year of the projection.
+We have not considered what happens during the course of the projection, only what happens at the end, i.e in the long term.
+When comparing HCRs we should compare what happens in the short- and medium-term as well as the long-term.
+
+# Measuring Performance
+
+Instead of reading values from the plot (which is annoying and inaccurate) we can produce a table of PIs.
+
+Press the **Reset** button.
+Set the HCR parameters to: *Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140.
+Leave the uncertainty parameters as they are (*Biological productivity variability* = 0.2, *Estimation error variability* = 0.2, *Estimation error bias* = 0).
 
 Click on the **Show performance indicators** button. Nothing happens - yet.
-With the HCR and uncertainty parameters set as before, cLick the **Run projection** button.
-You should see that a table has appeared with various PIs over different time periods.
-The PIs are in the rows in the table.
-The different time periods (short-, medium- and long-term) are the columns.
-The average value of the PIs is calculated over the differnt time periods.
+Now, press the **Run projection** button.
 
-At the time of writing there are 8 indicators. Don't worry about all of them for the moment.
-Just look at *SB/SBF=0*, *Prob. SB > LRP* (the probability of SB/SBF=0 being above the LRP), *Catch* and *CPUE (rel. 1999)* for now.
-<!-- And stability?-->
+You should see that a table has appeared with various PIs in it.
+The PIs are in the rows in the table.
+The PIs are measure over different time periods.
+The different time periods (short-, medium- and long-term) are the columns.
+The value in each cell of the table is the average value of that PI in that time periods.
+
+There are 5 PIs i the table.
+Three of them we have already used above: *SB/SBF=0*, *Catch* and *CPUE*.
+The two new ones are: *Prob. SB > LRP* (the probability of SB/SBF=0 being above the LRP) and *Catch variability* (the amound by which catch changes over time).
+
+*Catch variability* is a bit different to the other PIs in that a *low* value is preferred (because you probably want your catches to be stable, rather than changing frequently).
 
 Click the **Run projection** button again so that we have two iterations. Notice that the values in the table have changed.
 We now have two extra values for each PI in ().
-The single value is the median of the two iterations. The values in the () are the 20 and 80 percentile.
-It doesn't make much sense to calculate this for just 2 iterations.
+The single value is the median (average) of the two iterations. The values in the () are the 20 and 80 percentile. The 20 and 80 percentile represent low and high bounds of the PI with the majority of values of the PI falling between them.
 
-Keep clicking **Run projection** until you have about 30 iterations.
-You should see that the numbers update in the table but start to settle down (in the same way that the histogram settles down).
+Note that the *Prob. SB > LRP* PI does not have percentiles. This is because it is a probability.
+
+It doesn't make much sense to calculate the median or the percentiles this for just 2 iterations.
+Keep clicking **Run projection** until you have about 50 iterations.
+You should see that the numbers in the table start to settle down (in the same way that the histogram settles down).
 
 ![](figures/introUncertainty_PIs.png)
 
-Take note of the long-term values of *SB/SBF=0*, *Prob. SB > LRP*, *catch* and *CPUE (rel. 1999)*.
+In the previous exercise we only looked at the final values.
+Now, you can see the difference between the short-, medium- and long-term values.
+For example, you may find that the short-term catches than the long-term catches.
+Different HCRs will perform better over different time periods and this will affect which HCR you prefer.
 
-<!-- SB/SBF=0: 0.4 (0.38, 0.42) Catch: 95 (90, 110) Rel. CPUE: 0.59 (0.57, 0.63) -->
+# Exercise
 
-# Another HCR 
+We are going to look at some PIs to help us choose between HCR 1 (*Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140) and HCR 3 (*Blim* = 0.2, *Belbow* = 0.7, *Cmin* = 10 and *Cmax* = 150) from above (we will ignore the other HCR for now).
+To do this we are going to record the values for only three of the PIs: *Catch*, *Catch variability* and *CPUE*, in the different time periods, in the table below.
 
-We can do this again for a different HCR.
-Set these parameters: *Blim* = 0.2, *Belbow* = 0.7, *Cmin* = 10 and *Cmax* = 160.
-Keep the same uncertainty options as before.
+For each HCR, run 50 iterations (by pressing **Run projection** 50 times) and use the same uncertainty settings as above (*Biological productivity variability* = 0.2, *Estimation error variability* = 0.2, *Estimation error bias* = 0).
 
-Click **Run projection** about 30 times and note down the long-term behaviour of SB/SBF=0, catch and relative CPUE.
+<!--
 
-![](figures/introUncertainty_PIs2.png)
+HCR 3 has worse catch, and catch variability in the short term. Otherwise it is better
 
-<!--  SB/SBF=0: 0.5 (0.48, 0.52) Catch: 100 (93, 110) Rel. CPUE: 0.85 (0.81, 0.90) -->
+-->
 
-The catches and probability of being above the LRP look about the same, but SB/SBF=0 and CPUE are higher for the second HCR.
-This means if we only considered these four PIs in the long-term you would probably pick the second HCR instead of the first one.
+\begin{table}[H]
+\begin{tabular}{| c | C{3.5cm} | C{3.5cm} | C{3.5cm} |}
+\hline
+& Catch & Catch variability & CPUE \\ \hline
+HCR 1   &             &                &       \\ 
+\footnotesize{(\textit{Belbow}=0.5, \textit{Cmax}=140)}    &             &                &\\
+Short-term &&&\\ 
+&&&\\ 
+Medium-term&&&\\ 
+&&&\\ 
+Long-term&&&\\ \hline
+HCR 3   &             &                &       \\ 
+\footnotesize{(\textit{Belbow}=0.8, \textit{Cmax}=150)}    &             &                &\\
+Short-term &&&\\ 
+&&&\\ 
+Medium-term&&&\\ 
+&&&\\ 
+Long-term&&&\\ \hline
+\end{tabular}
+\end{table}
+
+Look at the performance in different time periods.
+Remember that we want *Catch variability* to be low.
+
+WHich HCR do you prefer?
+
 
 # Summary
 
-When we simulate the performance of a HCR we don't run just one projection, we run lots. How many depends on the sources of uncertainty, the life history of the stock etc. We need the distribution to settle down.
+HCRs need to be robust to uncertainty.
+In this tutorial we have seen that when we include uncertainty, it is necessary to run many projections to allow us to understood how the HCR is going to perform.
 
-This means we don't have just one value for the results but a distribution of values.
-We need to summarise these. Here we use the median and the 20, 80 percentile.
+We also started to use PIs to measure the performance of the HCRs. This allows us to better compare the performance of candidate HCRs. The performance in different time-periods, not just the long-term, is important (it's not just the final destination, but the journey).
 
