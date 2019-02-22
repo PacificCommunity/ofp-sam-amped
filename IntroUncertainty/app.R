@@ -18,8 +18,8 @@ source("../R/modules.R")
 #ui <- fluidPage(
   #theme = "bootstrap.css", 
 ui <- navbarPage(
-  title="Investigating uncertainty",
-  tabPanel("Investigating uncertainty",
+  title="Introducing Uncertainty and Performance Indicators",
+  tabPanel("Projections",
   sidebarLayout(
     sidebarPanel(width=3,
       br(),
@@ -29,7 +29,7 @@ ui <- navbarPage(
       # HCR options
       # Use same MP module as the Intro to HCRs - nice!
       #mp_params_setterUI("mpparams", mp_visible=c("Constant catch","Threshold catch")),
-      mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort")),
+      mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort"), init_thresh_max_catch=140, init_thresh_belbow=0.5),
       br(),
       tags$span(title="Run the projection for one more iteration.",
         actionButton("project", "Run projection")
@@ -135,7 +135,7 @@ server <- function(input, output,session) {
   # Bit dodgy having niters here as it will not reflect the actual niters
   # Maybe have iter outside of app_params
   # Here niters is the initial number of iters in a new stock object when reset is triggered
-  app_params <- list(initial_year = 1990, last_historical_timestep = 10)
+  app_params <- list(initial_year = 2009, last_historical_timestep = 10)
   app_params$historical_timesteps = 1:app_params$last_historical_timestep
   quantiles <- c(0.20, 0.80)
   # Where to put these Ref Pts?
@@ -226,7 +226,8 @@ server <- function(input, output,session) {
 
     # Get summary PIs 
     piqs <- get_summary_pis(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params,
-                            quantiles=c(0.01,quantiles, 0.99)) # Quantiles expecting length 4
+                            quantiles=c(0.01,quantiles, 0.99), pi_choices=c("bk", "problrp", "catch", "diffcatch", "relcpue")) # Quantiles expecting length 4
+    # pi_choice can be: bk, problrp, catch, diffcatch, releffort, diffeffort, relcpue, diffcpue
     pitemp(piqs)
   })
   
