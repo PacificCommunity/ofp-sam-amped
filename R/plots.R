@@ -621,7 +621,8 @@ plot_pi_choice <- function(pis, hcr_choices, pi_choices, plot_choice){
     # The plots - facet on name
     # Plot type one - bar chart on q50
     #dat <- subset(piqs, (quantiles=="q50") & (hcr %in% hcr_choices) & (name %in% pi_choices))
-    dat <- subset(piqs_transform, (quantiles=="q50"))
+    #dat <- subset(piqs_transform, (quantiles=="q50"))
+    dat <- subset(piqs, (quantiles=="q50"))
     p <- ggplot(dat, aes(x=term, y=value, fill=hcrlegend))
     p <- p + geom_bar(stat="identity", position="dodge", colour="black", width=0.7)
     p <- p + scale_fill_manual(values=hcrcols)

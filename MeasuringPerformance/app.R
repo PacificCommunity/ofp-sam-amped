@@ -117,15 +117,18 @@ ui <- navbarPage(
                    value="PIradar",
                    column(12, fluidRow(
                     tags$span(title="Radar plot of the median values of the performance indicators over the three time periods. Note that the PIs for effort and variability have been transformed so that the larger the value, the better the HCR is thought to be performing.",
-                 plotOutput("plotpiradar", height="600px")),
-                 "Note that stability PIs and relative effort are not shown on the radar plot."
+                 plotOutput("plotpiradar", height="600px"))#,
+                 #"Note that stability PIs and relative effort are not shown on the radar plot."
            ))
           ),
           tabPanel(title="Performance indicators - table",
                    value="PItable",
                    column(12, fluidRow(
-                   "Performance indicators in the long-term",
-                   div(tags$span(title="Peformance indicators in the long-term. The value is the median, the values in the parentheses are the 20-80 percentiles.", tableOutput("bigpitable"), style = "font-size:85%"))
+                   #"Performance indicators in the long-term",
+                   "Performance indicators in the short-, medium- and long-term",
+                   div(tags$span(title="Peformance indicators in the short-term. The value is the median, the values in the parentheses are the 20-80 percentiles.", tableOutput("bigpitable_short"), style = "font-size:85%")),
+                   div(tags$span(title="Peformance indicators in the medium-term. The value is the median, the values in the parentheses are the 20-80 percentiles.", tableOutput("bigpitable_medium"), style = "font-size:85%")),
+                   div(tags$span(title="Peformance indicators in the long-term. The value is the median, the values in the parentheses are the 20-80 percentiles.", tableOutput("bigpitable_long"), style = "font-size:85%"))
            ))
           ),
           tabPanel(title="Majuro plots",
@@ -159,7 +162,7 @@ ui <- navbarPage(
       ),
       mainPanel(width=9,
         fluidRow(column=12,
-          stoch_params_setterUI("stoch", init_prod_sigma=0.2, init_est_sigma=0.04, init_est_bias=0.0),
+          stoch_params_setterUI("stoch", init_prod_sigma=0.2, init_est_sigma=0.2, init_est_bias=0.0),
           stock_params_setterUI("stock"),
           # Total number of years (including historical years)
           numericInput("nyears", "Number of years", value = 30, min=20, max=100, step=1),
@@ -185,8 +188,8 @@ ui <- navbarPage(
         p("Project the stock forward under the chosen HCR by clicking on the ", strong("Project HCR"), " button. If you like the look of the output, add the HCR to the basket by clicking on the ", strong("Add to basket"), " button"),
         p("Keep adding HCRs to your basket until you are ready to compare them."),
         h1("Performance indicators"),
-        p("There are 8 PIs in the table. ", em("SB/SBF=0"), " and ", em("Catch"), " are fairly self explanatory. ", em("Effort (rel. 1999)"), " and ", em("CPUE (rel. 1999)"), " are the fishing effort and CPUE relative to their values in 1999 respectively. ", em("Prob. SB > LRP"), " is the probability of of SB/SBF=0 being above the LRP. ", em("Catch variability"), ",", em("Effort variability"), " and ", em("CPUE variability"), " measure the variability in the catch, relative effort and relative CPUE respectively. The variability PIs measure the bumpiness over time. The higher the value, the more the value changes over time."),
-        p("It should be noted that these PIs don't all point the same way.  It is generally thought that the higher the value of ", em("SB/SBF=0"), ",", em("Prob. SB > LRP"), ",", em("Catch"), " and ", em("CPUE (rel. 1999)"), " the better the HCR is performing. However, for ", em("Effort (rel. 1999)"), "and the ", em("variability"), " PIs, lower values are preferred. The higher the effort, the greater the costs. Stable catches and effort are preferred to catches and effort that varying strongly between years. Care must therefore be taken when using PIs to compare performance of HCRs."),
+        p("There are 8 PIs in the table. ", em("SB/SBF=0"), " and ", em("Catch"), " are fairly self explanatory. ", em("Effort (rel. 2018)"), " and ", em("CPUE (rel. 2018)"), " are the fishing effort and CPUE relative to their values in 2018 respectively. ", em("Prob. SB > LRP"), " is the probability of of SB/SBF=0 being above the LRP. ", em("Catch variability"), ",", em("Effort variability"), " and ", em("CPUE variability"), " measure the variability in the catch, relative effort and relative CPUE respectively. The variability PIs measure the bumpiness over time. The higher the value, the more the value changes over time."),
+        p("It should be noted that these PIs don't all point the same way.  It is generally thought that the higher the value of ", em("SB/SBF=0"), ",", em("Prob. SB > LRP"), ",", em("Catch"), " and ", em("CPUE (rel. 2018)"), " the better the HCR is performing. However, for ", em("Effort (rel. 2018)"), "and the ", em("variability"), " PIs, lower values are preferred. The higher the effort, the greater the costs. Stable catches and effort are preferred to catches and effort that varying strongly between years. Care must therefore be taken when using PIs to compare performance of HCRs."),
         h1("Comparing performance"),
         p("Choose the ", strong("Compare performance"), " tab for a range of plots and tables that allow the comparison of the performance of the HCRs through performance indicators and other metrics."),
         p("The performance indicators and HCRs can be selected and delselected to help with the comparison.")
@@ -197,7 +200,7 @@ ui <- navbarPage(
 
 server <- function(input, output,session) {
   # Global parameters
-  app_params <- list(initial_year = 1990, # Cosmetic only
+  app_params <- list(initial_year = 2009, # Cosmetic only
                      last_historical_timestep = 10)
   # Storage for stocks - not actually needed - we only use the tsstore and pistore - make both reactive
   # Comment out but leave in case we decide to use it
@@ -373,18 +376,47 @@ server <- function(input, output,session) {
     auto=TRUE
   )
 
+  # I don't like the repetition!
   # The mega table for the PIs - tricky
-  output$bigpitable <- renderTable({
+  output$bigpitable_long <- renderTable({
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
     # If no HCR or PI is selected then don't do anything
     if(is.null(hcr_choices) | is.null(pi_choices)){
       return()
     }
-    big_pi_table(pis=pistore(), hcr_choices=hcr_choices, pi_choices=pi_choices) 
+    big_pi_table(pis=pistore(), hcr_choices=hcr_choices, pi_choices=pi_choices, term_choice="long") 
     },
     rownames = TRUE,
-    caption= "Performance indicators",
+    caption= "Performance indicators in the long-term",
+    auto=TRUE
+  )
+  
+  output$bigpitable_medium <- renderTable({
+    hcr_choices <- input$hcrchoice
+    pi_choices <- input$pichoice
+    # If no HCR or PI is selected then don't do anything
+    if(is.null(hcr_choices) | is.null(pi_choices)){
+      return()
+    }
+    big_pi_table(pis=pistore(), hcr_choices=hcr_choices, pi_choices=pi_choices, term_choice="medium") 
+    },
+    rownames = TRUE,
+    caption= "Performance indicators in the medium-term",
+    auto=TRUE
+  )
+  
+  output$bigpitable_short <- renderTable({
+    hcr_choices <- input$hcrchoice
+    pi_choices <- input$pichoice
+    # If no HCR or PI is selected then don't do anything
+    if(is.null(hcr_choices) | is.null(pi_choices)){
+      return()
+    }
+    big_pi_table(pis=pistore(), hcr_choices=hcr_choices, pi_choices=pi_choices, term_choice="short") 
+    },
+    rownames = TRUE,
+    caption= "Performance indicators in the short-term",
     auto=TRUE
   )
 

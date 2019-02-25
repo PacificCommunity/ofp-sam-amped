@@ -1,5 +1,5 @@
 ---
-title: "Introduction to Harvest Control Rules using *AMPED*"
+title: "Introduction to Harvest Control Rules with *AMPED*"
 author: "Finlay Scott - OFP, SPC"
 date: "2019-21-02"
 output:
@@ -8,6 +8,8 @@ output:
   pdf_document:
     includes:
       in_header: mystyle.sty
+    latex_engine: xelatex
+mainfont: Calibri Light
 fontsize: 12pt
 ---
 
@@ -15,7 +17,7 @@ fontsize: 12pt
 <!-- render("tutorials/measuringPerformance.Rmd", output_format = "all")-->
 
 ```{r, results='hide', echo=FALSE, warning=FALSE, message=FALSE}
-library(kableExtra)
+#library(kableExtra)
 ```
 
 # Introduction to HCRs
@@ -130,18 +132,18 @@ Again, repeatedly press the **Advance** button and follow the evolution of the s
 \begin{table}[H]
 \begin{tabular}{| c | C{3cm} | C{3cm} | C{5cm} |}
 \hline
-HCR & Final catch & Final SB/SBF=0 & Notes \\ \hline
-1   &             &                &       \\ 
+& Final catch & Final SB/SBF=0 & Notes \\ \hline
+HCR 1   &             &                &       \\ 
 \footnotesize{(\textit{Belbow}=0.5, \textit{Cmax}=140)}    &             &                &\\
 &&&\\ 
 &&&\\ 
 &&&\\ \hline
-2   &             &                &       \\ 
+HCR 2   &             &                &       \\ 
 \footnotesize{(\textit{Belbow}=0.3, \textit{Cmax}=130)}    &             &                &\\
 &&&\\ 
 &&&\\ 
 &&&\\ \hline
-3   &             &                &       \\ 
+HCR 3   &             &                &       \\ 
 \footnotesize{(\textit{Belbow}=0.8, \textit{Cmax}=150)}    &             &                &\\
 &&&\\ 
 &&&\\ 

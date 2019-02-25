@@ -5,11 +5,32 @@ date: "2019-21-02"
 output:
   html_document:
     keep_md: yes
+    # tufte - no good
+#  tufte::tufte_handout:
+#    includes:
+#      in_header: mystyle.sty
+  pdf_document:
+    includes:
+      in_header: mystyle.sty
+    latex_engine: xelatex
+mainfont: Calibri Light
+fontsize: 12pt
+---
+
+
+
+<!--
+output:
+  tufte::tufte_handout: default
+  
+  
   pdf_document:
     includes:
       in_header: mystyle.sty
 fontsize: 12pt
----
+  
+  
+  -->
 
 <!--use render()-->
 <!-- render("tutorials/measuringPerformance.Rmd", output_format = "all")-->
@@ -35,7 +56,7 @@ Start by double-clicking on the **IntroUncertainty** file in the *AMPED* directo
 A black window *should* appear, followed by the app opening in a browser window.
 If this does not happen, something has gone wrong. Sorry...
 
-The layout of the app should show the HCR in the middle, with three time series plots of SB/SBF=0, catch and CPUE (relative to the CPUE in 1999) on the right-hand side and the control buttons on the left-hand side.
+The layout of the app should show the HCR in the middle, with three time series plots of SB/SBF=0, catch and CPUE (relative to the CPUE in 2018) on the right-hand side and the control buttons on the left-hand side.
 There should already be 10 years of catch, SB/SBF=0 and CPUE data in the plots.
 
 <!-- Insert image -->
@@ -270,7 +291,11 @@ Long-term&&&\\ \hline
 Look at the performance in different time periods.
 Remember that we want *Catch variability* to be low.
 
-WHich HCR do you prefer?
+Which HCR do you prefer?
+
+Here we have 3 indicators over 3 time periods giving us a total of 9 PIs to consider. Each PI is reported as a median (average) value plus the 20th and 80th percentiles. This is a lot of information to process!
+You can see that considering more and more indicators can quickly lead to an overwhelming amount of information.
+How we try to understand all of it is covered in the next tutorial.
 
 
 # Summary

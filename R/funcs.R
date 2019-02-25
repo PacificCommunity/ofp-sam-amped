@@ -506,8 +506,7 @@ current_pi_table <- function(pis){
   return(out)
 }
 
-
-big_pi_table <- function(pis, hcr_choices, pi_choices){
+big_pi_table <- function(pis, hcr_choices, pi_choices, term_choice="long"){
   if (length(pis) == 0){
     return()
   }
@@ -521,12 +520,11 @@ big_pi_table <- function(pis, hcr_choices, pi_choices){
   }
   signif <- 2
   # Big fuck-off table: PIs along top, HRCs in the rows
-  # Just the long term
   # Just the median and two quantiles
   # which quantiles do we want? drop the "q" from the front and order
   qs <- sort(as.numeric(substring(unique(piqs$quantiles),2)))
   qs <- paste("q", qs[2:4],sep="")
-  piqs <- subset(piqs, (hcr %in% hcr_choices) & (name %in% pi_choices) & (term == "long") & (quantiles %in% qs))
+  piqs <- subset(piqs, (hcr %in% hcr_choices) & (name %in% pi_choices) & (term == term_choice) & (quantiles %in% qs))
   piqs$value <- signif(piqs$value, signif)
   dat <- spread(piqs, key="quantiles", value="value")
   # Make the text values
