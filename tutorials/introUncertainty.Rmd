@@ -112,7 +112,7 @@ The black line shows the current iteration (projection), the grey line the past 
 This is the same on the HCR plot - the grey dots show the past iterations.
 
 Click **Run projection** again and again. More lines will appear.
-The bars at the end of the time series plots are histograms of the values in the final year of the projection.
+The bars at the end of the time series plots are histograms of the values in the final year of each projection.
 These histograms will fill in the more projections you run.
 
 Keep clicking **Run projection** until you get 30 or more iterations.
@@ -206,7 +206,7 @@ You should consider not only the average value, but also the range of values.
 In the exercise above, we compared the values of catch, SB/SBF=0 and CPUE in the final year to choose a preferred HCR.
 We used these metrics as *performance indicators* (PIs) for comparing the performance.
 
-Lots of different PIs are available that measure different things, for example, catch levels, changes in effort, probability of SB/SBF=0 being above the LRP etc. 
+Lots of different PIs are available that measure different things, for example, catch levels, changes in effort, probability of SB/SBF=0 being above the limit reference point (LRP) etc. 
 
 When comparing HCRs, the chosen PIs should relate to the management objectives for the fishery.  This allows you to measure how well the fishery is performing in relation to those objectives. Some HCRs will perform well for some PIs and poorly for others. This is where the ideas of prioritising PIs and evaluating trade-offs come in.
 
@@ -236,6 +236,7 @@ Three of them we have already used above: *SB/SBF=0*, *Catch* and *CPUE*.
 The two new ones are: *Prob. SB > LRP* (the probability of SB/SBF=0 being above the LRP) and *Catch variability* (the amound by which catch changes over time).
 
 *Catch variability* is a bit different to the other PIs in that a *low* value is preferred (because you probably want your catches to be stable, rather than changing frequently).
+A high value for *Prob. SB > LRP* is preferred because means you want to be safely away from the LRP.
 
 Click the **Run projection** button again so that we have two iterations. Notice that the values in the table have changed.
 We now have two extra values for each PI in ().

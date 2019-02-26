@@ -28,13 +28,13 @@ It uses the *Introduction to HCRs* app from the *AMPED* suite of apps for explor
 An HCR is a pre-agreed decision rule that is used to set fishing opportunities in the future. An HCR should be designed so that the management objectives of the fishery have the greatest chance of being achieved. A good HCR is robust to different sorts of uncertainty (which we will discuss later on).
 
 In this tutorial we will use a simple HCR to set the catch limit of a fishery in every year.
-The HCR takes an estimate of the current value of SB/SBF=0 and uses it to set a catch limit in the next year.
+The HCR takes an estimate of the current value of SB/SBF=0 (the amount of adult biomass compared to the amount of adult biomass if there was no fishing) and uses it to set a catch limit in the next year.
 The catch limit is set according to the general rule shown in the figure below:
 
 ![](figures/hcr_plot.png)
 
 The current value of SB/SBF=0 is on x-axis along the bottom. The catch limit in the next year is on the y-axis on the side. The red line is the rule that sets the catch limit given the SB/SBF=0. 
-The basic idea is that if SB/SBF=0 starts to fall, the catches are reduced. If the SB/SBF=0 starts to rise, the cathes are increased.
+The basic idea is that if SB/SBF=0 starts to fall, the catches are reduced. If the SB/SBF=0 starts to rise, the catches are increased.
 
 The shape of the HCR is determined by 4 parameters: *Blim*, *Belbow*, *Cmin* and *Cmax*.
 When the estimated SB/SBF=0 is greater than *Belbow* the catch limit is set at *Cmax*.
@@ -68,7 +68,7 @@ These are the default initial values, but make sure that they have set OK.
 
 # Using the HCR
 
-The purpose of the HCR is to set the catch limit each year. The HCR uses the current estimated value of SB/SBF=0 to set the catch limit. This rule will be applied every year in the future to set new catch limits each year.
+The purpose of the HCR is to set the catch limit each year. The HCR uses the current estimated value of SB/SBF=0 to set the catch limit. This rule will be applied every year in the future to set new catch limits in each year.
 
 We start at the very beginning of 2019 and we want to use the HCR to set the catch limit for 2019.
 The SB/SBF=0 can be seen in the bottom-left plot.
@@ -97,9 +97,9 @@ You should see that eventually the system settles down to a steady catch limit a
 # Exercises
 
 Press the **Reset** button in the left panel to clear the stock projection.
-Run through the projection again by pressing the **Advance** button. Make sure that you understand how the HCR uses the last value of SB/SbF=0 to set the catch limit.
+Run through the projection again by pressing the **Advance** button. Make sure that you understand how the HCR uses the last value of SB/SBF=0 to set the catch limit.
 
-Keep pressing the **Advance** button until you get to the end of the projection. In the table below write down the final value of the catch and the final value of SB/SBF=0 that you see on the plots. Also, note down anything interesting (if anything) that you see. For example, is the short-term catch, different to the long-term catch?
+Keep pressing the **Advance** button until you get to the end of the projection. In the table below write down the final value of the catch and the final value of SB/SBF=0 that you see on the plots. Also, note down anything interesting (if anything) that you see. For example, is the catch at the start of the projection different to the catch near the end of the projection?
 
 Different HCRs behave in different ways and some are better than others.
 The parameters of the HCR that we just tried are: *Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140.
@@ -112,13 +112,13 @@ Notice that this HCR has a lower maximum catch than the previous HCR. However, t
 
 As before, repeatedly press the **Advance** button and follow the evolution of the stock and the catches.
 Note how the behaviour of the catch and SB/SBF=0 are different to the initial example.
-Write down the final values and any observations in the table below.
+Write down the final values and any observations in the table at the end of this section.
 
 <!-- figure-->
 ![](figures/introHCR_HCR2.png)
 
-As a final example set *Belbow* to 0.8 and *Cmax* to 150. Notice that this HCR has a higher maximum catch but starts reducing the catches at a higher level of SB/SBF=0.
-Again, repeatedly press the **Advance** button and follow the evolution of the stock and catch limits. Note the behaviour and final values in the final values.
+As a final example set *Belbow* to 0.8 and *Cmax* to 150 and keep the other parameters the same. Notice that this HCR has a higher maximum catch but starts reducing the catches at a higher level of SB/SBF=0.
+Again, repeatedly press the **Advance** button and follow the evolution of the stock and catch limits. Write down the behaviour and final values in the table.
 
 
 <!-- figure-->
@@ -166,10 +166,10 @@ The question is, which HCR of these three is the best one?
 
 In the real world, fisheries management is affected by different types of uncertainty.
 However, the projections we have run so far have not considered uncertainty.
-This means that if we rerun the projection, the outcome will always be the same (they are *deterministic* simulations).
+This means that if we rerun the same projection, the outcome will always be the same (they are *deterministic* simulations).
 
-Because there is lot of uncertainty in fisheries, it is very important that a chosen HCR is robust to uncertainty.
-An HCR that performs well when there is no uncertainty does not necessarily perform well when there is uncertainty.
+Because there is lot of uncertainty in fisheries, it is very important to choose an HCR that is robust to this uncertainty, otherwise the outcome may not be what you expected.
+For example, an HCR that performs well when future stock recruitment is stable may not perform well when stock recruitment varies a lot.
 We will look at this here.
 
 We can include two sources of uncertainty: variability in the biological productivity and estimation error.
@@ -180,15 +180,13 @@ Click on the **Show variability option** option in the panel on the left to show
 ## Biological productivity variability
 
 Biological productivity variability reflects the natural variability in the stock dynamics, for example through variability in the recruitment, growth and natural mortality. Fisheries managers have no control over this source of uncertainty.
-As such it is very important than an adopted HCR is robust to this uncertainty.
+As such it is very important that an adopted HCR is robust to this uncertainty.
 
 We saw in the previous examples without uncertainty that eventually the stock abundance settles down to a constant value.
 What happens when we include natural variability?
 
 Set the HCR parameters back to their original values (*Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10, *Cmax* = 140).
 Increase the **Biological productivity variability** to 0.2 and project forward through time using the **Advance** button.
-
-INSERT FIGURE
 
 <!-- figure-->
 ![](figures/introHCR_Bnoise.png)
@@ -234,7 +232,7 @@ Are the final values higher or lower than when there is no bias?
 As mentioned above, fisheries management is affected by many types of uncertainty.
 
 Now turn on all the sources of uncertainty.
-Set **Biological productivity variability** to 0.2, **Estimation error variability** to 0.04 and the **Estimation error bias** to 0.1.
+Set **Biological productivity variability** to 0.2, **Estimation error variability** to 0.2 and the **Estimation error bias** to 0.1.
 Keep the HCR values the same as the initial values (*Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140).
 
 Project this forward. How are the results different to the first projection we ran which had the same HCR parameters but no uncertainty?
@@ -248,7 +246,7 @@ Use the same three HCRs that we used above.
 For each HCR, run about 5 full projections. Note down the final *true* SB/SBF=0 (the black line on the plot) and the final catch.
 Also note down any interesting behaviour.
 
-From this, is an HCR that you prefer?
+From this, which HCR do you prefer?
 It's probably quite hard to say at this stage. We shall look at this more closely in the next tutorial...
 
 \begin{table}[H]
@@ -283,7 +281,7 @@ HCR & Final catch & Final SB/SBF=0 & Notes \\ \hline
 # Summary
 
 A HCR is a decision rule for setting future fishing opportunities.
-In this example the input to the rule is *estimated* stock abundance (SB/SBF=0) and the output is the catch limit in the following year.
+In this example the input to the rule is the *estimated* stock abundance (SB/SBF=0) and the output is the catch limit in the following year.
 
 We have seen that different HCR parameterisations give different performances.
 

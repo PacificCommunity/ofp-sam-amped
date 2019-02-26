@@ -20,7 +20,7 @@ fontsize: 12pt
 
 In the previous tutorial (*Introduction to Uncertainty and Performance Indicators*) we looked at the performance of HCRs by running a large number of individual projections. 
 We included two sources of uncertainty (*biological productivity variability* and *estimation error*) and began to look at how to compare the performance of different HCRs using Performance Indicators (PIs).
-The more iterations (number of projections) we had, the better the estimate of uncertainty in the PIs.
+The more iterations (number of projections) we had, the more stable the histograms were and the better the estimate of uncertainty in the PIs.
 
 In this tutorial we build on this by assembling a basket of candidate HCRs, calculating a range of PIs and comparing their performance in a number of ways.
 
@@ -63,9 +63,9 @@ This runs a projection with 100 iterations. In the previous tutoral we ran one i
 There are 8 PIs in the table. *SB/SBF=0* and *Catch* are fairly self explanatory. *Effort (rel. 2018)* and *CPUE (rel. 2018)* are the fishing effort and CPUE relative to their values in 2018 respectively. *Prob. SB > LRP* is the probability of SB/SBF=0 being above the LRP. *Catch variability*, *Effort variability* and *CPUE variability* measure the variability in the catch, relative effort and relative CPUE respectively. They measure how much the catch etc. change over the time (the bumpiness in the plots). The higher the value, the more the value changes over time.
 
 It should be noted that we don't necessarily want high values for all of the PIs.
-It is generally thought that the higher the value of *Prob. SB > LRP*, *Catch* and *CPUE (rel. 1999)* the better the HCR is performing.
+It is generally thought that the higher the value of *Prob. SB > LRP*, *Catch* and *CPUE (rel. 2018)* the better the HCR is performing.
 
-However, for *Effort (rel. 1999)* and the three *variability* PIs, lower values are preferred. High effort implies high costs (something we want to avoid).
+However, for *Effort (rel. 2018)* and the three *variability* PIs, lower values are preferred. High effort implies high costs (something we want to avoid).
 Stable catches and effort are preferred to catches and effort that varying strongly between years.
 
 
@@ -98,7 +98,7 @@ Each panel shows the median (average) value of a PI for each of the HCRs in the 
 
 <!--
 FIX THIS
-It should be noted that in this plot the 'upside down' PIs (*Effort (rel. 1999)* and the *variability* PIs) have been transformed so that the higher the value the better. The variability PIs now measure the relative stability. The higher the value, the more stable the values.
+It should be noted that in this plot the 'upside down' PIs (*Effort (rel. 2018)* and the *variability* PIs) have been transformed so that the higher the value the better. The variability PIs now measure the relative stability. The higher the value, the more stable the values.
 -->
 We are looking at the median values of 8 PIs for 3 HCRs in 3 different time periods.
 This is a lot of information! We want to be able to choose which HCR best fits our objectives but it can be difficult when there is so much to look at.
