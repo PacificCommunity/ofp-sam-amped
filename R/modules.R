@@ -94,7 +94,7 @@ stock_params_setter <- function(input, output, session){
 
 # Modules for setting the MP parameters
 # Bit fiddly with the conditional panels inside a module
-mp_params_setterUI <- function(id, mp_visible=NULL, init_thresh_max_catch=140, init_thresh_belbow=0.5){
+mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HCR you want to test.", init_thresh_max_catch=140, init_thresh_belbow=0.5, init_constant_catch=50, input_label="HCR Type"){
   ns <- NS(id)
   all_hcrs <- c("Constant catch" = "constant_catch",
                 "Constant effort" = "constant_effort",
@@ -116,12 +116,12 @@ mp_params_setterUI <- function(id, mp_visible=NULL, init_thresh_max_catch=140, i
   #}
 
   # HCR options
-  hcr_type <- tags$span(title="Select the type of HCR you want to test.",   
-    selectInput(ns("hcr_type"), "HCR type", choices = hcr_choices))
+  hcr_type <- tags$span(title=title,   
+    selectInput(ns("hcr_type"), label=input_label, choices = hcr_choices))
   # The various parameter options
   ccpars <- conditionalPanel("input.hcr_type == 'constant_catch'", ns=ns,
     tags$span(title="Ignores stock status (e.g. estimated bimoass) and sets a constant catch limit.",
-      sliderInput(ns("constant_catch_level"), "Constant catch level:", min = 0, max = 150, value = 100, step = 1))
+      sliderInput(ns("constant_catch_level"), "Constant catch level:", min = 0, max = 150, value = init_constant_catch, step = 1))
   )
   cepars <- conditionalPanel("input.hcr_type == 'constant_effort'", ns=ns,
     tags$span(title="Ignores stock status (e.g. estimated bimoass) and sets a constant effort limit.",

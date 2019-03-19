@@ -42,7 +42,10 @@ create_stock <- function(){
 
 # I think that stock is getting passed by reference as when these functions are called the return value is not stored but stock is updated
 # But it does need to be passed in - i.e. it is not found in the calling environment
+# Make an empty stock with the right dimensions
 clear_stock <- function(stock, app_params, nyears, niters){
+  # nyears must be greater than app_params$last_historical_timestep and an integer
+  nyears <- max(app_params$last_historical_timestep+1, round(nyears))
   initial_array <- array(NA, dim=c(niters, nyears), dimnames=list(iter=1:niters, year=app_params$initial_year:(app_params$initial_year+nyears-1)))
   stock$biomass <- initial_array 
   stock$hcr_ip <- initial_array
@@ -544,6 +547,56 @@ big_pi_table <- function(pis, hcr_choices, pi_choices, term_choice="long"){
   rownames(out) <- out$hcr
   out <- out[,colnames(out) != "hcr"]
   return(out)
+}
+
+# PIs for the IntroProjection app
+# Each row in the stock is a separate projection
+get_projection_pis <- function(stock, stock_params, app_params, current_timestep){
+  # Return a data.frame of:
+  # Projection (1,2,3,..)
+  # Last catch
+  # Av. catch
+  # Last effort
+  # Av. effort
+  # Last SB/SBF=0
+  # Av. SB/SBF=0
+  # Prop. years in green
+  current_timestep <- min(current_timestep, dim(stock$biomass)[2])
+  final_catch <- stock$catch[,current_timestep-1]
+  bk <- stock$biomass / stock_params$k
+  final_sbsbf0 <- bk[,current_timestep]
+  rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
+  final_effort <- rel_effort[,current_timestep-1]
+  mean_catch <- apply(stock$catch,1,mean,na.rm=TRUE)
+  mean_sbsbf0 <- apply(bk,1,mean,na.rm=TRUE)
+  mean_effort <- apply(rel_effort,1,mean,na.rm=TRUE)
+  prop_sb_lrp <- apply(bk > stock_params$lrp,1,mean,na.rm=TRUE)
+  bmsy <- stock_params$k / 2
+  prop_sb_bmsy <- apply(stock$biomass > bmsy,1,mean,na.rm=TRUE)
+  dat <- data.frame(Projection = 1:nrow(stock$biomass),
+                    final_catch = final_catch,
+                    average_catch = mean_catch,
+                    final_effort = final_effort,
+                    average_effort = mean_effort,
+                    final_sbsbf0 = final_sbsbf0,
+                    average_sbsbf0 = mean_sbsbf0,
+                    prop_sb_lrp = prop_sb_lrp,
+                    prop_sb_bmsy = prop_sb_bmsy)
+  # Trim the digits a bit
+  dat <- signif(dat,3)
+  final_year <- app_params$initial_year + current_timestep - 1
+  # Better column names
+  colnames(dat) <- c("Projection",
+                     paste("Current catch (",final_year-1,")",sep=""),
+                     "Average catch",
+                     paste("Current effort (",final_year-1,")",sep=""),
+                     "Average effort",
+                     paste("Current SB/SBF=0 (",final_year,")",sep=""),
+                     "Average SB/SBF=0",
+                     "Prop. SB/SBF=0 > LRP",
+                     "Prop. B > BMSY")
+
+  return(dat)
 }
 
 #-------------------------------------------------------------------

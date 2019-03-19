@@ -176,12 +176,12 @@ draw_ribbon <- function(x, y, quantiles){
 
 # Biomass / K
 # Plot 'true' and only plot observed if model based MP
-plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # True bk
   bk_true <- stock$biomass / stock_params[["k"]]
   # Set up empty plot 
-  plot(x=years, y= bk_true[1,], type="n", ylab="SB/SBF=0", xlab="Year", ylim=c(0,1),xaxs="i", yaxs="i", ...)
+  plot(x=years, y= bk_true[1,], type="n", ylab="SB/SBF=0", xlab=xlab, ylim=c(0,1),xaxs="i", yaxs="i", ...)
   # Add LRP and TRP
   lines(x=c(years[1], years[length(years)]),y=c(stock_params[["lrp"]],stock_params[["lrp"]]), lty=ref_lty, lwd=ref_lwd, col=ref_col)
   lines(x=c(years[1], years[length(years)]),y=c(stock_params[["trp"]],stock_params[["trp"]]), lty=ref_lty, lwd=ref_lwd, col=ref_col)
@@ -227,13 +227,14 @@ plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_las
 
 # If we have timestep we also need app_params
 # quantiles of length 2
-plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+# If time, try to use the generic plot below
+plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Set Ylim - use same as HCR plot
   ymax <- get_catch_ymax(stock$catch, mp_params)
   yrange <- c(0, ymax)
   # Empty axis
-  plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Catch", xlab="Year", xaxs="i", yaxs="i",...)
+  plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Catch", xlab=xlab, xaxs="i", yaxs="i",...)
   if (add_grid){
     grid()
   }
@@ -277,49 +278,114 @@ plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep
   }
 }
 
-# Relative CPUE
-plot_relcpue <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
-  years <- as.numeric(dimnames(stock$biomass)$year)
-  cpue <- stock$catch / stock$effort
-  rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
-  # Set Ylim - use same as HCR plot
-  #ymax <- max(rel_cpue, na.rm=TRUE)
-  ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
 
-  yrange <- c(0, ymax)
-  # Empty axis
-  plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Relative CPUE", xlab="Year", xaxs="i", yaxs="i",...)
-  # Add 1 line
-  lines(x=years,y=rep(1,length(years)), lty=2)
+# Generic timeseries plot
+plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, yrange, ylab, add_grid=TRUE, xlab="Year", ...){
+
+  years <- as.numeric(dimnames(stock$biomass)$year)
+  # Plot empty axis
+  plot(x=years, y=years, type="n", ylim=c(yrange[1], yrange[2]), ylab=ylab, xlab=xlab, xaxs="i", yaxs="i",...)
   if (add_grid){
     grid()
   }
   # Get last iteration 
-  last_iter <- dim(stock$catch)[1]
+  last_iter <- dim(data)[1]
 
   # If we have more than X iters, draw envelope of iters
   if(last_iter > max_spaghetti_iters){
     # Draw ribbon
-    draw_ribbon(x=years, y=rel_cpue, quantiles=quantiles)
+    draw_ribbon(x=years, y=data, quantiles=quantiles)
     # Add spaghetti
     for (iter in 1:nspaghetti){
-      lines(x=years, y=rel_cpue[iter,], lty=spaghetti_lty, lwd=spaghetti_lwd, col=spaghetti_col)
+      lines(x=years, y=data[iter,], lty=spaghetti_lty, lwd=spaghetti_lwd, col=spaghetti_col)
     }
   }
-  # Else plot individual iters, depending on timestep argument
+  # Else plot individual iters
   else{
     # Plot all iters as ghosts
     if (last_iter > 1){
       for (i in 1:last_iter){
-        lines(x=years, y=rel_cpue[i,], col=ghost_col, lwd=ghost_lwd, lty=ghost_lty)
+        lines(x=years, y=data[i,], col=ghost_col, lwd=ghost_lwd, lty=ghost_lty)
       }
     }
   }
   # Current iteration
   if(show_last){
-    lines(x=years, y=rel_cpue[last_iter,], col=true_col, lwd=last_lwd, lty=last_lty)
+    lines(x=years, y=data[last_iter,], col=true_col, lwd=last_lwd, lty=last_lty)
   }
+
 }
+
+ 
+
+
+# Relative CPUE
+plot_relcpue <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+
+  years <- as.numeric(dimnames(stock$biomass)$year)
+  cpue <- stock$catch / stock$effort
+  rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
+  ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
+  yrange <- c(0, ymax)
+
+  # Plot it
+  plot_indiv_timeseries_base(data=rel_cpue, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="Relative CPUE", add_grid=add_grid, ...)
+
+  # Add 1 line
+  lines(x=years,y=rep(1,length(years)), lty=2)
+
+}
+
+
+plot_releffort <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+  years <- as.numeric(dimnames(stock$biomass)$year)
+  rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
+  # Set Ylim - use same as HCR plot
+  ymax <- max(c(rel_effort * 1.1, 1.0), na.rm=TRUE)
+  ymax <- min(10, ymax, na.rm=TRUE)
+  yrange <- c(0, ymax)
+
+  # Plot it
+  plot_indiv_timeseries_base(data=rel_effort, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="Relative effort", add_grid=add_grid, ...)
+
+  # Add 1 line
+  lines(x=years,y=rep(1,length(years)), lty=2)
+
+}
+
+
+plot_F <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+  years <- as.numeric(dimnames(stock$biomass)$year)
+  harvest_rate <- stock$catch / stock$biomass
+  # Set Ylim - use same as HCR plot
+  ymax <- max(harvest_rate, na.rm=TRUE) * 1.1
+  yrange <- c(0, ymax)
+
+  # Plot it
+  plot_indiv_timeseries_base(data=harvest_rate, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="F", add_grid=add_grid, ...)
+
+}
+
+# Move to main app window?
+# Projection plots for the IntroProjections app
+plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+
+  par(mfrow=c(3,1))
+  # And then cock about with margins
+  par(mar=c(0, 4.1, 5, 2.1))
+  plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="")
+
+  par(mar=c(2.5, 4.1, 2.5, 2.1))
+  plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="")
+
+  par(mar=c(5, 4.1, 0, 2.1))
+  plot_releffort(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters)
+}
+
+
+
+
+
 
 
 plot_hcr_intro_arrow <- function(stock, timestep){
@@ -457,13 +523,60 @@ plot_majuro_single_stock <- function(stock, stock_params, quantiles){
   plot_majuro(dat, stock_params)
 }
 
+# For plotting with the IntroProjection app
+# stock has multiple projections as rows
+plot_majuro_projections <- function(stock, stock_params){
+  fmsy <- stock_params$r / 2
+  f <- stock$catch / stock$biomass 
+  ffmsy <- f / fmsy
+  ffmsy <- as.data.frame(ffmsy)
+  ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
+  ffmsy <- gather(ffmsy, key="year", value="value", -hcr)
+  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA)
+  bk <- stock$biomass / stock_params$k
+  bk <- as.data.frame(bk)
+  bk <- cbind(bk, hcr=1:nrow(bk))
+  bk <- gather(bk, key="year", value="value", -hcr)
+  bk <- cbind(bk, metric="bk", name="SB / SBF=0", level="median", colour="black",hcrlegend=NA)
+  dat <- rbind(bk, ffmsy)
+  plot_majuro(dat, stock_params)
+}
+
+plot_kobe_projections<- function(stock, stock_params){
+  fmsy <- stock_params$r / 2
+  f <- stock$catch / stock$biomass 
+  ffmsy <- f / fmsy
+  ffmsy <- as.data.frame(ffmsy)
+  ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
+  ffmsy <- gather(ffmsy, key="year", value="value", -hcr)
+  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA)
+  # BMSY = K / 2
+  bmsy <- stock_params$k / 2
+  bbmsy <- stock$biomass / bmsy
+  bbmsy <- as.data.frame(bbmsy)
+  bbmsy <- cbind(bbmsy, hcr=1:nrow(bbmsy))
+  bbmsy <- gather(bbmsy, key="year", value="value", -hcr)
+  bbmsy <- cbind(bbmsy, metric="bbmsy", name="B / BMSY", level="median", colour="black",hcrlegend=NA)
+  dat <- rbind(bbmsy, ffmsy)
+  plot_kobe(dat, stock_params)
+}
+
+
 # Dat is a data.frame with columns:
-# HCR, Quantiles (lower, median, upper), FFMSY, BK, colour
+# hcr (name)
+# metric (bk or ffmsy)
+# name ("SB/SBF=0" or "F / FMSY")
+# level (lower, median, upper)
+# year
+# value
+# type - not used apparently
+# colour
+# hcrlegend
 plot_majuro <- function(dat, stock_params){
-  ymax <- max(c(2.0, 1.1*subset(dat, metric=="ffmsy" & level=="upper")$value), na.rm=TRUE)
+  ymax <- max(c(2.0, 1.1*subset(dat, metric=="ffmsy" & level=="upper")$value, 1.1*subset(dat, metric=="ffmsy" & level=="median")$value), na.rm=TRUE)
   ymax <- min(ymax, 5.0) # In case of stock collapse
   # Set up the axes
-  plot(x=c(0,1), y=c(0,2), type="n", xlim=c(0,1), ylim=c(0,ymax), xlab = "B / K", ylab = "F / FMSY", xaxs="i", yaxs="i")
+  plot(x=c(0,1), y=c(0,ymax), type="n", xlim=c(0,1), ylim=c(0,ymax), xlab = "B / K", ylab = "F / FMSY", xaxs="i", yaxs="i")
   # Set the colour panels
   # The big red one
   rect(0.0,0.0,stock_params$lrp,ymax, border="black", col="red", lty=1, lwd=1)
@@ -501,7 +614,6 @@ plot_majuro <- function(dat, stock_params){
     finalffmsy <- medffmsy[finalyr]
     points(x=finalbk, y=finalffmsy, pch=21, col=colour, bg="white")
   }
-  #browser()
   # Add legend
   # Adapt HCR name text
   # This is wrong - numbers not necessarily 1:X 
@@ -511,6 +623,73 @@ plot_majuro <- function(dat, stock_params){
     legend(x="bottomright", legend=hcrnames, lty=1, lwd=4, col=unique(dat$colour), cex=1.0)
   }
 }
+
+# Dat is a data.frame with columns:
+# hcr (name)
+# metric (bk or ffmsy)
+# name ("SB/SBF=0" or "F / FMSY")
+# level (lower, median, upper)
+# year
+# value
+# type - not used apparently
+# colour
+# hcrlegend
+# As majuro - would be good to combine the two - only difference is B metric and colours
+plot_kobe <- function(dat, stock_params){
+  ymax <- max(c(2.0, 1.1*subset(dat, metric=="ffmsy" & level=="upper")$value, 1.1*subset(dat, metric=="ffmsy" & level=="median")$value), na.rm=TRUE)
+  ymax <- min(ymax, 5.0) # In case of stock collapse
+  xmax <- max(c(2.0, 1.1*subset(dat, metric=="bbmsy" & level=="upper")$value, 1.1*subset(dat, metric=="bbmsy" & level=="median")$value), na.rm=TRUE)
+  # Set up the axes
+  plot(x=c(0,xmax), y=c(0,ymax), type="n", xlim=c(0,xmax), ylim=c(0,ymax), xlab = "B / BMSY", ylab = "F / FMSY", xaxs="i", yaxs="i")
+  # Set the colour panels
+  # The red one - top right
+  rect(0.0,1.0,1.0,ymax, border="black", col="red", lty=1, lwd=1)
+  # Bottom left - yellow
+  rect(0.0, 0.0, 1.0, 1.0, border="black", col="yellow", lty=1, lwd=1)
+  # Top right - yellow
+  rect(1.0, 1.0, xmax, ymax, border="black", col="yellow", lty=1, lwd=1)
+  # Bottom right - green
+  rect(1.0, 0.0, xmax, 1.0, border="black", col="green", lty=1, lwd=1)
+  # Loop over HCRs
+  hcrs <- unique(dat$hcr)
+  for (hcrcount in hcrs){
+    hcrdat <- subset(dat, hcr==hcrcount)
+    colour <- hcrdat$colour[1]
+    # Add the medians as points and a line to tell the story
+    medbbmsy <- subset(hcrdat, metric == "bbmsy" & level=="median")$value
+    medffmsy <- subset(hcrdat, metric == "ffmsy" & level=="median")$value
+    points(x=medbbmsy, y=medffmsy, pch=16, col=colour)
+    # Do a thick black line then overlay the real line
+    lines(x=medbbmsy, y=medffmsy, lty=1, lwd=4, col="black")
+    lines(x=medbbmsy, y=medffmsy, lty=1, lwd=3, col=colour)
+    # Add quantile lines
+    lowerbbmsy <- subset(hcrdat, metric == "bbmsy" & level=="lower")$value
+    lowerffmsy <- subset(hcrdat, metric == "ffmsy" & level=="lower")$value
+    upperbbmsy <- subset(hcrdat, metric == "bbmsy" & level=="upper")$value
+    upperffmsy <- subset(hcrdat, metric == "ffmsy" & level=="upper")$value
+    # We always have one more B value so use FFMsy for final year
+    finalyr <- max(which(!is.na(medffmsy))) 
+    for (yr in 1:finalyr){
+      lines(x=c(medbbmsy[yr],medbbmsy[yr]), y=c(lowerffmsy[yr],upperffmsy[yr]), lty=1, lwd=4, col="black")
+      lines(x=c(medbbmsy[yr],medbbmsy[yr]), y=c(lowerffmsy[yr],upperffmsy[yr]), lty=1, lwd=3, col=colour)
+      lines(x=c(lowerbbmsy[yr], upperbbmsy[yr]),y=c(medffmsy[yr], medffmsy[yr]), lty=1, lwd=4, col="black")
+      lines(x=c(lowerbbmsy[yr], upperbbmsy[yr]),y=c(medffmsy[yr], medffmsy[yr]), lty=1, lwd=3, col=colour)
+    }
+    # Blob at the end
+    finalbbmsy <- medbbmsy[finalyr]
+    finalffmsy <- medffmsy[finalyr]
+    points(x=finalbbmsy, y=finalffmsy, pch=21, col=colour, bg="white")
+  }
+  # Add legend
+  # Adapt HCR name text
+  # This is wrong - numbers not necessarily 1:X 
+  #if (!("Current" %in% hcrs )){ # Match single stock name in above function - bit dodgy
+  if(!any(is.na(dat$hcrlegend))){
+    hcrnames <- unique(dat$hcrlegend)
+    legend(x="bottomright", legend=hcrnames, lty=1, lwd=4, col=unique(dat$colour), cex=1.0)
+  }
+}
+
 
 
 # Plot the majuro plot
