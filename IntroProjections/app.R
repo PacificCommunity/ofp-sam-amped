@@ -192,7 +192,12 @@ server <- function(input, output,session) {
   
 
   observeEvent(input$setnext, {
-    # What to do if we haven't finished the current one? Ignore this?
+    # What to do if we haven't finished the current one?
+    # Button does not nothing - you have to complete the current projection
+    if(current_timestep() < dim(stock$biomass)[2]){
+      return()
+    }
+
     # Reset time, add another iter and add another row to the stock
     current_timestep(app_params$last_historical_timestep + 1)
     iter(iter() + 1)
@@ -226,7 +231,7 @@ server <- function(input, output,session) {
   # Projection procedure
   # The main event
   observeEvent(input$project, {
-    # If we have reached end of simulation, crank up the iter and reset timestep
+    # If we have reached end of simulation, don't do anything
     if (current_timestep() > dim(stock$biomass)[2]){
       return()
     }

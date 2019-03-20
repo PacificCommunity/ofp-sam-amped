@@ -183,7 +183,8 @@ estimation_error <- function(input, sigma, bias){
 # A lag of 0 means that the catch in year Y is given by the biomass at the start of year Y (same element in the array)
 # Biomass at the start of the timestep
 # Biomass is one year ahead of catch
-project <- function(stock, timesteps, stock_params, mp_params, app_params){
+# Relative effort is capped
+project <- function(stock, timesteps, stock_params, mp_params, app_params, max_releffort = 10){
   #biomass <- stock$biomass
   #biomass_obs <- stock$biomass_obs
   #catch <- stock$catch
@@ -215,6 +216,12 @@ project <- function(stock, timesteps, stock_params, mp_params, app_params){
       stock$effort[,yr] <- stock$effort[,app_params$last_historical_timestep] * stock$hcr_op[,yr]
       stock$catch[,yr] <- stock$effort[,yr] * stock_params$q * stock$biomass[,yr]
     }
+    # Apply relative effort cap and recalc max. realisable catch
+    rel_effort <- stock$effort[,yr] / stock$effort[,app_params$last_historical_timestep]
+    max_rel_effort <- pmin(rel_effort, max_releffort)
+    stock$effort[,yr] <- max_rel_effort * stock$effort[,app_params$last_historical_timestep]
+    stock$catch[,yr] <- stock$effort[,yr] * stock_params$q * stock$biomass[,yr]
+
     # If room get the biomass in the next timestep (using previously set catch)
     # Bt+1 = Bt + f(Bt) - Ct
     # f(Bt) = r/p Bt * (1 - (Bt/k)^p)
