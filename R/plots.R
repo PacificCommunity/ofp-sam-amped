@@ -176,7 +176,7 @@ draw_ribbon <- function(x, y, quantiles){
 
 # Biomass / K
 # Plot 'true' and only plot observed if model based MP
-plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col=ghost_col, last_col=last_col, ...){
+plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col="grey", last_col="blue", ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # True bk
   bk_true <- stock$biomass / stock_params[["k"]]
@@ -228,7 +228,7 @@ plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_las
 # If we have timestep we also need app_params
 # quantiles of length 2
 # If time, try to use the generic plot below
-plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col=ghost_col, true_col=true_col, ...){
+plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col="grey", true_col="black", ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Set Ylim - use same as HCR plot
   ymax <- get_catch_ymax(stock$catch, mp_params)
@@ -280,7 +280,7 @@ plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep
 
 
 # Generic timeseries plot
-plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, yrange, ylab, add_grid=TRUE, xlab="Year", ghost_col=ghost_col, true_col=true_col, ...){
+plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, yrange, ylab, add_grid=TRUE, xlab="Year", ghost_col="grey", true_col="black", ...){
 
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Plot empty axis

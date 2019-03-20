@@ -8,29 +8,55 @@
 # Just means combining the two lists of values before dispatching them to the functions
 
 # Module for the stochasticity options 
-stoch_params_setterUI <- function(id, init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=TRUE){
+stoch_params_setterUI <- function(id, show_biol_prod_sigma = TRUE, show_biol_est_sigma = TRUE, show_biol_est_bias = TRUE, init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=TRUE){
   ns <- NS(id)
   show_var <- checkboxInput(ns("show_var"), label = "Show variability options", value = show_var)
-  vars <- conditionalPanel(condition="input.show_var == true", ns=ns,
-      tags$span(title="Natural variability in the productivity of the stock through changes in growth and natural mortality", 
-        numericInput(ns("biol_prod_sigma"), label = "Biological productivity variability", value = init_prod_sigma, min=0, max=1, step=0.05)
-      ),
-      tags$span(title="Simulating the difference between the 'true' biomass and the 'estimated' biomass used by the HCR by applying randomly generated noise", 
-        numericInput(ns("biol_est_sigma"), label = "Estimation error variability", value = init_est_sigma, min=0, max=1, step=0.05)
-      ),
-      tags$span(title="Simulating the difference between the 'true' biomass and the 'estimated' biomass used by the HCR by applying a continuous bias (positive or negative)", 
-        numericInput(ns("biol_est_bias"), label = "Estimation error bias", value = init_est_bias, min=-0.5, max=0.5, step=0.05)
-      )
-    )
+  # Decide which stochasticity options to show
+  options <- list()
+  if (show_biol_prod_sigma){
+    options[[length(options)+1]] <- 
+    tags$span(title="Natural variability in the productivity of the stock through changes in growth and natural mortality", numericInput(ns("biol_prod_sigma"), label = "Biological productivity variability", value = init_prod_sigma, min=0, max=1, step=0.05))
+  }
+  if (show_biol_est_sigma){
+    options[[length(options)+1]] <- 
+    tags$span(title="Simulating the difference between the 'true' biomass and the 'estimated' biomass used by the HCR by applying randomly generated noise", numericInput(ns("biol_est_sigma"), label = "Estimation error variability", value = init_est_sigma, min=0, max=1, step=0.05))
+  }
+  if (show_biol_est_bias){
+    options[[length(options)+1]] <- 
+    tags$span(title="Simulating the difference between the 'true' biomass and the 'estimated' biomass used by the HCR by applying a continuous bias (positive or negative)", numericInput(ns("biol_est_bias"), label = "Estimation error bias", value = init_est_bias, min=-0.5, max=0.5, step=0.05))
+  }
+
+  vars <- conditionalPanel(condition="input.show_var == true", ns=ns, options)
   out <- tagList(show_var, vars)
   return(out)
 }
 
 stoch_params_setter<- function(input, output, session){
   get_stoch_params <- reactive({
-    out <- list(biol_prod_sigma=input$biol_prod_sigma,
-      biol_est_sigma=input$biol_est_sigma,
+    # Check which stochasticity options we are using
+    # If null, we're not using them
+    if(is.null(input$biol_prod_sigma)){
+      biol_prod_sigma <- 0.0
+    }
+    else{
+      biol_prod_sigma=input$biol_prod_sigma
+    }
+    if(is.null(input$biol_est_sigma)){
+      biol_est_sigma <- 0.0
+    }
+    else{
+      biol_est_sigma=input$biol_est_sigma
+    }
+    if(is.null(input$biol_est_bias)){
+      biol_est_bias <- 0.0
+    }
+    else{
       biol_est_bias=input$biol_est_bias
+    }
+    out <- list(
+      biol_prod_sigma=biol_prod_sigma,
+      biol_est_sigma=biol_est_sigma,
+      biol_est_bias=biol_est_bias
     )
     return(out)
   })

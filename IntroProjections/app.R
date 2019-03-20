@@ -51,12 +51,8 @@ ui <- navbarPage(
         selectInput("kobemajuro", "Plot selection", c("Kobe" = "kobe", "Majuro" = "majuro", "Yield curve" = "yieldcurve")),
         br(),
 
-
-        # Stochasticity options
-        # ***********************************************************************
-        # Can we edit this so that it only shows only the biological variability?
-        stoch_params_setterUI("stoch", init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=FALSE)
-        # ***********************************************************************
+        # Stochasticity options - only biological variability
+        stoch_params_setterUI("stoch", init_prod_sigma=0.0, show_var=FALSE, show_biol_est_sigma = FALSE, show_biol_est_bias = FALSE)
       ),
       #
       mainPanel(width=9,
@@ -79,7 +75,6 @@ ui <- navbarPage(
           column(12,
             textOutput("currentts"),
             tableOutput("pis")#,
-            #dataTableOutput("pisdt")
           )
         )
       )
@@ -120,13 +115,12 @@ ui <- navbarPage(
   )
 )
 
-# Do studd
+# Do stuff
 server <- function(input, output,session) {
 
   # Global settings - year range and quantiles
   app_params <- list(initial_year = 2009, last_historical_timestep = 10)
   app_params$historical_timesteps <- 1:app_params$last_historical_timestep
-  #app_params$current_timestep <- app_params$last_historical_timestep + 1
   quantiles <- c(0.20, 0.80)
 
   # Getting the stochasticity parameters
@@ -158,7 +152,7 @@ server <- function(input, output,session) {
   # Initialise the stock with a appropriate history
   # Use isolate else error (function tries to be reactive to changes in get_stock_params() and stock itself
   # Do we need this here? Isn't it already handled in the reset procedure?
-  isolate(reset_stock(stock=stock, stock_params = get_stock_params(), mp_params=get_mp_params(), app_params=app_params, initial_biomass=get_stock_params()$b0, nyears=input$nyears, niters=niters))
+  isolate(reset_stock(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, initial_biomass=get_stock_params()$b0, nyears=input$nyears, niters=niters))
   
   # Set iter as a reactive value. If this changes, it triggers other stuff
   iter <- reactiveVal(1) 
@@ -170,13 +164,7 @@ server <- function(input, output,session) {
   # Reset procedure
   # Clear out stock history for all iterations
   observe({
-    # ***************************************************
-    # req is a check for required values - if not about - fail
-    # not sure why this check is here - if we remove is it problem
-    # nyears is set in the Settings tab
     req(input$nyears)
-    # ***************************************************
-
     # If HCR changes, stock LH changes or reset button is pressed the reset procedure gets triggered
     #mp_params <- get_mp_params()
     stock_params <- get_stock_params() 
@@ -190,18 +178,15 @@ server <- function(input, output,session) {
     isolate(reset_stock(stock=stock, stock_params=stock_params, mp_params=get_mp_params(), app_params=app_params, initial_biomass=stock_params$b0, nyears=input$nyears, niters=niters))
   })
   
-
   observeEvent(input$setnext, {
     # What to do if we haven't finished the current one?
     # Button does not nothing - you have to complete the current projection
     if(current_timestep() < dim(stock$biomass)[2]){
       return()
     }
-
     # Reset time, add another iter and add another row to the stock
     current_timestep(app_params$last_historical_timestep + 1)
     iter(iter() + 1)
-
     # If nrow stock < iter, add a row biomass, biomass_obs and catch
     # This row will contain the values for the new iteration
     if (nrow(stock$biomass) < iter()){
@@ -226,7 +211,6 @@ server <- function(input, output,session) {
       names(dimnames(stock$catch)) <- dnames 
     }
   })
-
 
   # Projection procedure
   # The main event
@@ -283,11 +267,6 @@ server <- function(input, output,session) {
     caption= "Performance indicators",
     auto=TRUE
   )
-
-  #output$pisdt <- renderDataTable({
-  #  get_projection_pis(stock=stock, stock_params=get_stock_params(), app_params=app_params, current_timestep=current_timestep())
-  #  }
-  #)
 
   output$currentts  <- renderText({
     paste("Start of year: ", min(current_timestep(), dim(stock$biomass[2])) + app_params$initial_year-1, sep="")
