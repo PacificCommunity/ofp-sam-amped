@@ -4,7 +4,7 @@
 # Plotting functions
 # Globals - eesh!
 # Plot params - could make arguments
-# WTF? There are so many of them - reduce this madness
+#, app_params=app_params WTF? There are so many of them - reduce this madness
   hcr_lwd <-  2
   hcr_lty <-  1
   hcr_col <- "red"
@@ -176,7 +176,7 @@ draw_ribbon <- function(x, y, quantiles){
 
 # Biomass / K
 # Plot 'true' and only plot observed if model based MP
-plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ...){
+plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col=ghost_col, last_col=last_col, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # True bk
   bk_true <- stock$biomass / stock_params[["k"]]
@@ -228,7 +228,7 @@ plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_las
 # If we have timestep we also need app_params
 # quantiles of length 2
 # If time, try to use the generic plot below
-plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ...){
+plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col=ghost_col, true_col=true_col, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Set Ylim - use same as HCR plot
   ymax <- get_catch_ymax(stock$catch, mp_params)
@@ -280,7 +280,7 @@ plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep
 
 
 # Generic timeseries plot
-plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, yrange, ylab, add_grid=TRUE, xlab="Year", ...){
+plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, yrange, ylab, add_grid=TRUE, xlab="Year", ghost_col=ghost_col, true_col=true_col, ...){
 
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Plot empty axis
@@ -290,7 +290,6 @@ plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app
   }
   # Get last iteration 
   last_iter <- dim(data)[1]
-
   # If we have more than X iters, draw envelope of iters
   if(last_iter > max_spaghetti_iters){
     # Draw ribbon
@@ -369,24 +368,20 @@ plot_F <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TR
 # Move to main app window?
 # Projection plots for the IntroProjections app
 plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+  current_col <- "blue"
+  prev_col <- "black"
 
   par(mfrow=c(3,1))
   # And then cock about with margins
   par(mar=c(0, 4.1, 5, 2.1))
-  plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="")
+  plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="", ghost_col=prev_col, last_col=current_col, ...)
 
   par(mar=c(2.5, 4.1, 2.5, 2.1))
-  plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="")
+  plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="", ghost_col=prev_col, true_col=current_col, ...)
 
   par(mar=c(5, 4.1, 0, 2.1))
-  plot_releffort(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters)
+  plot_releffort(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, ghost_col=prev_col, true_col=current_col, ...)
 }
-
-
-
-
-
-
 
 plot_hcr_intro_arrow <- function(stock, timestep){
   # Arrow from B/K to HCR
@@ -514,7 +509,7 @@ plot_majuro_single_stock <- function(stock, stock_params, quantiles){
   ffmsyq <- cbind(metric="ffmsy", name="F / FMSY", level=c("lower","median","upper"),as.data.frame(ffmsyq))
   bk <- stock$biomass / stock_params$k
   bkq <- get_quantiles(bk, quantiles=quantiles)
-  bkq <- cbind(metric="bk", name="B / K", level=c("lower","median","upper"),as.data.frame(bkq))
+  bkq <- cbind(metric="bk", name="SB / SBF=0", level=c("lower","median","upper"),as.data.frame(bkq))
   dat <- rbind(bkq, ffmsyq)
   dat <- gather(dat, key="year", value="value",-level, -metric, -name)
   dat$hcr <- "Current"
@@ -549,15 +544,18 @@ plot_kobe_projections<- function(stock, stock_params){
   ffmsy <- as.data.frame(ffmsy)
   ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
   ffmsy <- gather(ffmsy, key="year", value="value", -hcr)
-  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA)
+  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
   # BMSY = K / 2
   bmsy <- stock_params$k / 2
   bbmsy <- stock$biomass / bmsy
   bbmsy <- as.data.frame(bbmsy)
   bbmsy <- cbind(bbmsy, hcr=1:nrow(bbmsy))
   bbmsy <- gather(bbmsy, key="year", value="value", -hcr)
-  bbmsy <- cbind(bbmsy, metric="bbmsy", name="B / BMSY", level="median", colour="black",hcrlegend=NA)
+  bbmsy <- cbind(bbmsy, metric="bbmsy", name="B / BMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
   dat <- rbind(bbmsy, ffmsy)
+  # Set last hcr to blue
+  last_hcr <- nrow(stock$catch)
+  dat[dat$hcr==last_hcr,"colour"] <- "blue"
   plot_kobe(dat, stock_params)
 }
 
@@ -576,7 +574,7 @@ plot_majuro <- function(dat, stock_params){
   ymax <- max(c(2.0, 1.1*subset(dat, metric=="ffmsy" & level=="upper")$value, 1.1*subset(dat, metric=="ffmsy" & level=="median")$value), na.rm=TRUE)
   ymax <- min(ymax, 5.0) # In case of stock collapse
   # Set up the axes
-  plot(x=c(0,1), y=c(0,ymax), type="n", xlim=c(0,1), ylim=c(0,ymax), xlab = "B / K", ylab = "F / FMSY", xaxs="i", yaxs="i")
+  plot(x=c(0,1), y=c(0,ymax), type="n", xlim=c(0,1), ylim=c(0,ymax), xlab = "SB / SBF=0", ylab = "F / FMSY", xaxs="i", yaxs="i")
   # Set the colour panels
   # The big red one
   rect(0.0,0.0,stock_params$lrp,ymax, border="black", col="red", lty=1, lwd=1)
@@ -709,7 +707,7 @@ old_plot_majuro <- function(stock, stock_params, quantiles){
 
   # Set up the axes
   ymax <- max(c(2.0, ffmsyqs * 1.1), na.rm=TRUE)
-  plot(x=c(0,1), y=c(0,2), xlim=c(0,1), ylim=c(0,ymax), xlab = "B / K", ylab = "F / FMSY")
+  plot(x=c(0,1), y=c(0,2), xlim=c(0,1), ylim=c(0,ymax), xlab = "SB / SBF=0", ylab = "F / FMSY")
   # And the colour panels
   # The big red one
   rect(0.0,0.0,stock_params$lrp,ymax, border="black", col="red", lty=1, lwd=1)
@@ -746,6 +744,37 @@ get_hcr_colours <- function(hcr_names, chosen_hcr_names){
   hcrcols <- allcols[chosen_hcr_names]
   return(hcrcols)
 }
+#------------------------------------------------------------
+# Yield curve
+
+plot_yieldcurve_projections <- function(stock, stock_params, app_params){
+  # x-axis = Effort
+  # y-axis = Catch
+  # In final year
+  # Only plot this if running a long term projection?
+  final_ts <- dim(stock$catch)[2]
+  rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
+  rel_effort <- rel_effort[,final_ts]
+  catch <- stock$catch[,final_ts]
+  # Bit of a mess to start with when we only have NAs
+  if (all(is.na(rel_effort))){
+    xrange <- c(0, 1)
+  }
+  else {
+    xrange <- c(0,min(max(rel_effort, na.rm=TRUE)*1.1,5, na.rm=TRUE))
+  }
+  if (all(is.na(catch))){
+    yrange <- c(0, 100)
+  }
+  else {
+    yrange <- c(0, max(catch, na.rm=TRUE) * 1.1)
+  }
+  plot(x=xrange, y=yrange, type="n", xlab="Relative fishing effort", ylab="Catch", xlim=xrange, ylim=yrange, pch=16)
+  points(x=rel_effort, y=catch)
+}
+
+
+
 
 #------------------------------------------------------------
 # PI plots

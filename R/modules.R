@@ -94,7 +94,7 @@ stock_params_setter <- function(input, output, session){
 
 # Modules for setting the MP parameters
 # Bit fiddly with the conditional panels inside a module
-mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HCR you want to test.", init_thresh_max_catch=140, init_thresh_belbow=0.5, init_constant_catch=50, input_label="HCR Type"){
+mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HCR you want to test.", init_thresh_max_catch=140, init_thresh_belbow=0.5, init_constant_catch=50, init_constant_effort=1.0, input_label="HCR Type"){
   ns <- NS(id)
   all_hcrs <- c("Constant catch" = "constant_catch",
                 "Constant effort" = "constant_effort",
@@ -125,7 +125,7 @@ mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HC
   )
   cepars <- conditionalPanel("input.hcr_type == 'constant_effort'", ns=ns,
     tags$span(title="Ignores stock status (e.g. estimated bimoass) and sets a constant effort limit.",
-      sliderInput(ns("constant_effort_level"), "Constant relative effort level:", min = 0, max = 3, value = 1, step = 0.01))
+      sliderInput(ns("constant_effort_level"), "Constant relative effort level:", min = 0, max = 3, value = init_constant_effort, step = 0.01))
   )
   # Blim and Belbow used by threshold catch and threshold effort # || JavaScript OR
   tctepars <- conditionalPanel("input.hcr_type == 'threshold_catch' || input.hcr_type == 'threshold_effort' ", ns=ns,

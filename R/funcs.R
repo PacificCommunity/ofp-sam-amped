@@ -561,18 +561,22 @@ get_projection_pis <- function(stock, stock_params, app_params, current_timestep
   # Last SB/SBF=0
   # Av. SB/SBF=0
   # Prop. years in green
-  current_timestep <- min(current_timestep, dim(stock$biomass)[2])
-  final_catch <- stock$catch[,current_timestep-1]
+
+  # Current values are that last value that isn't NA
+  final_catch <- apply(stock$catch, 1, function(x)x[max(which(!is.na(x)))])
   bk <- stock$biomass / stock_params$k
-  final_sbsbf0 <- bk[,current_timestep]
+  final_sbsbf0 <- apply(bk, 1, function(x)x[max(which(!is.na(x)))])
   rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
-  final_effort <- rel_effort[,current_timestep-1]
-  mean_catch <- apply(stock$catch,1,mean,na.rm=TRUE)
-  mean_sbsbf0 <- apply(bk,1,mean,na.rm=TRUE)
-  mean_effort <- apply(rel_effort,1,mean,na.rm=TRUE)
-  prop_sb_lrp <- apply(bk > stock_params$lrp,1,mean,na.rm=TRUE)
+  final_effort <- apply(rel_effort, 1, function(x)x[max(which(!is.na(x)))])
+
+  # Average values over projection period only
+  proj_period <- (app_params$last_historical_timestep+1):dim(stock$biomass)[2]
+  mean_catch <- apply(stock$catch[,proj_period,drop=FALSE],1,mean,na.rm=TRUE)
+  mean_sbsbf0 <- apply(bk[,proj_period,drop=FALSE],1,mean,na.rm=TRUE)
+  mean_effort <- apply(rel_effort[,proj_period,drop=FALSE],1,mean,na.rm=TRUE)
+  prop_sb_lrp <- apply(bk[,proj_period,drop=FALSE] > stock_params$lrp,1,mean,na.rm=TRUE)
   bmsy <- stock_params$k / 2
-  prop_sb_bmsy <- apply(stock$biomass > bmsy,1,mean,na.rm=TRUE)
+  prop_sb_bmsy <- apply(stock$biomass[,proj_period,drop=FALSE] > bmsy,1,mean,na.rm=TRUE)
   dat <- data.frame(Projection = 1:nrow(stock$biomass),
                     final_catch = final_catch,
                     average_catch = mean_catch,
@@ -587,15 +591,14 @@ get_projection_pis <- function(stock, stock_params, app_params, current_timestep
   final_year <- app_params$initial_year + current_timestep - 1
   # Better column names
   colnames(dat) <- c("Projection",
-                     paste("Current catch (",final_year-1,")",sep=""),
+                     "Last catch",
                      "Average catch",
-                     paste("Current effort (",final_year-1,")",sep=""),
+                     "Last effort",
                      "Average effort",
-                     paste("Current SB/SBF=0 (",final_year,")",sep=""),
+                     "Last SB/SBF=0",
                      "Average SB/SBF=0",
                      "Prop. SB/SBF=0 > LRP",
                      "Prop. B > BMSY")
-
   return(dat)
 }
 

@@ -25,11 +25,11 @@ ui <- navbarPage(
         br(),
         br(),
         # HCR is either constant catch or constant effort
-        mp_params_setterUI("mpparams", mp_visible=c("Constant catch", "Constant effort"), title="Select projection type: catch or effort", input_label="Projection type"),
+        mp_params_setterUI("mpparams", mp_visible=c("Constant effort", "Constant catch"), title="Select projection type: catch or effort", input_label="Projection type", init_constant_catch=50, init_constant_effort=1.0),
         br(),
         # Controls for management cycle length
         tags$span(title="Step length",
-          numericInput("projlen", label="Projection length", value=3, min = 1, step = 1)
+          numericInput("projlen", label="Step length", value=3, min = 1, step = 1)
         ),
         br(),
         # Buttons:
@@ -39,13 +39,16 @@ ui <- navbarPage(
         tags$span(title="Project one management cycle.",
           actionButton("project", "Project")
         ),
+        tags$span(title="Set up next projection",
+          actionButton("setnext", "Set up next projection")
+        ),
         tags$span(title="Reset all projections.",
-          actionButton("reset", "Reset")
+          actionButton("reset", "Reset all")
         ),
         br(),
         br(),
         # Majuro / Kobe option
-        selectInput("kobemajuro", "Plot selection", c("Kobe" = "kobe", "Majuro" = "majuro")),
+        selectInput("kobemajuro", "Plot selection", c("Kobe" = "kobe", "Majuro" = "majuro", "Yield curve" = "yieldcurve")),
         br(),
 
 
@@ -62,32 +65,21 @@ ui <- navbarPage(
           # SB/SBF=0
           # Catch
           # Effort (relative to something)
-          # F / FMSY
           column(6,
-          #fluidRow(
-            #plotOutput("plotbiomass",height="250px"),
-          #),
-          #fluidRow(
-            #plotOutput("plotcatch",height="250px"),
-          #),
-          #fluidRow(
-            #plotOutput("ploteffort",height="250px")
             plotOutput("plotall",height="500px")
           ),
-        #),
           # Top right
           # Kobe / Majuro (with switch)
           column(6,
-          #fluidRow(
             plotOutput("MajKobeplot",height="500px")
           )
         ),
         # PI Table underneath
         fluidRow(
           column(12,
-            #textOutput("PItable")
             textOutput("currentts"),
-            tableOutput("pis")
+            tableOutput("pis")#,
+            #dataTableOutput("pisdt")
           )
         )
       )
@@ -195,28 +187,15 @@ server <- function(input, output,session) {
     pitemp(NULL)
     # Need isolate here because calling reset_stock() causes stock to change which triggers this observe() resulting
     # in an infinite loop
-    #isolate(reset_stock(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, initial_biomass=stock_params$b0, nyears=input$nyears, niters=niters))
     isolate(reset_stock(stock=stock, stock_params=stock_params, mp_params=get_mp_params(), app_params=app_params, initial_biomass=stock_params$b0, nyears=input$nyears, niters=niters))
   })
+  
 
-
-  # Projection procedure
-  # The main event
-  # ********************************************************************
-  # Need a way of setting timesteps from length of management cycle input 
-  # ********************************************************************
-  observeEvent(input$project, {
-
-  # ********************************************************************
-    # If we have reached end of simulation, crank up the iter and reset timestep
-    #if (app_params$current_timestep >= dim(stock$biomass)[2]){
-    if (current_timestep() >= dim(stock$biomass)[2]){
-      current_timestep(app_params$last_historical_timestep + 1)
-      iter(iter() + 1)
-    }
-  # ********************************************************************
-
-
+  observeEvent(input$setnext, {
+    # What to do if we haven't finished the current one? Ignore this?
+    # Reset time, add another iter and add another row to the stock
+    current_timestep(app_params$last_historical_timestep + 1)
+    iter(iter() + 1)
 
     # If nrow stock < iter, add a row biomass, biomass_obs and catch
     # This row will contain the values for the new iteration
@@ -241,31 +220,30 @@ server <- function(input, output,session) {
       names(dimnames(stock$hcr_op)) <- dnames 
       names(dimnames(stock$catch)) <- dnames 
     }
-    # Pass in current iter
+  })
+
+
+  # Projection procedure
+  # The main event
+  observeEvent(input$project, {
+    # If we have reached end of simulation, crank up the iter and reset timestep
+    if (current_timestep() > dim(stock$biomass)[2]){
+      return()
+    }
+    # Pass current iter to project()
     # project() takes entire stock
     # Here we only want the current iteration
     # (subset out using fancy lapply with [ operator)
     stock_iter <- lapply(reactiveValuesToList(stock), '[', iter(),,drop=FALSE) 
-
-    # Update hcr_op  -
-    # But if noise added here it will result in different value
+    # Update hcr_op  - # But if noise added here it will result in different value?
     mp_params <- get_mp_params()
     stock_iter$hcr_op[,current_timestep()] <- get_hcr_op(stock=stock_iter, stock_params=get_stock_params(), mp_params, yr=current_timestep()-mp_params$timelag)
-
-
-
     max_timestep <- min(dim(stock$biomass)[2],current_timestep() + input$projlen - 1)
     out <-  project(stock_iter,
-  # ********************************************************************
-                    #timesteps=c((app_params$last_historical_timestep+1),dim(stock$biomass)[2]),
-                    #timesteps=c(app_params$current_timestep, app_params$current_timestep + input$projlen - 1),
-                    #timesteps=c(current_timestep(), current_timestep() + input$projlen - 1),
                     timesteps=c(current_timestep(), max_timestep),
-  # ********************************************************************
                     stock_params=get_stock_params(),
                     mp_params=mp_params,
                     app_params=app_params)
-
     # Update whole timeseries or just new elements?
     stock$biomass[iter(),] <- out$biomass
     stock$effort[iter(),] <- out$effort
@@ -273,48 +251,42 @@ server <- function(input, output,session) {
     stock$hcr_op[iter(),] <- out$hcr_op
     stock$catch[iter(),] <- out$catch
     # Update the timestep
-    #app_params$current_timestep <- app_params$current_timestep + input$projlen
     current_timestep(max_timestep+1)
   })
 
+  # ************************************************
+  # Output stuff
   output$plotall <- renderPlot({
-    plot_projection(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, show_last=TRUE, max_spaghetti_iters=500, quantiles=quantiles)
-  })
-
-  output$plotbiomass <- renderPlot({
-    plot_biomass(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), show_last=TRUE, quantiles=quantiles, max_spaghetti_iters=500)
-  })
-
-  output$plotcatch <- renderPlot({
-    plot_catch(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), show_last=TRUE, quantiles=quantiles, max_spaghetti_iters=500)
-  })
-
-  output$ploteffort <- renderPlot({
-    plot_releffort(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, show_last=TRUE, max_spaghetti_iters=500, quantiles=quantiles)
+    plot_projection(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, show_last=TRUE, max_spaghetti_iters=500, quantiles=quantiles, cex.lab=1.5, cex.axis=1.5)
   })
 
   output$MajKobeplot  <- renderPlot({
-    #plot_majuro_projections(stock=stock, stock_params=get_stock_params())
     if(input$kobemajuro == "kobe"){
       plot_kobe_projections(stock=stock, stock_params=get_stock_params())
     }
     if(input$kobemajuro == "majuro"){
       plot_majuro_projections(stock=stock, stock_params=get_stock_params())
     }
+    if(input$kobemajuro == "yieldcurve"){
+      plot_yieldcurve_projections(stock=stock, stock_params=get_stock_params(), app_params=app_params)
+    }
   })
 
   output$pis <- renderTable({
     get_projection_pis(stock=stock, stock_params=get_stock_params(), app_params=app_params, current_timestep=current_timestep())
     },
-    rownames = TRUE,
     caption= "Performance indicators",
     auto=TRUE
   )
 
+  #output$pisdt <- renderDataTable({
+  #  get_projection_pis(stock=stock, stock_params=get_stock_params(), app_params=app_params, current_timestep=current_timestep())
+  #  }
+  #)
+
   output$currentts  <- renderText({
-    paste("Current year: ", min(current_timestep(), dim(stock$biomass[2])) + app_params$initial_year-1, sep="")
+    paste("Start of year: ", min(current_timestep(), dim(stock$biomass[2])) + app_params$initial_year-1, sep="")
   })
-  # ****************************************************************
 }
 
 # Run the app
