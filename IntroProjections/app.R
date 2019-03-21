@@ -262,8 +262,13 @@ server <- function(input, output,session) {
   })
 
   output$pis <- renderTable({
-    get_projection_pis(stock=stock, stock_params=get_stock_params(), app_params=app_params, current_timestep=current_timestep())
+#If you put an image img1.png in www/img/img1.png, you can refer to it in server.R as <img src=img/img1.png></img> – Ramnath Dec 14 '13 at 1:34
+    tabout <- get_projection_pis(stock=stock, stock_params=get_stock_params(), app_params=app_params, current_timestep=current_timestep())
+    tabout[,"Notes"] <- ""
+    tabout[tabout[,"Last SB/SBF=0"] <= 1e-3,"Notes"] <- '<img src="deadfish.png" height="25"></img>'
+    return(tabout)
     },
+    sanitize.text.function = function(x) x,  # Necessary to include else you lose the figure
     caption= "Performance indicators",
     auto=TRUE
   )

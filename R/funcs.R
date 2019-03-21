@@ -594,7 +594,8 @@ get_projection_pis <- function(stock, stock_params, app_params, current_timestep
                     prop_sb_lrp = prop_sb_lrp,
                     prop_sb_bmsy = prop_sb_bmsy)
   # Trim the digits a bit
-  dat <- signif(dat,3)
+  #dat <- signif(dat,3)
+  dat <- round(dat,3)
   final_year <- app_params$initial_year + current_timestep - 1
   # Better column names
   colnames(dat) <- c("Projection",
