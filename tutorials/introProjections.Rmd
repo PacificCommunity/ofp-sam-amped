@@ -1,0 +1,126 @@
+---
+title: "Introduction to Projections with *AMPED*"
+author: "Finlay Scott - OFP, SPC"
+date: "2019-21-03"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document:
+    includes:
+      in_header: mystyle.sty
+    latex_engine: xelatex
+mainfont: Calibri Light
+fontsize: 12pt
+---
+
+<!--use render()-->
+<!-- render("tutorials/measuringPerformance.Rmd", output_format = "all")-->
+
+
+
+# Introduction to Projections
+
+Projections allow us to ask *"what if?"* questions and explore the answers.
+In this practical we will be asking ourselves *"what do we think will happen if we constantly fish at a certain level?"*.
+We will do this by projecting a simulated fish stock into the future under different fishing conditions.
+
+Note that the fish stock is not based on a real stock. It is just a toy.
+
+# Getting Started
+
+## Fire it up
+
+To get started double-click on the **IntroProjections** file in the *AMPED* directory.
+A black window *should* appear, followed by the app opening in a browser window.
+If this does not happen, something has gone wrong. Sorry...
+
+## Quick Tour
+
+You should see something that looks like this:
+
+ADD PICTURE
+
+The panel on the left-hand side has the controls, the main panel has some plots.
+On the left-hand side of the main panel there are three time-series plots: *SB / SBF=0* (the adult biomass as a proportion of the adult biomass if there was no fishing), *Catch* (the total catches in that year) and *Relative effort* (the fishing effort relative to the fishing effort in the year 2018).
+
+On the right-hand side of the main panel is either a *Kobe* plot, a *Majuro* plot or a *Yield* plot depending on the option selection in the **Plot selection** menu on the far left-hand side.
+
+At the bottom of the main panel is a table. At the moment it only has one line. Don't worry about this for the moment.
+
+To start with we only have 10 years of historical data (from 2009 to 2018). It will be our job to run projections into the future.
+
+The controls in the panel on the left-hand side allow us to choose between running an *effort* or *catch* based projection using the **Projection type** control. We can choose how long we want to project for using the **Step length** control.
+
+There is a check box that says **Show variability options** at the bottom. Ignore this for now.
+
+# Constant Effort Projections
+
+To start with, we will explore the consequences of running projections with constant fishing effort.
+
+## A Quick Example
+
+We want to run a projection until the end of 2059. At the moment the **Step length** is only set to 3.
+Change this to 40, so that we will run a 40 year projection.
+
+The **Projection type** should already be set to **Constant effort**.
+This means that we will be running a projection with a fixed effort.
+
+The **Constant relative effort level** slider sets the amount of effort to be used in the projection. Note that this effort is *relative* to the fishing effort in 2018. You can see in the time-series plot of effort that the value in 2018 is 1.
+The default value of the **Constant relative effort level** slider is 1. If it is not already set to 1, do so now.
+
+Set the **Plot selection** to *Kobe*.
+
+We are now ready to run our projection.
+
+Press the **Project** button.
+
+You should see that the the time-series plots now go to the end of the time-series. The Kobe plot has also been updated with the stock trajectory (although it may not have moved much).
+
+The effort plot should show a constant relative effort level of 1 for the projection period (this is what we wanted). The catch and SB/SBF=0 plots show the *consequence* of fishing at that level of effort through time.
+
+The table underneath the plots has been updated. The table shows that final values of catch, relative effort and SB/SBF=0 of the projection as well as their average values through the projection. The table also has the proportion of projected years in which the SB/SBF=0 was above the Limit Reference Point (LRP) and the biomass was above the biomass at MSY (BMSY).
+
+If you want, you can choose the *Majuro* plot from the **Plot selection** for an alternative view (ignore the *Yield curve* plot for now).
+
+Let's run another projection. First press the **Set up next projection** button. Your first projection is now shown in black lines on the plots and an additional line has been added to the table. Change the **Constant relative effort level** to 0 and press the **Project** button.
+
+What happened?
+
+You ran a projection to see what would happen if effort was 0, i.e. there was no fishing. The blue lines on the plots show the results of the latest projection. You can compare it to the black line from the previous projection.
+You should see that the catches decrease to 0 (there is no fishing) and the SB/SBF=0 increases to 1 (its maximum value).
+The values in the second line of the table have been updated to reflect this.
+
+
+## Exercise
+
+COnstant effort 0 - 3 in steps of 0.25.
+
+Similar This is what we do at SPC.
+Tells us limits of what may happen
+
+
+## Sustainability
+
+Yield curve
+
+Same effort - different final catch
+
+## Variability
+
+See more of this in **Introduction to Uncertainty** tutorial.
+
+
+# Managing a Fishery
+
+Maybe make this a separate tutorial?
+
+Catch management
+
+## Circle of Doom
+
+Look at HCRs
+
+Example
+
+
+
