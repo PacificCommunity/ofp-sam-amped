@@ -3,6 +3,7 @@
 
 # Load packages ----
 library(shiny)
+library(shinyjs)
 library(tidyr) # Could Try to avoid it and reduce weight of packages
 library(dplyr) # Just used for bind_rows() at the moment - change data structure of PIs to avoid this
 library(ggplot2)
@@ -17,6 +18,7 @@ source("../R/modules.R")
 ui <- navbarPage(
   title="Introducing Projections",
   tabPanel("Projections",
+  useShinyjs(),  # Include shinyjs
     # Controls and what not
     sidebarLayout(
       sidebarPanel(width=3,
@@ -161,6 +163,7 @@ server <- function(input, output,session) {
   # PIs for a single projection
   pitemp <- reactiveVal(NULL)
 
+
   # Reset procedure
   # Clear out stock history for all iterations
   observe({
@@ -176,6 +179,11 @@ server <- function(input, output,session) {
     # Need isolate here because calling reset_stock() causes stock to change which triggers this observe() resulting
     # in an infinite loop
     isolate(reset_stock(stock=stock, stock_params=stock_params, mp_params=get_mp_params(), app_params=app_params, initial_biomass=stock_params$b0, nyears=input$nyears, niters=niters))
+  })
+
+  # Turn on the setnext button only if we have run out of time
+  observe({
+    shinyjs::toggleState("setnext", current_timestep() >= dim(stock$biomass)[2])
   })
   
   observeEvent(input$setnext, {
@@ -210,6 +218,11 @@ server <- function(input, output,session) {
       names(dimnames(stock$hcr_op)) <- dnames 
       names(dimnames(stock$catch)) <- dnames 
     }
+  })
+
+  # Turn on the project button only if we have enough timesteps left
+  observe({
+    shinyjs::toggleState("project", current_timestep() <= dim(stock$biomass)[2])
   })
 
   # Projection procedure
