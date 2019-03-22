@@ -42,6 +42,7 @@ ADD PICTURE
 
 The panel on the left-hand side has the controls, the main panel has some plots.
 On the left-hand side of the main panel there are three time-series plots: *SB / SBF=0* (the adult biomass as a proportion of the adult biomass if there was no fishing), *Catch* (the total catches in that year) and *Relative effort* (the fishing effort relative to the fishing effort in the year 2018).
+Note that your plots may have slightly different values in them.
 
 On the right-hand side of the main panel is either a *Kobe* plot, a *Majuro* plot or a *Yield* plot depending on the option selection in the **Plot selection** menu on the far left-hand side.
 
@@ -77,50 +78,236 @@ Press the **Project** button.
 You should see that the the time-series plots now go to the end of the time-series. The Kobe plot has also been updated with the stock trajectory (although it may not have moved much).
 
 The effort plot should show a constant relative effort level of 1 for the projection period (this is what we wanted). The catch and SB/SBF=0 plots show the *consequence* of fishing at that level of effort through time.
+You can see that after a short period, the catch and SB/SBF=0 settle down to stable, long-term values.
 
 The table underneath the plots has been updated. The table shows that final values of catch, relative effort and SB/SBF=0 of the projection as well as their average values through the projection. The table also has the proportion of projected years in which the SB/SBF=0 was above the Limit Reference Point (LRP) and the biomass was above the biomass at MSY (BMSY).
 
 If you want, you can choose the *Majuro* plot from the **Plot selection** for an alternative view (ignore the *Yield curve* plot for now).
 
-Let's run another projection. First press the **Set up next projection** button. Your first projection is now shown in black lines on the plots and an additional line has been added to the table. Change the **Constant relative effort level** to 0 and press the **Project** button.
+Let's run another projection. First press the **Set up next projection** button (the **Project** button should be greyed out). Your first projection is now shown in black lines on the plots and an additional line has been added to the table. Change the **Constant relative effort level** to 0 and press the **Project** button.
 
 What happened?
 
 You ran a projection to see what would happen if effort was 0, i.e. there was no fishing. The blue lines on the plots show the results of the latest projection. You can compare it to the black line from the previous projection.
 You should see that the catches decrease to 0 (there is no fishing) and the SB/SBF=0 increases to 1 (its maximum value).
+These values are then stable for the rest of the projection.
 The values in the second line of the table have been updated to reflect this.
 
+Press the **Reset all** button to clear everything out and start again.
 
-## Exercise
+# Exercise 1
 
-COnstant effort 0 - 3 in steps of 0.25.
+You are going to run a series of 40 year projections with constant effort, using the same procedure as above.
+First, set the **Step length** to 40 then:
 
-Similar This is what we do at SPC.
-Tells us limits of what may happen
+* Press the **Set up next projection** button.
+* Select the desired constant effort level with the **Constant relative effort level** control (remember this is effort relative to the effort in 2018).
+* Press the **Project** button.
+* Note down the final (*last*) value of catch and SB/SBF=0 from the table and any notes of interest.
+* Try again with a different effort level.
+
+Fill in the table:
+
+\begin{table}[H]
+\begin{tabular}{| c | C{3cm} | C{3cm} | C{5cm} |}
+\hline
+Effort level & Final catch & Final SB/SBF=0 & Notes \\ \hline
+0 &&&\\ \hline
+0.33 &&&\\ \hline
+0.67 &&&\\ \hline
+1 &&&\\ \hline
+1.33 &&&\\ \hline
+1.67 &&&\\ \hline
+2 &&&\\ \hline
+2.33 &&&\\ \hline
+2.67 &&&\\ \hline
+3 &&&\\ \hline
+\end{tabular}
+\end{table}
+
+**Question:** As you increase the constant fishing level, what happens to the final values of catch?
+
+**Question:** And what happens to the SB/SBF=0?
+
+**Question:** What happens to the stock if you fish too hard?
+
+You have to remember that these projections are based on holding the level of fishing effort constant for 40 years. This is highly unrealistic. However, these kinds of projections are useful for exploring ranges of management options and exploring the possible behaviour of the fish stock.
+
+# Yield curve
+
+In all of the above projections the catch and SB/SBF=0 trajectories all reached a stable level.
+When the effort was high it took longer to reach the stable level.
+
+If you select the *Yield curve* from the **Plot selection** control you will see a plot of the catch against the effort for each projection you ran.
+The thin dashed lines shows the trajecories. The large circles shows the final values of each projection.
+Ignore the thin dashed lines for the moment and only focus on the final value of each projection.
+The final values show us the *long-term, stable* catch values that can be achieved at different levels of constant effort.
+
+FIGURE
+
+You should see that as the effort increases, the final value of the catch initially increases and then decreases.
+This is important because it shows that simply increasing your fishing effort will not necessarily result in higher catches in the long term. If you effort is already high, further increasing the effort may actually result in lower catches in the long-term.
+
+**Question:** There is a level of effort that gives the highest amount of stable, long-term catches. What is it?
+(you can run some more effort projections with different levels of effort to get a more detailed answer).
+
+<!-- it's between 1 and 1.33  - about 1.2 -->
 
 
-## Sustainability
+**Question:** If you are already fishing at this level of effort (or higher), what will happen to your long-term catches if you further increase your fishing effort? Will your long-term catches go up or down?
 
-Yield curve
+**Question:** From the plot, What is the highest level of stable, long-term catches that can be achieved?
 
-Same effort - different final catch
+**Question:** What do you think will happen if that level of catches is exceeded?
+Let's take a look...
 
-## Variability
+<!-- it's a 100 -->
 
-See more of this in **Introduction to Uncertainty** tutorial.
+# Running catch projections
 
+The projections we have run so far have been based on projecting forward in time with a constant level of fishing effort.
+Here we run some projections that are based on projecting forward with a constant level of catches.
+
+First, press the **Reset all** button to clear everything out.
+Change the **Plot selection** to *Kobe* or *Majuro*.
+Change the **Projection type** to *Constant catch*.
+Set the **Step length** to 40 (as before).
+Set the **Constant catch level** to 50.
+
+We are going to run a 40 year projection where we ask ourselves the question *"what would happen if I caught 50 tonnes of fish every year?"*.
+Press the **Project** button to find out...
+
+You should see in the plots that the future catch is at 50 (which is what we wanted). The effort and SB/SBF=0 eventually reach long-term stable values. Note these down from the table (the *last* values).
+
+# Exercise 2
+
+As before, you are going to run a series of projections but this time with different levels of constant catch.
+First, press the **Reset all** button to clear out the last projection and set the **Step length** to 40.
+
+* Select the desired constant catch level with the **Constant catch level** control.
+* Press the **Project** button.
+* Note down the final (*last*) value of effort and SB/SBF=0 from the table and any notes of interest.
+* Press the **Set up next projection** button and repeat with another catch level.
+
+Fill in the table:
+
+\begin{table}[H]
+\begin{tabular}{| c | C{3cm} | C{3cm} | C{5cm} |}
+\hline
+Catch level & Final effort & Final SB/SBF=0 & Notes \\ \hline
+0 &&&\\ \hline
+20 &&&\\ \hline
+40 &&&\\ \hline
+60 &&&\\ \hline
+80 &&&\\ \hline
+100 &&&\\ \hline
+120 &&&\\ \hline
+\end{tabular}
+\end{table}
+
+FIGURE
+
+**Question:** What happens to final (*last*) values for effort and SB/SBF=0 as the level of constant catches increases?
+
+**Question:** What happens to the stock if we set the level of constant catches to be too high?
+
+**Question:** When we looked at the *Yield curve* plot earlier, we noted down the level of effort that gave us the highest possible stable, long-term catch. We also noted down what that catch was (that maximum long-term stable catch that can be achieved). From the projections we just ran, what happens if we try to catch more than that level? Try it!
+
+# Short-term vs long-term projections
+
+In the projections we have run so far, we have concentrated on the long-term, final values only.
+However, we might also be interested in the short- or medium-term behaviour of the projections.
+We explore this here.
+
+Press the **Reset all** button. Change the **Projection type** to *Constant effort*. Leave the **Step length** at 40.
+Now run two projections with the following constant relative effort levels: *0.65* and *1.8*.
+
+Let's compare the results from these two projections and think about which one we prefer.
+
+**Question:** What is the final (*last*) catch for each projection (hopefully, the final catch values are approximately the same)?
+
+**Question:** What are the long-term (final) SB/SBF=0 values? Given that the final SB/SBF=0 values are above the Limit Reference Point (LRP) of 0.2, does the difference between the SB/SBF=0 values matter?
+
+**Question:** The two projections have different values of constant effort.  Given that it costs money to go fishing would you rather fish at a constant effort level of 0.65 or 1.8? Why?
+
+Both projections result in approximately the same level of final, long-term catches and the SB/SBF=0 for both projections are above the LRP. However, the second projection has over twice the level of effort than the first one. The first projection therefore costs less money for the same value of long-term catches. This would seem to indicate that fishing at a relative effort of 0.65 is better in the *long-term* than fishing at 1.8.
+
+However, this is only looking at the *long-term* behaviour. If we look at the short-term behaviour of the projections we can see that they are different.
+
+**Question:** If we look at the projected catches until 2025 only (i.e. in the short-term), which of the two projections has the higher catches?
+
+**Question:** In the short-term, which of the two projections do you prefer?
+
+If you were interested in only the short-term performance of the fishery, fishing at the higher effort level might seem better than fishing at the lower effort level because you get higher catches.
+However, if you were interested in the long-term performance of the fishery, fishing at the lower level might be the better option.
+
+It all depends on what your priorities and objectives for the fishery are.
+
+# Including variability and uncertainty
+
+In the real world, the biological processes of fish stocks can be very variable. This variability then affects the dynamics of the fish stocks and, subsequently, the fishery.
+For example, recruitment is a well known source of biological variability. It is very difficult to predict what the recruitment in a given year will be, even if we thought we knew how many adult fish there were.
+This uncertainty can make managing a fish stock more challenging.
+
+The projections we have run so far have not included any variability. We can run the same projection over and over again and the end result will always be the same (try it).
+
+Now we are going to run some projections that include biological variability in growth and recruitment.
+
+Press the **Reset all** button and make sure that we are running a *Constant effort* projection for 40 years.
+Set the **Constant relative effort level** control to 1.
+
+At the bottom of the controls in the panel on the left-hand side is a check box with **Show variability options** next to it. Click on this check box and another control will appear, **Biological productivity variability**. At the moment this is set to 0. This means that there is no biological variability and running the same projection will give the same result.
+
+Increase the **Biological productivty variability** to 0.2. We now have variable growth and recruitment in our projections.
+
+Press the **Project** button. We have run a projection with constant effort (as before) but now we have variability in the biology resulting in variability in the SB/SBF=0 values. This means we also have variability in the catch values.
+
+Press the **Set up next projection** button and then **Project** again with the same level of effort. You should see that even though we ran a projection with *exactly* the same constant effort, we get a different result.
+
+Try it several more times (**Set up next projection** button and then **Project**) with the same effort. You should see that even though each projection is different, the overall general performance of the projections is similar.
+
+If we run this projection 100s of times we would be able to get a distribution of the final values of catch and SB/SBF=0.
+We won't be able to say *exactly* what the final values of catch and SB/SBF=0 will be, but we can give a range of values.
+For example, if we ran this projection with an effort of 1, 100s of times you would see that the final catch falls between about 80 and 120, and the final SB/SBF=0 falls between about 0.4 and 0.6.
+You can see more of this in the **Introduction to Uncertainty** tutorial.
+
+As a final example, we saw above that the maximum long-term catch that can be sustained is 100 tonnes.
+What happens if we project at this catch level but also include biological variability?
+
+Press the **Reset all** button. Set the **Projection type** to be *Constant catch*. Set the **Constant catch level** to be 100 (our maximum level). Keep the **Step length** at 40. Keep the **Biological productivity variability** at 0.2.
+
+Run several projections with the **Constant catch level** at 100. What happens? Is fishing at the theoretical maximum sustainable catch a good idea when we have biological variability?
 
 # Managing a Fishery
 
-Maybe make this a separate tutorial?
+And now for something completely different...
 
-Catch management
+In this practical you are in charge of managing a fishery.
+Every 3 years you will make a decision about the catch limit (the level of catches) that will be applied every year for the next 3 years.
 
-## Circle of Doom
+Press the **Reset all** button.
+Set the **Projection type** to *Constant catch*.
+Set the **Step length** to 3.
+Check the **Show variability options** check box and set the **Biological productivity variability** to 0.2.
 
-Look at HCRs
+With these settings, everytime you press the **Project** button you will project forward at the chosen catch level for 3 years. You can set an alternative level of catch and **Project** again for another 3 years, and so on.
 
-Example
+## A quick example
+
+To start with follow these instructions.
+Note that you probably want to start with a reasonable healthy stock (e.g. in the green zone of a Kobe plot). Keeping pressing **Reset all** to generate new stocks until you get one you like.
+
+Typically, in green, fish high (say, 130 tonnes) for a couple of management cycles. The stock goes anti-clockwise round the Kobe plot until you enter the red zone. Then you decide to take management action and reduce the catches (say, 80 tonnes) for a couple of management cycles until you get back into the green zone (if you are lucky). Because you are in the green zone, you decide to increase the catches again (back to 130) and you go forward for another couple of management cycles until back into the red zone and so on...
+
+FIGURE
+
+This is known as the  **Circle of Doom** as is pretty unsatisfactory.
+
+
+## Your turn
+
+Keep the management cycle at 3 years (**Step length** = 3) and try managing the fishery yourself.
+WHat strategy works best for keeping the stock in the green and yellow zones and away from the red zone on the Kobe plot?
 
 
 

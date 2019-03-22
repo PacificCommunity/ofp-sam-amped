@@ -176,12 +176,12 @@ draw_ribbon <- function(x, y, quantiles){
 
 # Biomass / K
 # Plot 'true' and only plot observed if model based MP
-plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col="grey", last_col="blue", ...){
+plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col="grey", last_col="blue", ylim=c(0,1), ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # True bk
   bk_true <- stock$biomass / stock_params[["k"]]
   # Set up empty plot 
-  plot(x=years, y= bk_true[1,], type="n", ylab="SB/SBF=0", xlab=xlab, ylim=c(0,1),xaxs="i", yaxs="i", ...)
+  plot(x=years, y= bk_true[1,], type="n", ylab="SB/SBF=0", xlab=xlab, ylim=ylim, xaxs="i", yaxs="i", ...)
   # Add LRP and TRP
   lines(x=c(years[1], years[length(years)]),y=c(stock_params[["lrp"]],stock_params[["lrp"]]), lty=ref_lty, lwd=ref_lwd, col=ref_col)
   lines(x=c(years[1], years[length(years)]),y=c(stock_params[["trp"]],stock_params[["trp"]]), lty=ref_lty, lwd=ref_lwd, col=ref_col)
@@ -374,7 +374,7 @@ plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, sho
   par(mfrow=c(3,1))
   # And then cock about with margins
   par(mar=c(0, 4.1, 5, 2.1))
-  plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="", ghost_col=prev_col, last_col=current_col, ...)
+  plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="", ghost_col=prev_col, last_col=current_col, ylim=c(0,1.1), ...)
 
   par(mar=c(2.5, 4.1, 2.5, 2.1))
   plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="", ghost_col=prev_col, true_col=current_col, ...)
@@ -527,13 +527,23 @@ plot_majuro_projections <- function(stock, stock_params){
   ffmsy <- as.data.frame(ffmsy)
   ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
   ffmsy <- gather(ffmsy, key="year", value="value", -hcr)
-  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA)
+  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
   bk <- stock$biomass / stock_params$k
   bk <- as.data.frame(bk)
   bk <- cbind(bk, hcr=1:nrow(bk))
   bk <- gather(bk, key="year", value="value", -hcr)
-  bk <- cbind(bk, metric="bk", name="SB / SBF=0", level="median", colour="black",hcrlegend=NA)
-  dat <- rbind(bk, ffmsy)
+  bk <- cbind(bk, metric="bk", name="SB / SBF=0", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
+  # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
+  # So add 1 to the F years
+  bk$year <- as.numeric(bk$year)
+  ffmsy$year <- as.numeric(ffmsy$year)
+  ffmsy$year <- ffmsy$year + 1
+  # Only include common years between the two sets
+  common_years <- intersect(bk$year, ffmsy$year)
+  dat <- rbind(subset(bk, year %in% common_years), subset(ffmsy, year %in% common_years))
+  # Set last hcr to blue
+  last_hcr <- nrow(stock$catch)
+  dat[dat$hcr==last_hcr,"colour"] <- "blue"
   plot_majuro(dat, stock_params)
 }
 
@@ -552,7 +562,14 @@ plot_kobe_projections<- function(stock, stock_params){
   bbmsy <- cbind(bbmsy, hcr=1:nrow(bbmsy))
   bbmsy <- gather(bbmsy, key="year", value="value", -hcr)
   bbmsy <- cbind(bbmsy, metric="bbmsy", name="B / BMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
-  dat <- rbind(bbmsy, ffmsy)
+  # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
+  # So add 1 to the F years
+  bbmsy$year <- as.numeric(bbmsy$year)
+  ffmsy$year <- as.numeric(ffmsy$year)
+  ffmsy$year <- ffmsy$year + 1
+  # Only include common years between the two sets
+  common_years <- intersect(bbmsy$year, ffmsy$year)
+  dat <- rbind(subset(bbmsy, year %in% common_years), subset(ffmsy, year %in% common_years))
   # Set last hcr to blue
   last_hcr <- nrow(stock$catch)
   dat[dat$hcr==last_hcr,"colour"] <- "blue"
