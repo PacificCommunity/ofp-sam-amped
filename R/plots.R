@@ -764,36 +764,26 @@ get_hcr_colours <- function(hcr_names, chosen_hcr_names){
 #------------------------------------------------------------
 # Yield curve
 
-plot_yieldcurve_projections <- function(stock, stock_params, app_params){
+plot_yieldcurve_projections <- function(stock, stock_params, app_params, draw_trajectories=FALSE){
   # x-axis = Effort
   # y-axis = Catch
-  # In final year
-  # Only plot this if running a long term projection?
   final_ts <- dim(stock$catch)[2]
 
   rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
-  #final_rel_effort <- rel_effort[,final_ts]
   final_rel_effort <- apply(rel_effort, 1, function(x)x[max(which(!is.na(x)))])
-
-  #final_catch <- stock$catch[,final_ts]
   final_catch <- apply(stock$catch, 1, function(x)x[max(which(!is.na(x)))])
 
-
-  # Bit of a mess to start with when we only have NAs
-  #if (all(is.na(final_rel_effort))){
-  #  xrange <- c(0, 1)
-  #}
-  #else {
-    #xrange <- c(0,min(max(final_rel_effort, na.rm=TRUE)*1.1,5, na.rm=TRUE))
+  # If drawing trajectories use full range
+  if (draw_trajectories){
     xrange <- c(0,min(max(rel_effort, na.rm=TRUE)*1.1,5, na.rm=TRUE))
-  #}
-  #if (all(is.na(final_catch))){
-  #  yrange <- c(0, 100)
-  #}
-  #else {
     yrange <- c(0, max(stock$catch, na.rm=TRUE) * 1.1)
-  #}
-
+  }
+  else {
+    # Just last value
+    xrange <- c(0, max(final_rel_effort * 1.1, na.rm=TRUE))
+    yrange <- c(0, max(final_catch * 1.1, na.rm=TRUE))
+  }
+   
 
   plot(x=xrange, y=yrange, type="n", xlab="Final relative fishing effort", ylab="Final catch", xlim=xrange, ylim=yrange)
   points(x=final_rel_effort, y=final_catch, pch=16, cex=3)
@@ -803,14 +793,16 @@ plot_yieldcurve_projections <- function(stock, stock_params, app_params){
 
   # Add lines of full trajectories?
   # Looks too messy
-  for (proj in 1:nrow(stock$catch)){
-    lines(x=rel_effort[proj,], y=stock$catch[proj,], lty=3, col="black")
-    points(x=rel_effort[proj,], y=stock$catch[proj,], col="black", cex=0.5)
+  if (draw_trajectories){
+    for (proj in 1:nrow(stock$catch)){
+      lines(x=rel_effort[proj,], y=stock$catch[proj,], lty=3, col="black")
+      points(x=rel_effort[proj,], y=stock$catch[proj,], col="black", cex=0.5)
+    }
+    # Draw last one in blue
+    nproj <- nrow(stock$catch)
+    lines(x=rel_effort[nproj,], y=stock$catch[nproj,], lty=3, col="blue")
+    points(x=rel_effort[nproj,], y=stock$catch[nproj,], col="blue", cex=0.5)
   }
-  # Draw last one in blue
-  nproj <- nrow(stock$catch)
-  lines(x=rel_effort[nproj,], y=stock$catch[nproj,], lty=3, col="blue")
-  points(x=rel_effort[nproj,], y=stock$catch[nproj,], col="blue", cex=0.5)
 
 }
 

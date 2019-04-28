@@ -173,9 +173,12 @@ That stable level might have been with zero catches or zero SB/SBF=0. These are 
 You may have noticed that when the effort level was high it took longer to reach the stable level.
 
 If you select the *Yield curve* from the **Plot selection** control you will see a plot of the catch against the effort for each projection you ran.
+Leave the *Show trajectories* checkbox unchecked so that you only see the final value of each projection (ignore the tracjectories for now).
 The large circles shows the final values of each projection (the stable level from our projections).
+<!--
 The thin dashed lines shows the trajectories of the catch and effort on the way to the final value.
 Ignore the thin dashed lines for the moment and only focus on the final value of each projection.
+-->
 These final values show us the *long-term, stable* catch values that can be achieved at different levels of constant effort.
 
 <!-- figure-->

@@ -3,7 +3,7 @@
 
 # Load packages ----
 library(shiny)
-library(shinyjs)
+library(shinyjs) # For greying out buttons
 library(tidyr) # Could Try to avoid it and reduce weight of packages
 library(dplyr) # Just used for bind_rows() at the moment - change data structure of PIs to avoid this
 library(ggplot2)
@@ -18,7 +18,7 @@ source("../R/modules.R")
 ui <- navbarPage(
   title="Introducing Projections",
   tabPanel("Projections",
-  useShinyjs(),  # Include shinyjs
+  useShinyjs(),  # For greying out buttons
     # Controls and what not
     sidebarLayout(
       sidebarPanel(width=3,
@@ -69,7 +69,12 @@ ui <- navbarPage(
           # Top right
           # Kobe / Majuro (with switch)
           column(6,
-            plotOutput("MajKobeplot",height="500px")
+            plotOutput("MajKobeplot",height="500px"),
+            
+            # conditional panel - only show if yield-curve = TRUE
+            conditionalPanel(condition="input.kobemajuro == 'yieldcurve'", tags$span(title="Show projection trajectories", checkboxInput(inputId="showtraj", label="Show trajectores", value=FALSE)))
+            
+            
           )
         ),
         # PI Table underneath
@@ -270,7 +275,8 @@ server <- function(input, output,session) {
       plot_majuro_projections(stock=stock, stock_params=get_stock_params())
     }
     if(input$kobemajuro == "yieldcurve"){
-      plot_yieldcurve_projections(stock=stock, stock_params=get_stock_params(), app_params=app_params)
+      # Add an extra check box for drawing trajectories
+      plot_yieldcurve_projections(stock=stock, stock_params=get_stock_params(), app_params=app_params, draw_trajectories=input$showtraj)
     }
   })
 
