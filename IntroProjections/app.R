@@ -116,7 +116,7 @@ ui <- navbarPage(
       ),
       mainPanel(width=9,
         h1("Instructions"),
-        p("Notes")
+        p("TBD")
       )
     )
   )
