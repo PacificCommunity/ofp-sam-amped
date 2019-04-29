@@ -159,7 +159,7 @@ You should end up with something like this:
 
 **Question 1:** As you increase the constant fishing effort, what happens to the final values of catch?
 
-**Question 2:** And what happens to the SB/SBF=0?
+**Question 2:** And what happens to the final values of SB/SBF=0?
 
 **Question 3:** What happens to the stock if you fish too hard?
 
