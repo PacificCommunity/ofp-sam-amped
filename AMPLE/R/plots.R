@@ -514,7 +514,7 @@ plot_majuro_single_stock <- function(stock, stock_params, quantiles){
   bkq <- get_quantiles(bk, quantiles=quantiles)
   bkq <- cbind(metric="bk", name="SB / SBF=0", level=c("lower","median","upper"),as.data.frame(bkq))
   dat <- rbind(bkq, ffmsyq)
-  dat <- gather(dat, key="year", value="value",-level, -metric, -name)
+  dat <- tidyr::gather(dat, key="year", value="value",-level, -metric, -name)
   dat$hcr <- "Current"
   dat$colour <- "black"
   dat$hcrlegend <- NA
@@ -529,12 +529,12 @@ plot_majuro_projections <- function(stock, stock_params){
   ffmsy <- f / fmsy
   ffmsy <- as.data.frame(ffmsy)
   ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
-  ffmsy <- gather(ffmsy, key="year", value="value", -hcr)
+  ffmsy <- tidyr::gather(ffmsy, key="year", value="value", -hcr)
   ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
   bk <- stock$biomass / stock_params$k
   bk <- as.data.frame(bk)
   bk <- cbind(bk, hcr=1:nrow(bk))
-  bk <- gather(bk, key="year", value="value", -hcr)
+  bk <- tidyr::gather(bk, key="year", value="value", -hcr)
   bk <- cbind(bk, metric="bk", name="SB / SBF=0", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
   # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
   # So add 1 to the F years
@@ -556,14 +556,14 @@ plot_kobe_projections<- function(stock, stock_params){
   ffmsy <- f / fmsy
   ffmsy <- as.data.frame(ffmsy)
   ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
-  ffmsy <- gather(ffmsy, key="year", value="value", -hcr)
+  ffmsy <- tidyr::gather(ffmsy, key="year", value="value", -hcr)
   ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
   # BMSY = K / 2
   bmsy <- stock_params$k / 2
   bbmsy <- stock$biomass / bmsy
   bbmsy <- as.data.frame(bbmsy)
   bbmsy <- cbind(bbmsy, hcr=1:nrow(bbmsy))
-  bbmsy <- gather(bbmsy, key="year", value="value", -hcr)
+  bbmsy <- tidyr::gather(bbmsy, key="year", value="value", -hcr)
   bbmsy <- cbind(bbmsy, metric="bbmsy", name="B / BMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
   # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
   # So add 1 to the F years
