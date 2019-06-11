@@ -1,0 +1,19 @@
+Package: AMPLE
+Title: Grab yourself a handful
+Version: 0.0.0.9000
+Maintainer: Finlay Scott <finlay.scott@spc.int>
+Authors@R: 
+    person(given = "Finlay",
+           family = "Scott",
+           role = c("aut", "cre"),
+           email = "finlays@spc,int")
+Description: Common code for the AMPED and PIMPLE Shiny applications
+License: GPL-3
+Imports:
+  ggplot2 (>= 3.1.1),
+  dplyr (>= 0.8.1),
+  tidyr (>= 0.8.3),
+  RColorBrewer (>= 1.1.2)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
