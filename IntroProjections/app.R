@@ -108,7 +108,7 @@ ui <- navbarPage(
         img(src = "spc.png", height = 100),
         br(),
         br(),
-        maintainer_and_licence()
+        amped_maintainer_and_licence()
       ),
       mainPanel(width=9,
         h1("Instructions"),

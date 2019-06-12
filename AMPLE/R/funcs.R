@@ -5,7 +5,7 @@
 #
 
 # This looks pretty crummy
-maintainer_and_licence <- function(){
+amped_maintainer_and_licence <- function(){
   out <- tags$html(
     tags$h1("AMPED"),
     tags$p("Amazing Management Procedures Exploration Device"),
@@ -29,20 +29,24 @@ maintainer_and_licence <- function(){
 # And always deal with relative CPUE and relative effort and relative F so we don't have to use q
 
 # Make the empty reactive stock object
+# The stock object is not reactive, but the elements inside it are (it's like a list)
+# stock cannot just be a calculated value returned from a reactive() as it needs to persist
+# i.e. here the next timestep depends on the previous timestep
+# it's empty but has structure
 create_stock <- function(){
   stock <- reactiveValues(
     biomass = NULL,
     hcr_ip = NULL,
     hcr_op = NULL,
     effort = NULL,
-    catch=NULL
+    catch = NULL
   )
   return(stock)
 }
 
-# I think that stock is getting passed by reference as when these functions are called the return value is not stored but stock is updated
-# But it does need to be passed in - i.e. it is not found in the calling environment
-# Make an empty stock with the right dimensions
+# Stock is sort of passed by reference as when this function is called the return value is not stored but stock is updated
+# But stock does need to be passed in - i.e. it is not found in the calling environment
+# Make an empty stock with the right dimensions - niters is the number of rows
 clear_stock <- function(stock, app_params, nyears, niters){
   # nyears must be greater than app_params$last_historical_timestep and an integer
   nyears <- max(app_params$last_historical_timestep+1, round(nyears))
@@ -132,7 +136,7 @@ get_timeseries <- function(stock=stock, stock_params=stock_params, app_params=ap
   ffmsyq <- cbind(metric="ffmsy", name="F / FMSY", level=c("lower","median","upper"),as.data.frame(ffmsyq))
 
   qout <- rbind(bkq, catchq, rel_cpueq, ffmsyq)
-  qout <- gather(qout, key="year", value="value",-level, -metric, -name)
+  qout <- tidyr::gather(qout, key="year", value="value",-level, -metric, -name)
   qout <- cbind(qout, type="quantile")
 
   # Spaghetti
@@ -144,7 +148,7 @@ get_timeseries <- function(stock=stock, stock_params=stock_params, app_params=ap
   ffmsysp <- cbind(metric="ffmsy", name="F / FMSY", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(ffmsy[spaghetti_iters,]))
   rel_cpuesp <- cbind(metric="relcpue", name="Rel. CPUE", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(rel_cpue[spaghetti_iters,]))
   spout <- rbind(bksp, catchsp, rel_cpuesp, ffmsysp)
-  spout <- gather(spout, key="year", value="value",-level, -metric, -name)
+  spout <- tidyr::gather(spout, key="year", value="value",-level, -metric, -name)
   spout <- cbind(spout, type="spaghetti")
   
   out <- rbind(qout,spout)
@@ -412,7 +416,6 @@ get_pis <- function(stock, stock_params, mp_params, app_params, pi_choices = NUL
   }
   
   # Use tidyr or something else to put into a single df
-  #out <- gather(out, key="year", value="value", -iter, -pi, -name)
   out <- tidyr::gather(out, key="year", value="value", -iter, -pi, -name)
 
   # F***ing factors!
@@ -547,7 +550,7 @@ big_pi_table <- function(pis, hcr_choices, pi_choices, term_choice="long"){
   qs <- paste("q", qs[2:4],sep="")
   piqs <- subset(piqs, (hcr %in% hcr_choices) & (name %in% pi_choices) & (term == term_choice) & (quantiles %in% qs))
   piqs$value <- signif(piqs$value, signif)
-  dat <- spread(piqs, key="quantiles", value="value")
+  dat <- tidyr::spread(piqs, key="quantiles", value="value")
   # Make the text values
   dat$valtxt <- as.character(NA)
   # Which rows have same qs - no uncertainty
@@ -561,7 +564,7 @@ big_pi_table <- function(pis, hcr_choices, pi_choices, term_choice="long"){
   dat$valtxt[!certain_rows] <- uncertain_valtx
 
   dat <- dat[,c("hcr","name","valtxt")]
-  out <- as.data.frame(dat %>% spread(key="name", value="valtxt"))
+  out <- as.data.frame(tidyr::spread(dat, key="name", value="valtxt"))
   rownames(out) <- out$hcr
   out <- out[,colnames(out) != "hcr"]
   return(out)

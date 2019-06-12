@@ -2,21 +2,9 @@
 # Maintainer: Finlay Scott, OFP SPC
 
 # Load packages ----
-#library(shiny)
-#library(tidyr) # Could Try to avoid it and reduce weight of packages
-#library(dplyr) # Just used for bind_rows() at the moment - change data structure of PIs to avoid this
-#library(ggplot2)
-#library(RColorBrewer)
 library(AMPLE)
 
-# Source helpers ----
-#source("../R/funcs.R")
-#source("../R/plots.R")
-#source("../R/modules.R")
-
 # User interface ----
-#ui <- fluidPage(
-#  titlePanel("What is a Harvest Control Rule?"),
 ui <- navbarPage(
   title="What is a Harvest Control Rule?",
   tabPanel("What is a Harvest Control Rule?",
@@ -26,9 +14,7 @@ ui <- navbarPage(
         img(src = "spc.png", height = 100),
         br(),
         br(),
-        #mp_params_setterUI("mpparams", mp_visible=c("Constant catch","Threshold catch"), init_thresh_max_catch=140),
         mp_params_setterUI("mpparams", mp_visible=c("Threshold catch","Constant catch"), init_thresh_max_catch=140, init_thresh_belbow=0.5),
-        #mp_params_setterUI("mpparams", mp_visible=c("Threshold catch"), init_thresh_max_catch=140),
         br(),
         # Buttons
         tags$span(title="Project forward one year", 
@@ -94,7 +80,7 @@ ui <- navbarPage(
         img(src = "spc.png", height = 100),
         br(),
         br(),
-        maintainer_and_licence()
+        amped_maintainer_and_licence()
         #tags$footer("test")
       ),
       mainPanel(width=9,
@@ -118,14 +104,9 @@ ui <- navbarPage(
 
 server <- function(input, output,session) {
 
-# How to reset all this  
-  # Globals for testing - make them reactive later?
+  # App parameters, year range etc
   app_params <- list(initial_year = 2009, last_historical_timestep = 10)
   app_params$historical_timesteps = 1:app_params$last_historical_timestep
-  # Aus tiger prawn
-  # MSY = r K / 4
-  # BMSY = K / 2
-  # FMSY = r/2
 
   # Modules for the stochasticity and MP parameters!
   get_mp_params <- callModule(mp_params_setter, "mpparams") 
@@ -140,17 +121,12 @@ server <- function(input, output,session) {
   })
 
   # Make the reactive stock object and fill it up with initial values
-  # stock cannot just be a calculated value returned from a reactive() as it needs to persist
-  # i.e. here the next timestep depends on the previous timestep
-  # it's empty but has structure
   stock <- create_stock()
 
-  # Initialise it  - do as one step?
-  # Stock is reactive so passed by reference?
-  # Use isolate else error (function tries to be reactive to changes in get_stock_params() and stock itself
+  # Make the initial stock 
+  # Use isolate as we don't want this triggered by changes to stock or stock_params
   niters <- 1 # We only have 1 iteration for this stock
-  isolate(reset_stock(stock=stock, stock_params = get_stock_params(), mp_params=get_mp_params(), app_params=app_params, initial_biomass=get_stock_params()$b0, nyears=input$nyears, niters=niters))
-  # Need a better way of setting the first stock up
+  isolate(reset_stock(stock = stock, stock_params = get_stock_params(), mp_params = get_mp_params(), app_params = app_params, initial_biomass = get_stock_params()$b0, nyears = input$nyears, niters = niters))
   
   # To keep track of current timestep
   timestep <- reactiveVal(app_params$last_historical_timestep) 
@@ -158,15 +134,14 @@ server <- function(input, output,session) {
   # Reset the stock if any of the controls are fiddled with
   # Just side effects so use an observer
   observe({
+    # req checks that nyears is available (if leave input box empty it won't be) - if not, don't do this observe
     req(input$nyears)
     # If any of the following change the observer gets triggered
-    #mp_params <- get_mp_params()
     nyears <- input$nyears
     input$reset
-    timestep(app_params$last_historical_timestep)
+    timestep(app_params$last_historical_timestep) # sets the timestep to last historical timestep
     mp_params <- get_mp_params()
     stock_params <- get_stock_params()
-    #stock_params <- get_stock_params() # The output is stored here because we need it for the reset_stock() function
     # Need isolate here because calling reset_stock() causes stock to change which triggers this observe() resulting
     # in an infinite loop
     isolate(reset_stock(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, initial_biomass=get_stock_params()$b0, nyears=nyears, niters=niters))
@@ -189,36 +164,7 @@ server <- function(input, output,session) {
     }
   })
   
-  ## Call the HCR plot function
-  #output$hcrplot <- renderPlot({
-  #  plot_hcr(stock=stock, mp_params=get_mp_params(), stock_params=get_stock_params(), type="stepping")
-  #})
-  #
-  ## stock is a reactive value so changes to it will cause the plot to be called
-  #output$biomassplot <- renderPlot({
-  #  plot_biomass(stock=stock, stock_params=get_stock_params())
-  #})
-  
-  #output$bdplot <- renderPlot({
-  #  plot_bmd(biomass=stock$biomass, catch=stock$catch, stock_params=stock_params, mp_params=mp_params)
-  #}) 
-  #
-  #output$hcrplot <- renderPlot({
-  #  #plot_bmd(biomass=stock$biomass, catch=stock$catch, stock_params=stock_params)
-  #  current_biomass <- stock$biomass[,timestep()]
-  #  plot_hcr(mp_params=mp_params, stock_params=stock_params, biomass=current_biomass)
-  #}) 
-  #
-  #output$altplot <- renderPlot({
-  #  plot_alt(biomass=stock$biomass, biomass_obs=stock$biomass_obs, catch=stock$catch, timestep(), stock_params=stock_params, mp_params=mp_params, last_historical_timestep=last_historical_timestep)
-  #  }
-  #  ,
-  #  height = function() {
-  #    session$clientData$output_altplot_width * 2/3}
-  #) 
-
-  # Plots all 4 panels but in a single figure - hard to get it so it is not squashed
-  # Looks better if all 4 panels are plotted separately
+  # Plot the 4 panels separately
   output$intro_hcr_plot <- renderPlot({
     plot_hcr_intro(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, timestep = timestep())
   })
@@ -230,7 +176,6 @@ server <- function(input, output,session) {
   output$plothcr <- renderPlot({
     plot_hcr(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, timestep=timestep()+1)
   })
-
 
   output$plotbiomass <- renderPlot({
     plot_biomass(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), timestep=timestep()+1, main="SB / SBF=0", add_grid=TRUE)
@@ -244,8 +189,6 @@ server <- function(input, output,session) {
   session$onSessionEnded(function() {
       stopApp()
   })
-
-  
 }
 
 # Run the app

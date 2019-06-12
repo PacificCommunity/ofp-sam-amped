@@ -903,7 +903,7 @@ plot_pi_choice <- function(pis, hcr_choices, pi_choices, plot_choice){
     #dat <- subset(piqs)
     dat <- piqs
     # Spread out the quantiles columns
-    dat <- dat %>% spread(key="quantiles", value="value")
+    dat <- tidyr::spread(dat, key="quantiles", value="value")
     p <- ggplot(dat, aes(x=term))
     p <- p + ggplot2::geom_boxplot(aes(ymin=q5, ymax=q95, lower=q20,middle=q50,upper=q80, fill=hcrlegend), stat="identity")
     p <- p + xlab("Time period")
@@ -989,7 +989,7 @@ plot_timeseries <- function(timeseries, hcr_choices, stock_params, show_spaghett
   #hcrcols <- get_hcr_colours(hcr_names=unique(timeseries$hcr), chosen_hcr_names=hcr_choices)
 
   qdat <- subset(timeseries, (type=="quantile") & (hcr %in% hcr_choices))
-  qdat <- qdat %>% spread(key="level", value="value")
+  qdat <- tidyr::spread(qdat, key="level", value="value")
   # For adding the LRP line to the biomass plot
   bkdat <- subset(qdat, metric=="bk")
   bkdat$lrp <- stock_params$lrp

@@ -1,24 +1,10 @@
 # Copyright 2018 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 
-# Load packages ----
-#library(shiny)
-#library(tidyr) # Could Try to avoid it and reduce weight of packages
-#library(dplyr) # Just used for bind_rows() at the moment - change data structure of PIs to avoid this
-#library(ggplot2)
-#library(RColorBrewer)
-
 library(AMPLE)
-
-# Source helpers ----
-#source("../R/funcs.R")
-#source("../R/plots.R")
-#source("../R/modules.R")
 
 ui <- navbarPage(
   title="Measuring performance",
-  # Front tab
-  # Choosing and running the HCR
   tabPanel("HCR Selection", 
     sidebarLayout(          
       sidebarPanel(width=3, 
@@ -27,19 +13,15 @@ ui <- navbarPage(
         br(),
         br(),
         # HCR options
-        #mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch")),
         mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort")),
-        #mp_params_setterUI("mpparams"), # All HCR types
-        br(),
         br(),
         actionButton("project", "Project", icon=icon("fish")), # Careful with fish icon - needs particular version of R
-        br(),
         actionButton("add_basket", "Add HCR to basket", icon=icon("shopping-basket")),
+        # How many HCRs do we have in the store
+        textOutput("nstoredstocks"),
         br(),
         # This should reset everything - empty the stores
-        actionButton("empty_basket", "Empty basket"),
-        # How many HCRs do we have in the store
-        textOutput("nstoredstocks")
+        actionButton("empty_basket", "Empty basket")
       ),
       mainPanel(width=9,
         column(6,
@@ -56,19 +38,16 @@ ui <- navbarPage(
           fluidRow(
             tags$span(title="Plot of SB/SBF=0. The grey envelope contains the 20-80 percentiles. The blue dashed line is median. The black lines are several iterations to illustrate the dynamics. The histogram shows the range of values in the final year.",
             plotOutput("plotbiomasshisto",height="250px")
-            #plotOutput("plotbiomasshisto")
           )
         ),
           fluidRow(
             tags$span(title="Plot of the catch. The grey envelope contains the 20-80 percentiles. The blue dashed line is median. The black lines are several iterations to illustrate the dynamics. The histogram shows the range of values in the final year.",
               plotOutput("plotcatchhisto",height="250px")
-              #plotOutput("plotcatchhisto")
             )
           ),
           fluidRow(
             tags$span(title="Plot of the CPUE relative to the CPUE in the year 2000.  The grey envelope contains the 20-80 percentiles. The blue dashed line is median. The black lines are several iterations to illustrate the dynamics. The histogram shows the range of values in the final year.",
               plotOutput("plotrelcpuehisto",height="250px")
-              #plotOutput("plotrelcpuehisto")
             )
           )
         )
@@ -83,7 +62,7 @@ ui <- navbarPage(
         br(),
         # PI selection
         # Keep this updated with the available PIs
-        checkboxGroupInput(inputId = "pichoice", label="PI selection", inline=TRUE, # inline does not seem to work...
+        checkboxGroupInput(inputId = "pichoice", label="PI selection", inline=TRUE, 
           # character(0) means no choice is available
           choices = character(0)),
         br(),
@@ -93,16 +72,12 @@ ui <- navbarPage(
           # character(0) means no choice is available
           choices = character(0)),
         br()
-        # Choice of plotting style:
-        # bar plot, box plot, radar
-        # time series comparison?
       ),
       mainPanel(width=9,
         tabsetPanel(id="comparisontabs",
           tabPanel(title="Performance indicators - medians",
                    value="PImeds",
-                   column(12, fluidRow( # Difference with row(column( ?
-                   #fluidRow(column(12, 
+                   column(12, fluidRow( 
                     tags$span(title="Bar plot of the median values of the performance indicators over the three time periods. Note that the PIs for effort and variability have been transformed so that the larger the value, the better the HCR is thought to be performing.",
                     plotOutput("plotpimed", height="600px"))
                   ))
@@ -168,7 +143,7 @@ ui <- navbarPage(
           # Total number of years (including historical years)
           numericInput("nyears", "Number of years", value = 30, min=20, max=100, step=1),
           # Number of iteration
-          numericInput("niters", "Number of iterations", value = 100, min=10, max=1000, step=10)
+          numericInput("niters", "Number of iterations", value = 200, min=10, max=1000, step=10)
         )
       )
     )
@@ -180,8 +155,7 @@ ui <- navbarPage(
         img(src = "spc.png", height = 100),
         br(),
         br(),
-        maintainer_and_licence()
-        #tags$footer("test")
+        amped_maintainer_and_licence()
       ),
       mainPanel(width=9,
         h1("General idea"),
@@ -201,14 +175,11 @@ ui <- navbarPage(
 
 server <- function(input, output,session) {
   # Global parameters
-  app_params <- list(initial_year = 2009, # Cosmetic only
-                     last_historical_timestep = 10)
+  app_params <- list(initial_year = 2009, last_historical_timestep = 10)
   # Storage for stocks - not actually needed - we only use the tsstore and pistore - make both reactive
-  # Comment out but leave in case we decide to use it
-  #stockstore <- reactiveVal(list()) 
-  # pitemp is used for the PI table on the front page - needed?
+  # pitemp is the pis for a single stock (HCR) - shown on the front page
   pitemp <- reactiveVal(NULL)
-  # Storage for the PIs
+  # Storage for the PIs (all stocks / HCRs)
   pistore <- reactiveVal(list())
   # Storage for the timeseries
   tsstore <- reactiveVal(list())
@@ -220,7 +191,7 @@ server <- function(input, output,session) {
   get_mp_params <- callModule(mp_params_setter, "mpparams") 
   get_stoch_params <- callModule(stoch_params_setter, "stoch") 
   get_lh_params <- callModule(stock_params_setter, "stock") 
-  # Join stoch and lh together into a single object to be passed to funcs - bit clumsy as I will have to do this in all the servers
+  # Join stoch and lh together into a single object to be passed to funcs
   get_stock_params <- reactive({
     sp <- get_stoch_params()
     lh <- get_lh_params()
@@ -228,10 +199,10 @@ server <- function(input, output,session) {
     return(out)
   })
   
-  # The stock
+  # The stock - only one needed at a time - just pull out data for PIs and plots
   stock <- create_stock()
   # Use isolate else error (function tries to be reactive to changes in get_stock_params() and stock itself
-  isolate(reset_stock(stock=stock, stock_params = get_stock_params(), mp_params=get_mp_params(), app_params=app_params, initial_biomass=get_stock_params()$b0, nyears=input$nyears, niters=input$niters))
+  isolate(reset_stock(stock = stock, stock_params = get_stock_params(), mp_params = get_mp_params(), app_params = app_params, initial_biomass = get_stock_params()$b0, nyears = input$nyears, niters = input$niters))
   
   # Store the stock in the basket and create a new empty one
   observeEvent(input$add_basket, {
@@ -242,9 +213,6 @@ server <- function(input, output,session) {
     # Store the stock, stockparams and mpparams
     stock_params <- get_stock_params()
     mp_params <- get_mp_params()
-    stock_list <- list(stock = reactiveValuesToList(stock),
-      stock_params = stock_params,
-      mp_params = mp_params)
     # Add stock and summary PIs to lists
     name <- paste(length(pistore())+1, ". ",mp_params$name,sep="")
     # Bit faffy to update the stores
@@ -257,10 +225,12 @@ server <- function(input, output,session) {
 
     # Update the available PIs - although this doesn't really dynamically change
     # It just saves having to maintain a list in the UI at the top AND in the PI calculation function
+    # Because the options come from the pistore and if no pistore yet, no names
     updateCheckboxGroupInput(session, "pichoice",
                              choices = unique(pistore()[[name]]$piqs$name),
                              selected = unique(pistore()[[name]]$piqs$name)
                              )
+
     # You can't store again until you project again
     OKtostore <<- FALSE
   })
