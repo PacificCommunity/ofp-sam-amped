@@ -143,7 +143,7 @@ ui <- navbarPage(
           # Total number of years (including historical years)
           numericInput("nyears", "Number of years", value = 30, min=20, max=100, step=1),
           # Number of iteration
-          numericInput("niters", "Number of iterations", value = 200, min=10, max=1000, step=10)
+          numericInput("niters", "Number of iterations", value = 1000, min=10, max=1000, step=10)
         )
       )
     )
@@ -288,21 +288,13 @@ server <- function(input, output,session) {
   
   # Project all timesteps
   observeEvent(input$project, {
-    # Could add iter loop to the project() function instead of doing it here?
-    for (iter in 1:dim(stock$biomass)[1]){
-      stock_iter <- lapply(reactiveValuesToList(stock), '[', iter,,drop=FALSE) 
-      stock_params <- get_stock_params()
-      out <-  project(stock_iter,
-                      timesteps=c((app_params$last_historical_timestep+1),dim(stock$biomass)[2]),
-                      stock_params=stock_params,
-                      mp_params=get_mp_params(),
-                      app_params=app_params)
-      stock$biomass[iter,] <- out$biomass
-      stock$effort[iter,] <- out$effort
-      stock$hcr_ip[iter,] <- out$hcr_ip
-      stock$hcr_op[iter,] <- out$hcr_op
-      stock$catch[iter,] <- out$catch
-    }
+    # Do all iters at the same time
+    out <-  project(stock,
+                    timesteps=c((app_params$last_historical_timestep+1),dim(stock$biomass)[2]),
+                    stock_params=get_stock_params(),
+                    mp_params=get_mp_params(),
+                    app_params=app_params)
+    # stock is automagically updated as it's by reference - or something - so no need to update by hand
     # Get summary PIs 
     piqs <- get_summary_pis(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params,
                             quantiles=quantiles)

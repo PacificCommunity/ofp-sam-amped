@@ -109,6 +109,7 @@ reset_stock <- function(stock, stock_params, mp_params, app_params, initial_biom
   # Set up current_corrnoise object to store the current noise value for each iteration
   # Stored in the package global environment
   pkg_env$current_corrnoise <- rep(0, niters)
+  #pkg_env$current_corrnoise <- rnorm(niters, sd=0.01)
   #
   stock <- clear_stock(stock=stock, app_params=app_params, nyears, niters)
   stock <- fill_initial_stock(stock=stock, stock_params=stock_params, mp_params=mp_params, initial_biomass=initial_biomass, app_params=app_params)
