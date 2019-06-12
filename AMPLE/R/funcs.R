@@ -20,14 +20,6 @@ amped_maintainer_and_licence <- function(){
   return(out)
 }
 
-# Note
-# F * q  = effort?
-# F = C / B
-# Do we need an effort slot?
-# We never report real effort - just relative so q gets lost
-# Could probably streamline all this as effort is essentially a derived quantity - derived from catch and biomass
-# Just have to be careful with how we are dealing with the effort based HCRs
-# And always deal with relative CPUE and relative effort and relative F so we don't have to use q
 
 # Make the empty reactive stock object
 # The stock object is not reactive, but the elements inside it are (it's like a list)
@@ -62,8 +54,9 @@ clear_stock <- function(stock, app_params, nyears, niters){
   return(stock)
 }
 
+
+# Return an array of catches to drive the initial dynamics of the stock
 get_catch_history <- function(stock_params, app_params, niters){
-  # Return an array of catches to drive the initial dynamics of the stock
   # It will depend on the stock_history parameter, r and k
   # MSY = r K / 4 # BMSY = K / 2 # FMSY = r/2
   # Make one trajectory, then repeat with a load of noise on it
@@ -71,10 +64,8 @@ get_catch_history <- function(stock_params, app_params, niters){
   catch <- switch(stock_params$stock_history,
          "under" = rep(2*msy/3, app_params$last_historical_timestep),
          "fully" = rep(msy, app_params$last_historical_timestep),
-         #"over" = rep(3*msy/2, app_params$last_historical_timestep)
          "over" = seq(from=3*msy/4, to=4*msy/3, length=app_params$last_historical_timestep)
          )
-  #catch <- seq(from=msy, to=msy/2,length=app_params$last_historical_timestep)
   out <- array(NA,dim=c(niters, app_params$last_historical_timestep))
   out[] <- rep(catch, each=niters)
   # Sling a load of noise on it
@@ -112,8 +103,13 @@ fill_initial_stock <- function(stock, stock_params, mp_params, initial_biomass, 
   return(stock)
 }
 
+# Clear out stock and refill initial period
 #' @export
 reset_stock <- function(stock, stock_params, mp_params, app_params, initial_biomass, nyears, niters){
+  # Set up current_corrnoise object to store the current noise value for each iteration
+  # Stored in the package global environment
+  pkg_env$current_corrnoise <- rep(0, niters)
+  #
   stock <- clear_stock(stock=stock, app_params=app_params, nyears, niters)
   stock <- fill_initial_stock(stock=stock, stock_params=stock_params, mp_params=mp_params, initial_biomass=initial_biomass, app_params=app_params)
   # Not sure this return statement is needed but means we can call this function from tests
@@ -259,19 +255,17 @@ project <- function(stock, timesteps, stock_params, mp_params, app_params, max_r
 # biomass,  catch can have multiple iterations
 # but this is one just timstep so we are dealing a with a vector of iterations
 
-# corr_noise is not multi iter and it should be
-# Nasty global variable - or generate all at the same time and reference it by iter and year?
-corr_noise <- 0
 get_next_biomass<- function(biomass, catch, stock_params){
   fB <- (stock_params[["r"]] / stock_params[["p"]]) * biomass * (1 - (biomass / stock_params[["k"]])^stock_params[["p"]])
   # Apply lognormal noise to r
   #process_variability <- rlnorm(length(biomass),meanlog=0,sdlog=stock_params[["biol_prod_sigma"]]) 
   #fB <- fB * process_variability
   # A value of b = 0.5 is red noise, make redder by increasing (< 1)
-  # Currently not an input
-  #corr_noise <<- next_corrnoise(corr_noise, b=0.5, sd=stock_params[["biol_prod_sigma"]])
-  corr_noise <- next_corrnoise(corr_noise, b=0.5, sd=stock_params[["biol_prod_sigma"]])
-  fB <- fB * (corr_noise + 1)
+  # Currently not an input but could be
+  b <- 0.5
+  pkg_env$current_corrnoise <- next_corrnoise(pkg_env$current_corrnoise, b=b, sd=stock_params[["biol_prod_sigma"]])
+  # Subsetting current_corrnoise in we case we have set it up to have multiple iterations but only use 1 iter at a time
+  fB <- fB * (pkg_env$current_corrnoise[1:length(fB)] + 1)
   next_biomass <- biomass + fB - catch
   # Biomass cannot be less than 1e-6
   next_biomass <- pmax(next_biomass,1e-6)
@@ -633,9 +627,15 @@ get_projection_pis <- function(stock, stock_params, app_params, current_timestep
 ## s is normally distributed random variable with mean = 0
 ## b is the autocorrelation parameter > -1 and < 1
 ## e.g. -0.8 very blue, 0.8 red
-## @export
+
+# New package environment for keeping the current value of the autocorrelated noise
+# This is a pretty ugly solution - else have create at start and pass around
+# We create current_corrnoise object in this environment in the reset_stock() function
+pkg_env <- new.env()
+
 next_corrnoise <- function(x, b, sd=0.1){
-  s <- rnorm(1,mean=0,sd=sd)
+  # Each iter needs a separate noise (i.e. not correlated across iters)
+  s <- rnorm(length(x),mean=0,sd=sd)
   nextx <- b * x + s * sqrt(1 - b^2)
   return(nextx)
 }
