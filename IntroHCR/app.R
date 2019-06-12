@@ -164,11 +164,6 @@ server <- function(input, output,session) {
     }
   })
   
-  # Plot the 4 panels separately
-  output$intro_hcr_plot <- renderPlot({
-    plot_hcr_intro(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, timestep = timestep())
-  })
-
   output$plotcatch <- renderPlot({
     plot_catch(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, timestep=timestep(), main="Catch", add_grid=TRUE)
   })

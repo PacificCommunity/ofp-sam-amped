@@ -239,6 +239,7 @@ server <- function(input, output,session) {
     # (subset out using fancy lapply with [ operator)
     stock_iter <- lapply(reactiveValuesToList(stock), '[', iter(),,drop=FALSE) 
     # Update hcr_op  - # But if noise added here it will result in different value?
+    # Necessary in this app because each iteration and timestep (row of stock) can have a different HCR
     mp_params <- get_mp_params()
     stock_iter$hcr_op[,current_timestep()] <- get_hcr_op(stock=stock_iter, stock_params=get_stock_params(), mp_params, yr=current_timestep()-mp_params$timelag)
     max_timestep <- min(dim(stock$biomass)[2],current_timestep() + input$projlen - 1)

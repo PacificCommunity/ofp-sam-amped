@@ -81,6 +81,7 @@ sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="bl
 # Try to keep it flexible
 # type - are we stepping or projecting? Better way of doing this
 # Use ... instead of passing in more args like timestep?
+#' @export
 plot_hcr <- function(stock, stock_params, mp_params, app_params, timestep=NULL, show_last=TRUE, ...){
 
   if (mp_params$output_type=="catch"){
@@ -179,6 +180,7 @@ draw_ribbon <- function(x, y, quantiles){
 
 # Biomass / K
 # Plot 'true' and only plot observed if model based MP
+#' @export
 plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col="grey", last_col="blue", ylim=c(0,1), ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # True bk
@@ -231,6 +233,7 @@ plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_las
 # If we have timestep we also need app_params
 # quantiles of length 2
 # If time, try to use the generic plot below
+#' @export
 plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col="grey", true_col="black", ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Set Ylim - use same as HCR plot
@@ -370,6 +373,7 @@ plot_F <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TR
 
 # Move to main app window?
 # Projection plots for the IntroProjections app
+#' @export
 plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
   current_col <- "blue"
   prev_col <- "black"
@@ -386,6 +390,7 @@ plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, sho
   plot_releffort(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, ghost_col=prev_col, true_col=current_col, ...)
 }
 
+#' @export
 plot_hcr_intro_arrow <- function(stock, timestep){
   # Arrow from B/K to HCR
   btimestep <- min(timestep, dim(stock$hcr_ip)[2])
@@ -401,46 +406,10 @@ plot_hcr_intro_arrow <- function(stock, timestep){
   arrows(x0=x[length(x)-1], y0=y[length(y)-1], x1=x[length(x)], y1=y[length(y)],col=guide_col,lwd=guide_lwd)
 }
 
-# This works but...
-# It's hard to get a single plot (2x2) to be the right dims.
-# It looks better plotting each plot separately
-plot_hcr_intro <- function(stock, stock_params, mp_params, app_params, timestep){
-  # Main plot for the Intro to HCR app
-  # 2 x 2 panel
-  # Catch  |  HCR
-  # ----------------
-  # B/K    |  connecting arrow
-
-  par(mfrow=c(2,2))
-  #par(mfrow=c(2,2), pty="s") # make square - looks bad
-  # Catch
-  # timestep is the timestep of the catch
-  plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, timestep=timestep)
-
-  # HCR
-  # Add one more onto the timestep because the timestep coming in is for the catch and biomass, hcr_ip and hcr_op are 1 step ahead
-  plot_hcr(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, timestep=timestep+1)
-
-  # B/K
-  plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, timestep=timestep+1)
-
-  # Arrow from B/K to HCR
-  btimestep <- min(timestep+1, dim(stock$hcr_ip)[2])
-  last_hcr_ip  <- stock$hcr_ip[1, btimestep]
-  npoints <- 100
-  theta <- seq(from=0, to=pi/2, length=npoints)
-  x <- sin(theta) * last_hcr_ip
-  y <- -1 * cos(theta) * (1-last_hcr_ip)
-  # Set up plot
-  plot(x=x, y=y, xlim=c(0,1), ylim=c(-1,0), type="n", xaxt="n", yaxt="n",xlab="", ylab="", axes=FALSE,xaxs="i", yaxs="i")
-  lines(x=x,y=y,col=guide_col, lwd=guide_lwd)
-  # Add an arrow
-  # Just last two points looks weird
-  arrows(x0=x[length(x)-1], y0=y[length(y)-1], x1=x[length(x)], y1=y[length(y)],col=guide_col,lwd=guide_lwd)
-}
 
 # Could combine with function above into a single 
 # quantiles of length 2: lower and upper
+#' @export
 plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_params=NULL, show_last=TRUE, quantiles=c(0.2,0.8)){
   # Plot the metric with an extra sideways histogram
   layout(matrix(c(1,2), ncol=2), widths=c(6/7, 1/7))
@@ -487,6 +456,7 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
 # Majuoro plotting functions
 # Plot a single stock using the stock object
 # Plotting all the stocks using the time series results
+#' @export
 plot_majuro_all_stocks <- function(timeseries, hcr_choices, stock_params){
   # Put into one big DF
   timeseries <- dplyr::bind_rows(timeseries, .id="hcr")
@@ -523,6 +493,7 @@ plot_majuro_single_stock <- function(stock, stock_params, quantiles){
 
 # For plotting with the IntroProjection app
 # stock has multiple projections as rows
+#' @export
 plot_majuro_projections <- function(stock, stock_params){
   fmsy <- stock_params$r / 2
   f <- stock$catch / stock$biomass 
@@ -550,6 +521,7 @@ plot_majuro_projections <- function(stock, stock_params){
   plot_majuro(dat, stock_params)
 }
 
+#' @export
 plot_kobe_projections<- function(stock, stock_params){
   fmsy <- stock_params$r / 2
   f <- stock$catch / stock$biomass 
@@ -767,6 +739,7 @@ get_hcr_colours <- function(hcr_names, chosen_hcr_names){
 #------------------------------------------------------------
 # Yield curve
 
+#' @export
 plot_yieldcurve_projections <- function(stock, stock_params, app_params){
   # x-axis = Effort
   # y-axis = Catch
@@ -832,6 +805,7 @@ plot_yieldcurve_projections <- function(stock, stock_params, app_params){
 #' @importFrom ggplot2 "theme"
 #' @importFrom ggplot2 "xlab"
 #' @importFrom ggplot2 "ylab"
+#' @export
 plot_pi_choice <- function(pis, hcr_choices, pi_choices, plot_choice){
   if (length(pis) == 0){
     return()
@@ -970,6 +944,7 @@ plot_pi_choice <- function(pis, hcr_choices, pi_choices, plot_choice){
 #' @importFrom ggplot2 "xlab"
 #' @importFrom ggplot2 "ylab"
 #' @importFrom ggplot2 "geom_line"
+#' @export
 plot_timeseries <- function(timeseries, hcr_choices, stock_params, show_spaghetti=FALSE){
   if (length(timeseries) == 0){
     return()

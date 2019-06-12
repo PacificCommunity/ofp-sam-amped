@@ -5,6 +5,7 @@
 #
 
 # This looks pretty crummy
+#' @export
 amped_maintainer_and_licence <- function(){
   out <- tags$html(
     tags$h1("AMPED"),
@@ -33,6 +34,7 @@ amped_maintainer_and_licence <- function(){
 # stock cannot just be a calculated value returned from a reactive() as it needs to persist
 # i.e. here the next timestep depends on the previous timestep
 # it's empty but has structure
+#' @export
 create_stock <- function(){
   stock <- reactiveValues(
     biomass = NULL,
@@ -106,12 +108,14 @@ fill_initial_stock <- function(stock, stock_params, mp_params, initial_biomass, 
   stock$effort <- stock$catch / (stock$biomass * stock_params[["q"]])
 }
 
+#' @export
 reset_stock <- function(stock, stock_params, mp_params, app_params, initial_biomass, nyears, niters){
   clear_stock(stock=stock, app_params=app_params, nyears, niters)
   fill_initial_stock(stock=stock, stock_params=stock_params, mp_params=mp_params, initial_biomass=initial_biomass, app_params=app_params)
 }
 
 # quantiles is of length 2, lower and upper
+#' @export
 get_timeseries <- function(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=quantiles, nspaghetti=5){
   # Make a data.frame with year, metric, quantile, value
   # quantile are based on the lower and upper quantile
@@ -188,6 +192,7 @@ estimation_error <- function(input, sigma, bias){
 # Biomass at the start of the timestep
 # Biomass is one year ahead of catch
 # Relative effort is capped
+#' @export
 project <- function(stock, timesteps, stock_params, mp_params, app_params, max_releffort = 10){
   #biomass <- stock$biomass
   #biomass_obs <- stock$biomass_obs
@@ -272,7 +277,8 @@ get_next_biomass<- function(biomass, catch, stock_params){
   #fB <- fB * process_variability
   # A value of b = 0.5 is red noise, make redder by increasing (< 1)
   # Currently not an input
-  corr_noise <<- next_corrnoise(corr_noise, b=0.5, sd=stock_params[["biol_prod_sigma"]])
+  #corr_noise <<- next_corrnoise(corr_noise, b=0.5, sd=stock_params[["biol_prod_sigma"]])
+  corr_noise <- next_corrnoise(corr_noise, b=0.5, sd=stock_params[["biol_prod_sigma"]])
   fB <- fB * (corr_noise + 1)
   next_biomass <- biomass + fB - catch
   # Biomass cannot be less than 1e-6
@@ -305,6 +311,7 @@ get_hcr_ip <- function(stock, stock_params, mp_params, yr){
 # Outputs from the HCR can be different (e.g. catch, catch multiplier, effort, effort multiplier)
 # Evaluates one timestep (yr), multiple iterations (chance of multiple timesteps? maybe - need to be careful with dims)
 # yr is the yr of the stock$hcr$input to be used
+#' @export
 get_hcr_op <- function(stock, stock_params, mp_params, yr){
   # Shape is not NA
   # Call HCR with the lagged input
@@ -444,6 +451,7 @@ get_time_periods <- function(app_params, nyears){
 }
 
 # Calc the PIs
+#' @export
 get_summary_pis <- function(stock, stock_params, mp_params, app_params, quantiles, ...){
   years <- dimnames(stock$biomass)$year
   # Average them over years? S, M, L?
@@ -487,6 +495,7 @@ get_quantiles <- function(dat, quantiles){
   return(qs)
 }
 
+#' @export
 current_pi_table <- function(pis){
   pis$piqs
   piqs <- pis$piqs
@@ -530,6 +539,7 @@ current_pi_table <- function(pis){
   return(out)
 }
 
+#' @export
 big_pi_table <- function(pis, hcr_choices, pi_choices, term_choice="long"){
   if (length(pis) == 0){
     return()
@@ -572,6 +582,7 @@ big_pi_table <- function(pis, hcr_choices, pi_choices, term_choice="long"){
 
 # PIs for the IntroProjection app
 # Each row in the stock is a separate projection
+#' @export
 get_projection_pis <- function(stock, stock_params, app_params, current_timestep){
   # Return a data.frame of:
   # Projection (1,2,3,..)

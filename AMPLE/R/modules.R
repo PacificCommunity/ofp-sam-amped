@@ -7,6 +7,7 @@
 # Just means combining the two lists of values before dispatching them to the functions
 
 # Module for the stochasticity options 
+#' @export
 stoch_params_setterUI <- function(id, show_biol_prod_sigma = TRUE, show_biol_est_sigma = TRUE, show_biol_est_bias = TRUE, init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=TRUE){
   ns <- NS(id)
   show_var <- checkboxInput(ns("show_var"), label = "Show variability options", value = show_var)
@@ -30,6 +31,7 @@ stoch_params_setterUI <- function(id, show_biol_prod_sigma = TRUE, show_biol_est
   return(out)
 }
 
+#' @export
 stoch_params_setter<- function(input, output, session){
   get_stoch_params <- reactive({
     # Check which stochasticity options we are using
@@ -63,6 +65,7 @@ stoch_params_setter<- function(input, output, session){
 }
 
 # Choose if we want fast or slow growth etc
+#' @export
 stock_params_setterUI <- function(id){
   ns <- NS(id)
     stock_lh <- tags$span(title="Choose the life history of the stock: slow, medium or fast growing. Some HCRs are more appropriate for different life histories.", 
@@ -95,6 +98,7 @@ stock_params_setterUI <- function(id){
 # New Zealand Rock Lobster: r=0.0659 k=129
 # Northern Namibian Hake: r=0.379 k= 2772.6
 
+#' @export
 stock_params_setter <- function(input, output, session){
   get_stock_params <- reactive({
     # Set r and k depending on the stock choice radio button
@@ -119,26 +123,14 @@ stock_params_setter <- function(input, output, session){
 
 # Modules for setting the MP parameters
 # Bit fiddly with the conditional panels inside a module
+#' @export
 mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HCR you want to test.", init_thresh_max_catch=140, init_thresh_belbow=0.5, init_constant_catch=50, init_constant_effort=1.0, input_label="HCR Type"){
   ns <- NS(id)
   all_hcrs <- c("Constant catch" = "constant_catch",
                 "Constant effort" = "constant_effort",
                 "Threshold catch" = "threshold_catch",
                 "Threshold effort" = "threshold_effort")
-  # The MPs that are visible in the UI are controlled by mp_visible argument
-  # If not null it should have the names of the HCRs, matching those in the all_hcrs object
-  #if (is.null(mp_visible)){
-  #  hcr_choices <- all_hcrs
-  #}
-  #else {
-  
-  
-    # Same order as mp_visible
-    #hcr_choice_names <- names(all_hcrs)[names(all_hcrs) %in% mp_visible]
-    #hcr_choices <- all_hcrs[hcr_choice_names[order(mp_visible)]]
     hcr_choices <- all_hcrs[mp_visible]
-    #hcr_choices <- all_hcrs[names(all_hcrs) %in% mp_visible]
-  #}
 
   # HCR options
   hcr_type <- tags$span(title=title,   
@@ -169,6 +161,7 @@ mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HC
   return(out)
 }
 
+#' @export
 mp_params_setter <- function(input, output, session){
   get_mp_params <- reactive({
     # Messy setting of the parameters
