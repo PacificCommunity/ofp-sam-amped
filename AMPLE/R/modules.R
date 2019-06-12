@@ -34,6 +34,13 @@ stoch_params_setterUI <- function(id, show_biol_prod_sigma = TRUE, show_biol_est
 #' @export
 stoch_params_setter<- function(input, output, session){
   get_stoch_params <- reactive({
+    return(set_stoch_params(input))
+  })
+  return(get_stoch_params)
+}
+
+# Defined outside of reactive so we can use it in tests
+set_stoch_params <- function(input){
     # Check which stochasticity options we are using
     # If null, we're not using them
     if(is.null(input$biol_prod_sigma)){
@@ -60,8 +67,6 @@ stoch_params_setter<- function(input, output, session){
       biol_est_bias=biol_est_bias
     )
     return(out)
-  })
-  return(get_stoch_params)
 }
 
 # Choose if we want fast or slow growth etc
@@ -101,6 +106,13 @@ stock_params_setterUI <- function(id){
 #' @export
 stock_params_setter <- function(input, output, session){
   get_stock_params <- reactive({
+    return(get_lh_params(input))
+  })
+  return(get_stock_params)
+}
+
+# Defined outside of above reactive so we can call it elsewhere
+get_lh_params <- function(input){
     # Set r and k depending on the stock choice radio button
     # Set MSY to be a 100 for each stock
     msy <- 100
@@ -117,8 +129,6 @@ stock_params_setter <- function(input, output, session){
       lrp=0.2, trp=0.5 # These are SB/SBF=0 based reference points - inline with WCPFC tuna stocks
       )
     return(out)
-  })
-  return(get_stock_params)
 }
 
 # Modules for setting the MP parameters
@@ -165,6 +175,13 @@ mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HC
 mp_params_setter <- function(input, output, session){
   get_mp_params <- reactive({
     # Messy setting of the parameters
+    return(mp_params_switcheroo(input))
+  })
+  return(get_mp_params)
+}
+
+#Defined outsode of the reactive above so we can use it non-reactively
+mp_params_switcheroo <- function(input){
     out <- switch(input$hcr_type,
                           threshold_catch = list(hcr_shape = "threshold", mp_analysis = "assessment",
                                                mp_type="model", output_type="catch",
@@ -187,7 +204,4 @@ mp_params_setter <- function(input, output, session){
                           stop("In mp_params_setter. Unrecognised hcr_type.")) 
     out$timelag <- 0 # 2
     return(out)
-  })
-  return(get_mp_params)
 }
-

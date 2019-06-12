@@ -58,6 +58,8 @@ clear_stock <- function(stock, app_params, nyears, niters){
   stock$hcr_op <- initial_array
   stock$catch <- initial_array
   stock$effort <- initial_array
+  # Not sure this return statement is needed but means we can call this function from tests
+  return(stock)
 }
 
 get_catch_history <- function(stock_params, app_params, niters){
@@ -106,12 +108,16 @@ fill_initial_stock <- function(stock, stock_params, mp_params, initial_biomass, 
   stock$hcr_ip[,hcr_ip_yrs] <- get_hcr_ip(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=hcr_ip_yrs)
   stock$hcr_op[,hcr_op_yrs] <- get_hcr_op(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=hcr_ip_yrs)
   stock$effort <- stock$catch / (stock$biomass * stock_params[["q"]])
+  # Not sure this return statement is needed but means we can call this function from tests
+  return(stock)
 }
 
 #' @export
 reset_stock <- function(stock, stock_params, mp_params, app_params, initial_biomass, nyears, niters){
-  clear_stock(stock=stock, app_params=app_params, nyears, niters)
-  fill_initial_stock(stock=stock, stock_params=stock_params, mp_params=mp_params, initial_biomass=initial_biomass, app_params=app_params)
+  stock <- clear_stock(stock=stock, app_params=app_params, nyears, niters)
+  stock <- fill_initial_stock(stock=stock, stock_params=stock_params, mp_params=mp_params, initial_biomass=initial_biomass, app_params=app_params)
+  # Not sure this return statement is needed but means we can call this function from tests
+  return(stock)
 }
 
 # quantiles is of length 2, lower and upper
@@ -194,9 +200,6 @@ estimation_error <- function(input, sigma, bias){
 # Relative effort is capped
 #' @export
 project <- function(stock, timesteps, stock_params, mp_params, app_params, max_releffort = 10){
-  #biomass <- stock$biomass
-  #biomass_obs <- stock$biomass_obs
-  #catch <- stock$catch
   # Check timesteps - should be a range of two values
   if (length(timesteps) == 1){
     timesteps <- rep(timesteps,2)
@@ -209,26 +212,28 @@ project <- function(stock, timesteps, stock_params, mp_params, app_params, max_r
   }
   # Loop over the timesteps and update catch and biomass
   # yr is the year we get catch for
-  # yr + 1 is the  year we get true biomass for
+  # yr + 1 is the  year we get true biomass and HCR op for
   for (yr in timesteps[1]:timesteps[2]){
-    # Run the MP analysis to generate stock$hcr_ip, e.g. assessment to estimate B/K, or some kind of CPUE magic
-    # Turn the HCR op into catch - move to separate function?
-    #est_yr <- yr - mp_params$timelag
+
+    # Get HCR OP in yr instead of at end?
+    # But should already have been set given biomass which is always y+1
+
+    base_effort <- stock$effort[,app_params$last_historical_timestep]
     # Implementation function stuff
+    # Test this to death with different yr ranges etc
     if (mp_params$output_type == "catch"){
       stock$catch[,yr] <- stock$hcr_op[,yr]
       stock$effort[,yr] <- stock$catch[,yr] / (stock_params$q * stock$biomass[,yr]) 
     }
-    # Test this to death with different yr ranges etc
     if (mp_params$output_type == "relative effort"){
       # HCR OP is relative to last historical effort
-      stock$effort[,yr] <- stock$effort[,app_params$last_historical_timestep] * stock$hcr_op[,yr]
+      stock$effort[,yr] <- base_effort * stock$hcr_op[,yr]
       stock$catch[,yr] <- stock$effort[,yr] * stock_params$q * stock$biomass[,yr]
     }
     # Apply relative effort cap and recalc max. realisable catch
-    rel_effort <- stock$effort[,yr] / stock$effort[,app_params$last_historical_timestep]
+    rel_effort <- stock$effort[,yr] / base_effort
     max_rel_effort <- pmin(rel_effort, max_releffort)
-    stock$effort[,yr] <- max_rel_effort * stock$effort[,app_params$last_historical_timestep]
+    stock$effort[,yr] <- max_rel_effort * base_effort
     stock$catch[,yr] <- stock$effort[,yr] * stock_params$q * stock$biomass[,yr]
 
     # If room get the biomass in the next timestep (using previously set catch)
@@ -237,23 +242,9 @@ project <- function(stock, timesteps, stock_params, mp_params, app_params, max_r
     if (yr < dim(stock$biomass)[2]){
       next_biomass <- get_next_biomass(biomass=stock$biomass[,yr], catch=stock$catch[,yr], stock_params=stock_params)
       stock$biomass[,yr+1] <- next_biomass
-      #
       stock$hcr_ip[,yr+1-mp_params$timelag] <- get_hcr_ip(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=yr+1-mp_params$timelag)
-      #
       stock$hcr_op[,yr+1] <- get_hcr_op(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=yr+1-mp_params$timelag)
     }
-    # Strictly we should do these separately so we can fill up the HCR IP as full as possible
-    # But it makes the last couple of years on the plots a bit tricky
-    # We lost the relationship between ip and op - (timelag is lost) - we could be stricter with the plots but this is better
-    # as we do not have an extra year of output
-    #if ((yr - mp_params$timelag) < dim(stock$biomass)[2]){
-    #  # Do assessment and set the catch (target) for the following year
-    #  #stock$hcr_ip[,yr+1] <- get_hcr_ip(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=yr+1-mp_params$timelag)
-    #  stock$hcr_ip[,yr+1-mp_params$timelag] <- get_hcr_ip(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=yr+1-mp_params$timelag)
-    #}
-    #if (yr < dim(stock$biomass)[2]){
-    #  stock$hcr_op[,yr+1] <- get_hcr_op(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=yr+1-mp_params$timelag)
-    #}
   }
   return(stock)
 }
@@ -268,6 +259,7 @@ project <- function(stock, timesteps, stock_params, mp_params, app_params, max_r
 # biomass,  catch can have multiple iterations
 # but this is one just timstep so we are dealing a with a vector of iterations
 
+# corr_noise is not multi iter and it should be
 # Nasty global variable - or generate all at the same time and reference it by iter and year?
 corr_noise <- 0
 get_next_biomass<- function(biomass, catch, stock_params){
@@ -331,13 +323,13 @@ assessment <- function(stock, mp_params, stock_params, yr){
   # Return observed biomass
   true_ip <- stock$biomass[,yr] / stock_params$k
   est_ip <- estimation_error(input =  true_ip, sigma = stock_params$biol_est_sigma, bias = stock_params$biol_est_bias)
+  # Max depletion is 1.0
   est_ip <- pmin(est_ip, 1.0)
   return(est_ip)
 }
 
 # HCR shape functions
 # Called by get_hcr_op()
-
 threshold <- function(input, mp_params, ...){
   output <- array(NA, dim=dim(input))
   # Below lim
