@@ -1,11 +1,13 @@
 # Copyright 2018 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 
+library(shinyjs) # For greying out buttons
 library(AMPLE)
 
 ui <- navbarPage(
   title="Measuring performance",
   tabPanel("HCR Selection", 
+    useShinyjs(),  # Include shinyjs
     sidebarLayout(          
       sidebarPanel(width=3, 
         br(),
@@ -184,7 +186,8 @@ server <- function(input, output,session) {
   # Storage for the timeseries
   tsstore <- reactiveVal(list())
   # It is not possible to store something until you have projected
-  OKtostore <- FALSE
+  #OKtostore <- FALSE
+  OKtostore <- reactiveVal(FALSE)
   quantiles <- c(0.05,0.2, 0.8, 0.95)
 
   # Modules for the stochasticity and MP parameters!
@@ -204,10 +207,15 @@ server <- function(input, output,session) {
   # Use isolate else error (function tries to be reactive to changes in get_stock_params() and stock itself
   isolate(reset_stock(stock = stock, stock_params = get_stock_params(), mp_params = get_mp_params(), app_params = app_params, initial_biomass = get_stock_params()$b0, nyears = input$nyears, niters = input$niters))
   
+  # Only allow Add HCR to Basket if Project has been pressed
+  observe({
+    shinyjs::toggleState("add_basket", OKtostore()==TRUE)
+  })
+
   # Store the stock in the basket and create a new empty one
   observeEvent(input$add_basket, {
     # Check if project has been pressed first or you may store empty results
-    if(OKtostore == FALSE){
+    if(OKtostore() == FALSE){
       return()
     }
     # Store the stock, stockparams and mpparams
@@ -232,7 +240,8 @@ server <- function(input, output,session) {
                              )
 
     # You can't store again until you project again
-    OKtostore <<- FALSE
+    #OKtostore <<- FALSE
+    OKtostore(FALSE)
   })
   
   # Reset the current stock if you touch the MP parameters
@@ -241,7 +250,8 @@ server <- function(input, output,session) {
     reset_stock(stock=stock, stock_params=stock_params, mp_params=get_mp_params(), app_params=app_params, initial_biomass=stock_params$b0, nyears=input$nyears, niters=input$niters)
     # Reset the show table variable
     pitemp(NULL)
-    OKtostore <<- FALSE
+    #OKtostore <<- FALSE
+    OKtostore(FALSE)
   })
 
   # Update HCR choice in comparison tab (if HCR basket gets added to or emptied)
@@ -283,7 +293,8 @@ server <- function(input, output,session) {
     pitemp(NULL)
     pistore(list()) 
     tsstore(list()) 
-    OKtostore <<- FALSE
+    #OKtostore <<- FALSE
+    OKtostore(FALSE)
   })
   
   # Project all timesteps
@@ -299,7 +310,8 @@ server <- function(input, output,session) {
     piqs <- get_summary_pis(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params,
                             quantiles=quantiles)
     pitemp(piqs)
-    OKtostore <<- TRUE
+    #OKtostore <<- TRUE
+    OKtostore(TRUE)
   })
   
   # Call the HCR plot function
