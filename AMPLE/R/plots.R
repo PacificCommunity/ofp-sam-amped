@@ -8,6 +8,9 @@
 # Globals - eesh!
 # Plot params - could make arguments
 #, app_params=app_params WTF? There are so many of them - reduce this madness
+
+# Maybe put them all as part of the pkg_env?
+# Or some kind of theme?
   hcr_lwd <-  2
   hcr_lty <-  1
   hcr_col <- "red"
@@ -321,16 +324,15 @@ plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app
 
 }
 
- 
-
-
 # Relative CPUE
-plot_relcpue <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+plot_relcpue <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ymax=NA, ...){
 
   years <- as.numeric(dimnames(stock$biomass)$year)
   cpue <- stock$catch / stock$effort
   rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
-  ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
+  if(is.na(ymax)){
+    ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
+  }
   yrange <- c(0, ymax)
 
   # Plot it
@@ -433,12 +435,17 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
     range <- c(0, get_catch_ymax(stock$catch, mp_params))
   }
   else if (metric == "relcpue"){
-    plot_relcpue(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles)
     cpue <- stock$catch / stock$effort
     rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
+    # Set a maximum value for rel_cpue - just for plotting purposes
+    max_rel_cpue <- 2
+    rel_cpue[rel_cpue > max_rel_cpue] <- max_rel_cpue
+    ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
+    plot_relcpue(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles, ymax=ymax)
+    # data for the histogram
     final_yr <- dim(rel_cpue)[2]
     dat <- rel_cpue[,final_yr]
-    range <- c(0, max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE))
+    range <- c(0, ymax) # Matches the ymax in the plot_relcpue function
   }
   else {
     stop("In plot_metric_with_histo(). Unknown metric\n")
