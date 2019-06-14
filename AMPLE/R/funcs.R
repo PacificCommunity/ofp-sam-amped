@@ -118,55 +118,55 @@ reset_stock <- function(stock, stock_params, mp_params, app_params, initial_biom
 }
 
 # quantiles is of length 2, lower and upper
-#' @export
-get_timeseries <- function(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=quantiles, nspaghetti=5){
-  # Make a data.frame with year, metric, quantile, value
-  # quantile are based on the lower and upper quantile
-  # Do we also want spaghetti? could do
-  # metrics are B/K, Catch, Rel. CPUE, F/FMSY 
-  bk <- stock$biomass / stock_params$k
-  bkq <- get_quantiles(bk, quantiles)
-  bkq <- cbind(metric="bk", name="SB/SBF=0", level=c("lower","median","upper"),as.data.frame(bkq))
-
-  catchq <- get_quantiles(stock$catch, quantiles)
-  catchq <- cbind(metric="catch", name="Catch", level=c("lower","median","upper"),as.data.frame(catchq))
-
-  cpue <- stock$catch / stock$effort
-  rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
-  rel_cpueq <- get_quantiles(rel_cpue, quantiles)
-  rel_cpueq <- cbind(metric="relcpue", name="Rel. CPUE", level=c("lower","median","upper"),as.data.frame(rel_cpueq))
-
-  fmsy <- stock_params$r / 2
-  f <- stock$catch / stock$biomass 
-  ffmsy <- f / fmsy
-  ffmsyq <- get_quantiles(ffmsy, quantiles)
-  ffmsyq <- cbind(metric="ffmsy", name="F / FMSY", level=c("lower","median","upper"),as.data.frame(ffmsyq))
-
-  qout <- rbind(bkq, catchq, rel_cpueq, ffmsyq)
-  qout <- tidyr::gather(qout, key="year", value="value",-level, -metric, -name)
-  qout <- cbind(qout, type="quantile")
-
-  # Spaghetti
-  # Pick 5 iters at random
-  nspaghetti <- min(nspaghetti, dim(bk)[1])
-  spaghetti_iters <- round(runif(nspaghetti, min=1, max=dim(bk)[1]))
-  bksp <- cbind(metric="bk", name="SB/SBF=0", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(bk[spaghetti_iters,]))
-  catchsp <- cbind(metric="catch", name="Catch", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(stock$catch[spaghetti_iters,]))
-  ffmsysp <- cbind(metric="ffmsy", name="F / FMSY", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(ffmsy[spaghetti_iters,]))
-  rel_cpuesp <- cbind(metric="relcpue", name="Rel. CPUE", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(rel_cpue[spaghetti_iters,]))
-  spout <- rbind(bksp, catchsp, rel_cpuesp, ffmsysp)
-  spout <- tidyr::gather(spout, key="year", value="value",-level, -metric, -name)
-  spout <- cbind(spout, type="spaghetti")
-  
-  out <- rbind(qout,spout)
-  # Producing warnings about factors?
-  out$level <- as.character(out$level)
-  out$type <- as.character(out$type)
-  out$metric <- as.character(out$metric)
-  out$name <- as.character(out$name)
-  out$year <- as.numeric(out$year)
-  return(out)
-}
+# @export
+#get_timeseries <- function(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=quantiles, nspaghetti=5){
+#  # Make a data.frame with year, metric, quantile, value
+#  # quantile are based on the lower and upper quantile
+#  # Do we also want spaghetti? could do
+#  # metrics are B/K, Catch, Rel. CPUE, F/FMSY 
+#  bk <- stock$biomass / stock_params$k
+#  bkq <- get_quantiles(bk, quantiles)
+#  bkq <- cbind(metric="bk", name="SB/SBF=0", level=c("lower","median","upper"),as.data.frame(bkq))
+#
+#  catchq <- get_quantiles(stock$catch, quantiles)
+#  catchq <- cbind(metric="catch", name="Catch", level=c("lower","median","upper"),as.data.frame(catchq))
+#
+#  cpue <- stock$catch / stock$effort
+#  rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
+#  rel_cpueq <- get_quantiles(rel_cpue, quantiles)
+#  rel_cpueq <- cbind(metric="relcpue", name="Rel. CPUE", level=c("lower","median","upper"),as.data.frame(rel_cpueq))
+#
+#  fmsy <- stock_params$r / 2
+#  f <- stock$catch / stock$biomass 
+#  ffmsy <- f / fmsy
+#  ffmsyq <- get_quantiles(ffmsy, quantiles)
+#  ffmsyq <- cbind(metric="ffmsy", name="F / FMSY", level=c("lower","median","upper"),as.data.frame(ffmsyq))
+#
+#  qout <- rbind(bkq, catchq, rel_cpueq, ffmsyq)
+#  qout <- tidyr::gather(qout, key="year", value="value",-level, -metric, -name)
+#  qout <- cbind(qout, type="quantile")
+#
+#  # Spaghetti
+#  # Pick 5 iters at random
+#  nspaghetti <- min(nspaghetti, dim(bk)[1])
+#  spaghetti_iters <- round(runif(nspaghetti, min=1, max=dim(bk)[1]))
+#  bksp <- cbind(metric="bk", name="SB/SBF=0", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(bk[spaghetti_iters,]))
+#  catchsp <- cbind(metric="catch", name="Catch", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(stock$catch[spaghetti_iters,]))
+#  ffmsysp <- cbind(metric="ffmsy", name="F / FMSY", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(ffmsy[spaghetti_iters,]))
+#  rel_cpuesp <- cbind(metric="relcpue", name="Rel. CPUE", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(rel_cpue[spaghetti_iters,]))
+#  spout <- rbind(bksp, catchsp, rel_cpuesp, ffmsysp)
+#  spout <- tidyr::gather(spout, key="year", value="value",-level, -metric, -name)
+#  spout <- cbind(spout, type="spaghetti")
+#  
+#  out <- rbind(qout,spout)
+#  # Producing warnings about factors?
+#  out$level <- as.character(out$level)
+#  out$type <- as.character(out$type)
+#  out$metric <- as.character(out$metric)
+#  out$name <- as.character(out$name)
+#  out$year <- as.numeric(out$year)
+#  return(out)
+#}
 
 
 # Observation error is a combination of bias and lognormally distributed noise
@@ -345,77 +345,77 @@ constant <- function(mp_params, ...){
 #-------------------------------------------------------------------
 # Performance indicators
 
-# Other methods are available
-transform_upside_down_pis <- function(x){
-  #min_value <- 1e-6
-  #adjuster <- -1.0001
-  #x <- pmax(x, min_value)
-  #x <- log(x) + log(min_value) * adjuster # Now x is between just greater than 0 and something positive
-  #x <- (log(min_value) + log(min_value) * adjuster) / (x)
-  #return(x)
-  return(-x) # Just return the negative - simple!
-}
-
-# Get pis by year and iter
-# Stick into a single data.frame
-# @export
-get_pis <- function(stock, stock_params, mp_params, app_params, pi_choices = NULL){
-  rel_year <- app_params$initial_year + app_params$last_historical_timestep - 1
-  bkm <- stock$biomass / stock_params$k
-  # B/K
-  bk <- cbind(pi="bk", iter=1:nrow(bkm), as.data.frame(bkm), name="SB/SBF=0")
-  # Total catch
-  catch <- cbind(pi="catch", iter=1:nrow(stock$catch), as.data.frame(stock$catch), name="Catch")
-  # Variability in catch
-  diffcatch <- abs(t(apply(stock$catch, 1, diff))) # Need to transpose due to odd apply() behaviour
-  #diffcatch <- transform_upside_down_pis(diffcatch)
-  # Stick some NAs for the first column and name column
-  diffcatch <- cbind(NA, diffcatch)
-  colnames(diffcatch)[1] <- colnames(stock$catch)[1]
-  diffcatch <- cbind(pi="diffcatch", iter=1:nrow(diffcatch), as.data.frame(diffcatch), name="Catch variability")
-  # Relative effort
-  # Base effort is effort in the last historical timestep
-  releffort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
-  releffort <- cbind(pi="releffort", iter=1:nrow(releffort), as.data.frame(releffort), name=paste("Effort (rel. ", rel_year," )", sep=""))
-  # Variability of relative effort
-  diffeffort <- abs(t(apply(stock$effort, 1, diff))) # Need to transpose due to odd apply() behaviour
-  #diffeffort <- transform_upside_down_pis(diffeffort)
-  diffeffort <- cbind(NA, diffeffort)
-  colnames(diffeffort)[1] <- colnames(stock$effort)[1]
-  diffeffort <- cbind(pi="diffeffort", iter=1:nrow(diffeffort), as.data.frame(diffeffort), name="Effort variability")
-  # Relative CPUE
-  cpue <- stock$catch / stock$effort
-  relcpuem <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
-  relcpue <- cbind(pi="relcpue", iter=1:nrow(relcpuem), as.data.frame(relcpuem), name=paste("CPUE (rel. ", rel_year, " )", sep=""))
-  # Variability of relative CPUE
-  diffcpue <- abs(t(apply(relcpuem, 1, diff))) # Need to transpose due to odd apply() behaviour
-  #diffcpue <- transform_upside_down_pis(diffcpue)
-  diffcpue <- cbind(NA, diffcpue)
-  colnames(diffcpue)[1] <- colnames(stock$effort)[1]
-  diffcpue <- cbind(pi="diffcpue", iter=1:nrow(diffcpue), as.data.frame(diffcpue), name="CPUE variability")
-
-  # Probabilities in each year
-  problrp <- apply(bkm > stock_params$lrp,2,mean)
-  # A bit of mucking about to get a data.frame
-  problrp <- cbind(pi="problrp", iter=1, as.data.frame(t(problrp)), name="Prob. SB > LRP")
-  
-  # pi_choices is a character string of these objects
-  # Put altogether and reshape
-  if (is.null(pi_choices)){
-    out <- rbind(bk, problrp, catch, diffcatch, releffort, diffeffort, relcpue, diffcpue)
-  }
-  # Else only bind together the chosen pis
-  else{
-    out <- do.call(rbind, lapply(pi_choices,function(x) get(x)))
-  }
-  
-  # Use tidyr or something else to put into a single df
-  out <- tidyr::gather(out, key="year", value="value", -iter, -pi, -name)
-
-  # F***ing factors!
-  out$name <- as.character(out$name)
-  return(out)
-}
+## Other methods are available
+#transform_upside_down_pis <- function(x){
+#  #min_value <- 1e-6
+#  #adjuster <- -1.0001
+#  #x <- pmax(x, min_value)
+#  #x <- log(x) + log(min_value) * adjuster # Now x is between just greater than 0 and something positive
+#  #x <- (log(min_value) + log(min_value) * adjuster) / (x)
+#  #return(x)
+#  return(-x) # Just return the negative - simple!
+#}
+#
+## Get pis by year and iter
+## Stick into a single data.frame
+## @export
+#get_pis <- function(stock, stock_params, mp_params, app_params, pi_choices = NULL){
+#  rel_year <- app_params$initial_year + app_params$last_historical_timestep - 1
+#  bkm <- stock$biomass / stock_params$k
+#  # B/K
+#  bk <- cbind(pi="bk", iter=1:nrow(bkm), as.data.frame(bkm), name="SB/SBF=0")
+#  # Total catch
+#  catch <- cbind(pi="catch", iter=1:nrow(stock$catch), as.data.frame(stock$catch), name="Catch")
+#  # Variability in catch
+#  diffcatch <- abs(t(apply(stock$catch, 1, diff))) # Need to transpose due to odd apply() behaviour
+#  #diffcatch <- transform_upside_down_pis(diffcatch)
+#  # Stick some NAs for the first column and name column
+#  diffcatch <- cbind(NA, diffcatch)
+#  colnames(diffcatch)[1] <- colnames(stock$catch)[1]
+#  diffcatch <- cbind(pi="diffcatch", iter=1:nrow(diffcatch), as.data.frame(diffcatch), name="Catch variability")
+#  # Relative effort
+#  # Base effort is effort in the last historical timestep
+#  releffort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
+#  releffort <- cbind(pi="releffort", iter=1:nrow(releffort), as.data.frame(releffort), name=paste("Effort (rel. ", rel_year," )", sep=""))
+#  # Variability of relative effort
+#  diffeffort <- abs(t(apply(stock$effort, 1, diff))) # Need to transpose due to odd apply() behaviour
+#  #diffeffort <- transform_upside_down_pis(diffeffort)
+#  diffeffort <- cbind(NA, diffeffort)
+#  colnames(diffeffort)[1] <- colnames(stock$effort)[1]
+#  diffeffort <- cbind(pi="diffeffort", iter=1:nrow(diffeffort), as.data.frame(diffeffort), name="Effort variability")
+#  # Relative CPUE
+#  cpue <- stock$catch / stock$effort
+#  relcpuem <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
+#  relcpue <- cbind(pi="relcpue", iter=1:nrow(relcpuem), as.data.frame(relcpuem), name=paste("CPUE (rel. ", rel_year, " )", sep=""))
+#  # Variability of relative CPUE
+#  diffcpue <- abs(t(apply(relcpuem, 1, diff))) # Need to transpose due to odd apply() behaviour
+#  #diffcpue <- transform_upside_down_pis(diffcpue)
+#  diffcpue <- cbind(NA, diffcpue)
+#  colnames(diffcpue)[1] <- colnames(stock$effort)[1]
+#  diffcpue <- cbind(pi="diffcpue", iter=1:nrow(diffcpue), as.data.frame(diffcpue), name="CPUE variability")
+#
+#  # Probabilities in each year
+#  problrp <- apply(bkm > stock_params$lrp,2,mean)
+#  # A bit of mucking about to get a data.frame
+#  problrp <- cbind(pi="problrp", iter=1, as.data.frame(t(problrp)), name="Prob. SB > LRP")
+#  
+#  # pi_choices is a character string of these objects
+#  # Put altogether and reshape
+#  if (is.null(pi_choices)){
+#    out <- rbind(bk, problrp, catch, diffcatch, releffort, diffeffort, relcpue, diffcpue)
+#  }
+#  # Else only bind together the chosen pis
+#  else{
+#    out <- do.call(rbind, lapply(pi_choices,function(x) get(x)))
+#  }
+#  
+#  # Use tidyr or something else to put into a single df
+#  out <- tidyr::gather(out, key="year", value="value", -iter, -pi, -name)
+#
+#  # F***ing factors!
+#  out$name <- as.character(out$name)
+#  return(out)
+#}
 
 get_time_periods <- function(app_params, nyears){
   nyears <- nyears - app_params$last_historical_timestep
@@ -438,134 +438,95 @@ get_time_periods <- function(app_params, nyears){
 }
 
 # Calc the PIs
-#' @export
-get_summary_pis <- function(stock, stock_params, mp_params, app_params, quantiles, ...){
-  years <- dimnames(stock$biomass)$year
-  # Average them over years? S, M, L?
-  # Average over years - then calc quantiles
-  time_periods <- get_time_periods(app_params, nyears=dim(stock$biomass)[2])
-  short_term <- years[time_periods[["short_term"]]]
-  medium_term <- years[time_periods[["medium_term"]]]
-  long_term <- years[time_periods[["long_term"]]]
+# @export
+#get_summary_pis <- function(stock, stock_params, mp_params, app_params, quantiles, ...){
+#  years <- dimnames(stock$biomass)$year
+#  # Average them over years? S, M, L?
+#  # Average over years - then calc quantiles
+#  time_periods <- get_time_periods(app_params, nyears=dim(stock$biomass)[2])
+#  short_term <- years[time_periods[["short_term"]]]
+#  medium_term <- years[time_periods[["medium_term"]]]
+#  long_term <- years[time_periods[["long_term"]]]
+#
+#  pis <- get_pis(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, ...)
+#  pis <- pis[pis$year %in% c(short_term, medium_term, long_term),]
+#
+#  # Add timeperiod column - as.data.frame to use stringsAsFactors
+#  pis <- as.data.frame(cbind(pis, term=as.character(NA), stringsAsFactors=FALSE))
+#  pis[pis$year %in% short_term,"term"] <- "short"
+#  pis[pis$year %in% long_term,"term"] <- "long"
+#  pis[pis$year %in% medium_term,"term"] <- "medium"
+#  # Drop the rows that do not have a term
+#  # This seems to take a long time
+#
+#  # Take median value over the timeperiods
+#
+#  #yearav <- pis %>% group_by(pi, iter, term, name) %>% summarise(value=median(value, na.rm=TRUE))
+#  temp <- dplyr::group_by(pis, pi, iter, term, name) 
+#  yearav <- dplyr::summarise(temp, value=median(value, na.rm=TRUE))
+#
+#  # Take the quantiles - 
+#  qmed <- c(quantiles, 0.5)
+#  #piqs <- yearav %>% group_by(pi, term, name) %>% summarise(quantiles = list(paste("q",qmed*100,sep="")), value = list(quantile(value, qmed))) %>% unnest
+#  temp <- dplyr::group_by(yearav, pi, term, name)
+#  temp <- dplyr::summarise(temp, quantiles = list(paste("q",qmed*100,sep="")), value = list(quantile(value, qmed)))
+#  piqs <- tidyr::unnest(temp)
+#
+#
+#
+#  return(list(piqs=piqs, terms=list(short=short_term, medium=medium_term, long=long_term)))
+#}
 
-  pis <- get_pis(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, ...)
-  pis <- pis[pis$year %in% c(short_term, medium_term, long_term),]
+#get_quantiles <- function(dat, quantiles){
+#  qs <- apply(dat, 2, function(x){quantile(x, probs=c(quantiles[1], 0.5, quantiles[2]), na.rm=TRUE)})
+#  return(qs)
+#}
 
-  # Add timeperiod column - as.data.frame to use stringsAsFactors
-  pis <- as.data.frame(cbind(pis, term=as.character(NA), stringsAsFactors=FALSE))
-  pis[pis$year %in% short_term,"term"] <- "short"
-  pis[pis$year %in% long_term,"term"] <- "long"
-  pis[pis$year %in% medium_term,"term"] <- "medium"
-  # Drop the rows that do not have a term
-  # This seems to take a long time
+## @export
+#current_pi_table <- function(pis){
+#  pis$piqs
+#  piqs <- pis$piqs
+#  # Beat this into a table
+#  # Each row is a PI
+#  # 4 Columns: Name, short, medium, long
+#  # median (quantile)
+#
+#  signif <- 2
+#  upis <- as.character(unique(piqs$pi))
+#  uterm <- as.character(unique(piqs$term))
+#  out <- data.frame()
+#  for (upi in upis){
+#    tempdat <- subset(piqs, term =="short" & pi==upi)
+#    svalues <- signif(sort(subset(piqs, term =="short" & pi==upi)$value),signif)
+#    mvalues <- signif(sort(subset(piqs, term =="medium" & pi==upi)$value),signif)
+#    lvalues <- signif(sort(subset(piqs, term =="long" & pi==upi)$value),signif)
+#    # If no uncertainty
+#    if ((svalues[2] == svalues[1]) & (svalues[4] == svalues[5]) &
+#        (mvalues[2] == mvalues[1]) & (mvalues[4] == mvalues[5]) &
+#        (lvalues[2] == lvalues[1]) & (lvalues[4] == lvalues[5])){
+#      sval <- as.character(svalues[3])
+#      mval <- as.character(mvalues[3])
+#      lval <- as.character(lvalues[3])
+#    }
+#    else {
+#      sval <- paste(svalues[3], " (", svalues[2], ",", svalues[4],")", sep="")
+#      mval <- paste(mvalues[3], " (", mvalues[2], ",", mvalues[4],")", sep="")
+#      lval <- paste(lvalues[3], " (", lvalues[2], ",", lvalues[4],")", sep="")
+#    }
+#    out <- rbind(out, data.frame(name = tempdat$name[1], short = sval, medium=mval, long=lval))
+#  }
+#  rownames(out) <- out$name
+#  # Drop rownames column
+#  out <- out[,colnames(out) != "name"]
+#  term_years <- pis$term
+#  colnames(out) <- c(paste("Short (", term_years$short[1], "-", term_years$short[length(term_years$short)],")", sep=""),
+#                     paste("Med. (", term_years$medium[1], "-", term_years$medium[length(term_years$medium)],")", sep=""),
+#                     paste("Long (", term_years$long[1], "-", term_years$long[length(term_years$long)],")", sep=""))
+#
+#  return(out)
+#}
 
-  # Take median value over the timeperiods
-
-  #yearav <- pis %>% group_by(pi, iter, term, name) %>% summarise(value=median(value, na.rm=TRUE))
-  temp <- dplyr::group_by(pis, pi, iter, term, name) 
-  yearav <- dplyr::summarise(temp, value=median(value, na.rm=TRUE))
-
-  # Take the quantiles - 
-  qmed <- c(quantiles, 0.5)
-  #piqs <- yearav %>% group_by(pi, term, name) %>% summarise(quantiles = list(paste("q",qmed*100,sep="")), value = list(quantile(value, qmed))) %>% unnest
-  temp <- dplyr::group_by(yearav, pi, term, name)
-  temp <- dplyr::summarise(temp, quantiles = list(paste("q",qmed*100,sep="")), value = list(quantile(value, qmed)))
-  piqs <- tidyr::unnest(temp)
-
-
-
-  return(list(piqs=piqs, terms=list(short=short_term, medium=medium_term, long=long_term)))
-}
-
-get_quantiles <- function(dat, quantiles){
-  qs <- apply(dat, 2, function(x){quantile(x, probs=c(quantiles[1], 0.5, quantiles[2]), na.rm=TRUE)})
-  return(qs)
-}
-
-#' @export
-current_pi_table <- function(pis){
-  pis$piqs
-  piqs <- pis$piqs
-  # Beat this into a table
-  # Each row is a PI
-  # 4 Columns: Name, short, medium, long
-  # median (quantile)
-
-  signif <- 2
-  upis <- as.character(unique(piqs$pi))
-  uterm <- as.character(unique(piqs$term))
-  out <- data.frame()
-  for (upi in upis){
-    tempdat <- subset(piqs, term =="short" & pi==upi)
-    svalues <- signif(sort(subset(piqs, term =="short" & pi==upi)$value),signif)
-    mvalues <- signif(sort(subset(piqs, term =="medium" & pi==upi)$value),signif)
-    lvalues <- signif(sort(subset(piqs, term =="long" & pi==upi)$value),signif)
-    # If no uncertainty
-    if ((svalues[2] == svalues[1]) & (svalues[4] == svalues[5]) &
-        (mvalues[2] == mvalues[1]) & (mvalues[4] == mvalues[5]) &
-        (lvalues[2] == lvalues[1]) & (lvalues[4] == lvalues[5])){
-      sval <- as.character(svalues[3])
-      mval <- as.character(mvalues[3])
-      lval <- as.character(lvalues[3])
-    }
-    else {
-      sval <- paste(svalues[3], " (", svalues[2], ",", svalues[4],")", sep="")
-      mval <- paste(mvalues[3], " (", mvalues[2], ",", mvalues[4],")", sep="")
-      lval <- paste(lvalues[3], " (", lvalues[2], ",", lvalues[4],")", sep="")
-    }
-    out <- rbind(out, data.frame(name = tempdat$name[1], short = sval, medium=mval, long=lval))
-  }
-  rownames(out) <- out$name
-  # Drop rownames column
-  out <- out[,colnames(out) != "name"]
-  term_years <- pis$term
-  colnames(out) <- c(paste("Short (", term_years$short[1], "-", term_years$short[length(term_years$short)],")", sep=""),
-                     paste("Med. (", term_years$medium[1], "-", term_years$medium[length(term_years$medium)],")", sep=""),
-                     paste("Long (", term_years$long[1], "-", term_years$long[length(term_years$long)],")", sep=""))
-
-  return(out)
-}
-
-#' @export
-big_pi_table <- function(pis, hcr_choices, pi_choices, term_choice="long"){
-  if (length(pis) == 0){
-    return()
-  }
-  # Put into one big DF
-  piqs <- lapply(pis, function(x) return(x$piqs))
-  piqs <- dplyr::bind_rows(piqs, .id="hcr")
-
-  # Sanity check - if all the hcr choices are not in the PI table then something has gone wrong
-  if (!all(hcr_choices %in% unique(piqs$hcr))){
-    stop("In big_pi_table(). Not all hcr_choices are in the hcr list.\n")
-  }
-  signif <- 2
-  # Big fuck-off table: PIs along top, HRCs in the rows
-  # Just the median and two quantiles
-  # which quantiles do we want? drop the "q" from the front and order
-  qs <- sort(as.numeric(substring(unique(piqs$quantiles),2)))
-  qs <- paste("q", qs[2:4],sep="")
-  piqs <- subset(piqs, (hcr %in% hcr_choices) & (name %in% pi_choices) & (term == term_choice) & (quantiles %in% qs))
-  piqs$value <- signif(piqs$value, signif)
-  dat <- tidyr::spread(piqs, key="quantiles", value="value")
-  # Make the text values
-  dat$valtxt <- as.character(NA)
-  # Which rows have same qs - no uncertainty
-  certain_rows <- c((dat[,qs[2]] == dat[,qs[1]]) & (dat[,qs[2]] == dat[,qs[3]]))
-  # uncertain rows
-  uncertain_valtx <- paste(unlist(dat[,qs[2]])," (",
-        unlist(dat[,qs[1]]),",",
-        unlist(dat[,qs[3]]),")",sep="")[!certain_rows]
-  certain_valtx <- paste(unlist(dat[,qs[2]]))[certain_rows]
-  dat$valtxt[certain_rows] <- certain_valtx
-  dat$valtxt[!certain_rows] <- uncertain_valtx
-
-  dat <- dat[,c("hcr","name","valtxt")]
-  out <- as.data.frame(tidyr::spread(dat, key="name", value="valtxt"))
-  rownames(out) <- out$hcr
-  out <- out[,colnames(out) != "hcr"]
-  return(out)
-}
+#-------------------------------------------------------------------
 
 # PIs for the IntroProjection app
 # Each row in the stock is a separate projection
@@ -641,3 +602,86 @@ next_corrnoise <- function(x, b, sd=0.1){
   return(nextx)
 }
 
+#----------------------------------------------------
+# Function to get the perfomance indicators in same format as PIMPLE
+
+
+get_summaries <- function(stock, stock_params, app_params, quantiles){
+  # worms - a sample of iters by year
+  # yearqs - the quantiles by year
+  # periodqs - average over the periods and take quantiles
+
+
+  # SBSBF0
+  sbsbf0 <- as.data.frame(stock$biomass / stock_params$k)
+  sbsbf0$iter <- 1:nrow(sbsbf0)
+  sbsbf0 <- tidyr::gather(sbsbf0, key="year", value="data", -iter, convert=TRUE)
+  sbsbf0 <- cbind(sbsbf0, pi="sbsbf0", piname="SB/SBF=0", upsidedown=FALSE)
+
+  # Prob SBSBF0 > LRP
+  problrp <- dplyr::group_by(sbsbf0, year)
+  problrp <- dplyr::summarise(problrp, data=mean(data > stock_params$lrp, na.rm=TRUE))
+  problrp <- cbind(problrp, pi="pi1", piname="Prob. SB > LRP", upsidedown=FALSE, iter=1) # Called pi1 inline with PIMPLE
+
+
+  # Catch
+  catch <- as.data.frame(stock$catch)
+  catch$iter <- 1:nrow(catch)
+  catch <- tidyr::gather(catch, key="year", value="data", -iter, convert=TRUE)
+  catch <- cbind(catch, pi="catch", piname="Catch", upsidedown=FALSE)
+  
+  # Catch var
+
+  # Effort
+
+  # Effort var
+
+  # CPUE
+
+  # CPUE var
+
+  # F / FMSY
+  fmsy <- stock_params$r / 2
+  f <- stock$catch / stock$biomass 
+  ffmsy <- as.data.frame(f / fmsy)
+  ffmsy$iter <- 1:nrow(ffmsy)
+  ffmsy <- tidyr::gather(ffmsy, key="year", value="data", -iter, convert=TRUE)
+  ffmsy <- cbind(ffmsy, pi="ffmsy", piname="F/FMSY", upsidedown=TRUE)
+
+
+  # Combine all 
+  dat <- rbind(problrp, sbsbf0, catch, ffmsy)
+
+  # Period table and add to the dat
+  years <- dimnames(stock$biomass)$year
+  time_periods <- get_time_periods(app_params, nyears=dim(stock$biomass)[2])
+  short_term <- years[time_periods[["short_term"]]]
+  medium_term <- years[time_periods[["medium_term"]]]
+  long_term <- years[time_periods[["long_term"]]]
+  rest <- years[1:(time_periods$short_term[1]-1)]
+  periods <- rbind(data.frame(period = "Rest", year=rest),
+      data.frame(period = "Short", year=short_term),
+      data.frame(period = "Medium", year=medium_term),
+      data.frame(period = "Long", year=long_term))
+  
+  # Add period
+  dat <- merge(dat, periods)
+
+  # Get summaries etc
+  # Get averages by periods, then quantiles
+  periodqs <- dplyr::group_by(dat, pi, piname, upsidedown, period, iter)
+  periodqs <- dplyr::summarise(periodqs, data=mean(data, na.rm=TRUE))
+  periodqs <- dplyr::do(periodqs, data.frame(t(quantile(.$data, probs=quantiles, na.rm=TRUE))))
+  # Get quantiles of each year
+  yearqs <- dplyr::group_by(dat, pi, piname, upsidedown, year)
+  yearqs <- dplyr::do(yearqs, data.frame(t(quantile(.$data, probs=quantiles, na.rm=TRUE))))
+  # Get worms
+  nworms <- 5
+  wormiters <- sample(unique(dat$iter),nworms)
+  worms <- subset(dat, iter %in% wormiters)
+  # rename iter column to wormid
+  worms <- dplyr::rename(worms, wormid = iter)
+
+  # Fucking tibble shit
+  return(list(worms=as.data.frame(worms), yearqs=as.data.frame(yearqs), periodqs=as.data.frame(periodqs)))
+}

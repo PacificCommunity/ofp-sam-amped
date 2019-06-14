@@ -2,18 +2,8 @@
 # Maintainer: Finlay Scott, OFP SPC
 
 # Load packages ----
-#library(shiny)
 library(shinyjs)
-#library(tidyr) # Could Try to avoid it and reduce weight of packages
-#library(dplyr) # Just used for bind_rows() at the moment - change data structure of PIs to avoid this
-#library(ggplot2)
-#library(RColorBrewer)
 library(AMPLE)
-
-# Source helpers ----
-#source("../R/funcs.R")
-#source("../R/plots.R")
-#source("../R/modules.R")
 
 # UI
 ui <- navbarPage(

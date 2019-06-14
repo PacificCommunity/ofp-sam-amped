@@ -1,6 +1,6 @@
 Package: AMPLE
 Title: Grab yourself a handful
-Version: 0.0.0.9000
+Version: 0.0.1
 Maintainer: Finlay Scott <finlay.scott@spc.int>
 Authors@R: 
     person(given = "Finlay",

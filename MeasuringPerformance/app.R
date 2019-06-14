@@ -72,7 +72,8 @@ ui <- navbarPage(
         # See: https://shiny.rstudio.com/reference/shiny/1.0.0/updateCheckboxGroupInput.html
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection",
           # character(0) means no choice is available
-          choices = character(0)),
+          #choices = character(0)),
+          choiceNames = character(0), choiceValues = character(0)),
         br()
       ),
       mainPanel(width=9,
@@ -180,15 +181,20 @@ server <- function(input, output,session) {
   app_params <- list(initial_year = 2009, last_historical_timestep = 10)
   # Storage for stocks - not actually needed - we only use the tsstore and pistore - make both reactive
   # pitemp is the pis for a single stock (HCR) - shown on the front page
-  pitemp <- reactiveVal(NULL)
+  #pitemp <- reactiveVal(NULL)
   # Storage for the PIs (all stocks / HCRs)
-  pistore <- reactiveVal(list())
+  #pistore <- reactiveVal(list())
   # Storage for the timeseries
-  tsstore <- reactiveVal(list())
+  #tsstore <- reactiveVal(list())
   # It is not possible to store something until you have projected
   #OKtostore <- FALSE
   OKtostore <- reactiveVal(FALSE)
-  quantiles <- c(0.05,0.2, 0.8, 0.95)
+  #quantiles <- c(0.05,0.2, 0.8, 0.95)
+  quantiles <- c(0.01, 0.05, 0.20, 0.5, 0.80, 0.95, 0.99)
+  # Objects for the PI summaries
+  worms <- reactiveVal(data.frame())
+  periodqs <- reactiveVal(data.frame())
+  yearqs <- reactiveVal(data.frame())
 
   # Modules for the stochasticity and MP parameters!
   get_mp_params <- callModule(mp_params_setter, "mpparams") 
@@ -222,21 +228,43 @@ server <- function(input, output,session) {
     stock_params <- get_stock_params()
     mp_params <- get_mp_params()
     # Add stock and summary PIs to lists
-    name <- paste(length(pistore())+1, ". ",mp_params$name,sep="")
+    #hcrno <- length(pistore())+1
+    #name <- paste(hcrno, ". ",mp_params$name,sep="")
     # Bit faffy to update the stores
-    temp <- pistore()
-    temp[[eval(name)]] <- pitemp()
-    pistore(temp)
-    temp <- tsstore()
-    temp[[eval(name)]] <- get_timeseries(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=quantiles[c(2,3)])
-    tsstore(temp)
+    #temp <- pistore()
+    #temp[[eval(name)]] <- pitemp()
+    #pistore(temp)
+    #temp <- tsstore()
+    #temp[[eval(name)]] <- get_timeseries(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=quantiles[c(2,3)])
+    #tsstore(temp)
 
-    # Update the available PIs - although this doesn't really dynamically change
+
+    # Scrub the above
+    # Remove old plotting
+    # Add in new plottin
+
+    temp <- get_summaries(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=quantiles)
+    hcrno <- length(unique(worms()$hcrref)) + 1
+    hcrname <- paste(hcrno, ". ",mp_params$name,sep="")
+    hcrref <- paste("HCR ", hcrno, sep="") # Used for legends
+    worms(rbind(worms(), cbind(temp$worms, hcrref=hcrref, hcrname=hcrname)))
+    periodqs(rbind(periodqs(), cbind(temp$periodqs, hcrref=hcrref, hcrname=hcrname)))
+    yearqs(rbind(yearqs(), cbind(temp$yearqs, hcrref=hcrref, hcrname=hcrname)))
+
+    # Update the available PIs checkboces - although this doesn't really dynamically change
     # It just saves having to maintain a list in the UI at the top AND in the PI calculation function
     # Because the options come from the pistore and if no pistore yet, no names
+
+
+    # Drop F/FMSY and others from list
+    drop_pis <- c("ffmsy") 
+    drop_pinames <- unique(subset(periodqs(), pi %in% drop_pis)$piname)
+    pi_choices <- unique(periodqs()$piname)
+    pi_choices <- pi_choices[!(pi_choices %in% drop_pinames)]
+
     updateCheckboxGroupInput(session, "pichoice",
-                             choices = unique(pistore()[[name]]$piqs$name),
-                             selected = unique(pistore()[[name]]$piqs$name)
+                             choices = pi_choices,
+                             selected = pi_choices
                              )
 
     # You can't store again until you project again
@@ -249,7 +277,7 @@ server <- function(input, output,session) {
     stock_params <- get_stock_params()
     reset_stock(stock=stock, stock_params=stock_params, mp_params=get_mp_params(), app_params=app_params, initial_biomass=stock_params$b0, nyears=input$nyears, niters=input$niters)
     # Reset the show table variable
-    pitemp(NULL)
+    #pitemp(NULL)
     #OKtostore <<- FALSE
     OKtostore(FALSE)
   })
@@ -260,14 +288,19 @@ server <- function(input, output,session) {
     input$empty_basket
     input$add_basket
     selected <- NULL
-    choices <- character(0)
-    if(length(pistore())>0){
-      selected <- names(pistore())
-      choices <- names(pistore())
+    choiceNames <- character(0)
+    choiceValues <- character(0)
+
+    if(length(unique(periodqs()$hcrname)) > 0){
+      selected <- unique(periodqs()$hcrref)
+      choiceNames <- as.character(unique(periodqs()$hcrname))
+      choiceValues <- unique(periodqs()$hcrref)
     }
+
     updateCheckboxGroupInput(session, "hcrchoice",
-      choices = choices,
-      selected = selected
+      selected = selected,
+      choiceNames = choiceNames,
+      choiceValues = choiceValues
     )
   })
   
@@ -290,9 +323,13 @@ server <- function(input, output,session) {
     # Reset the stock
     isolate(reset_stock(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, initial_biomass=stock_params$b0, nyears=nyears, niters=niters))
     # Empty the storage
-    pitemp(NULL)
-    pistore(list()) 
-    tsstore(list()) 
+    #pitemp(NULL)
+    #pistore(list()) 
+    #tsstore(list()) 
+    worms(data.frame())
+    periodqs(data.frame())
+    yearqs(data.frame())
+
     #OKtostore <<- FALSE
     OKtostore(FALSE)
   })
@@ -307,127 +344,200 @@ server <- function(input, output,session) {
                     app_params=app_params)
     # stock is automagically updated as it's by reference - or something - so no need to update by hand
     # Get summary PIs 
-    piqs <- get_summary_pis(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params,
-                            quantiles=quantiles)
-    pitemp(piqs)
+    #piqs <- get_summary_pis(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params,
+    #                        quantiles=quantiles)
+    #pitemp(piqs)
     #OKtostore <<- TRUE
     OKtostore(TRUE)
   })
   
+  #------------------------------------------------------------
+  # Front page plotting events
+
   # Call the HCR plot function
   output$plothcr <- renderPlot({
     plot_hcr(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, show_last = FALSE)
   })
   
   output$plotbiomasshisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", show_last = FALSE, quantiles=quantiles[c(2,3)])
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", show_last = FALSE, quantiles=quantiles[c(3,5)])
   })
 
   output$plotcatchhisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", show_last = FALSE, quantiles=quantiles[c(2,3)])
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", show_last = FALSE, quantiles=quantiles[c(3,5)])
   })
 
   output$plotrelcpuehisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, show_last = FALSE, quantiles=quantiles[c(2,3)])
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, show_last = FALSE, quantiles=quantiles[c(3,5)])
   })
 
-  output$plotmajuro <- renderPlot({
-    plot_majuro_single_stock(stock=stock, stock_params = get_stock_params(),quantiles=quantiles[c(2,3)])
-  })
+  #output$plotmajuro <- renderPlot({
+  #  plot_majuro_single_stock(stock=stock, stock_params = get_stock_params(),quantiles=quantiles[c(2,3)])
+  #})
 
   output$nstoredstocks <- renderText({
-    paste("Number of HCRs in basket: ", length(pistore()), sep="")
+    #paste("Number of HCRs in basket: ", length(pistore()), sep="")
+    paste("Number of HCRs in basket: ", length(unique(worms()$hcrref)), sep="")
   })
 
-  output$currenthcrpis <- renderTable({
-    # Don't print table unless project has been pressed
-    if (is.null(pitemp())){
-      return()}
-    # Use pitemp() to fill table
-    current_pi_table(pitemp())
-    },
-    rownames = TRUE,
-    caption= "Performance indicators",
-    auto=TRUE
-  )
+  #output$currenthcrpis <- renderTable({
+  #  # Don't print table unless project has been pressed
+  #  if (is.null(pitemp())){
+  #    return()}
+  #  # Use pitemp() to fill table
+  #  current_pi_table(pitemp())
+  #  },
+  #  rownames = TRUE,
+  #  caption= "Performance indicators",
+  #  auto=TRUE
+  #)
 
-  # I don't like the repetition!
-  # The mega table for the PIs - tricky
-  output$bigpitable_long <- renderTable({
+  #------------------------------------------------------------
+  # Comparison plotting events
+
+  get_pi_table <- function(period_choice="Short"){
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
     # If no HCR or PI is selected then don't do anything
     if(is.null(hcr_choices) | is.null(pi_choices)){
       return()
     }
-    big_pi_table(pis=pistore(), hcr_choices=hcr_choices, pi_choices=pi_choices, term_choice="long") 
-    },
-    rownames = TRUE,
-    caption= "Performance indicators in the long-term",
-    auto=TRUE
-  )
-  
-  output$bigpitable_medium <- renderTable({
-    hcr_choices <- input$hcrchoice
-    pi_choices <- input$pichoice
-    # If no HCR or PI is selected then don't do anything
-    if(is.null(hcr_choices) | is.null(pi_choices)){
-      return()
-    }
-    big_pi_table(pis=pistore(), hcr_choices=hcr_choices, pi_choices=pi_choices, term_choice="medium") 
-    },
-    rownames = TRUE,
-    caption= "Performance indicators in the medium-term",
-    auto=TRUE
-  )
-  
+    dat <- subset(periodqs(), hcrref %in% hcr_choices & period == period_choice & piname %in% pi_choices)
+    tabdat <- pitable(dat)
+    return(tabdat)
+  }
+
   output$bigpitable_short <- renderTable({
-    hcr_choices <- input$hcrchoice
-    pi_choices <- input$pichoice
-    # If no HCR or PI is selected then don't do anything
-    if(is.null(hcr_choices) | is.null(pi_choices)){
-      return()
-    }
-    big_pi_table(pis=pistore(), hcr_choices=hcr_choices, pi_choices=pi_choices, term_choice="short") 
+      tabdat <- get_pi_table(period_choice="Short")
     },
-    rownames = TRUE,
+    rownames = FALSE,
     caption= "Performance indicators in the short-term",
     auto=TRUE
   )
 
-  # Ouputs for the PI plotting tab
-  # You can't have the same output ID but you can set up mutltiple output ids to have the same renderPlot() function
-  renderPIplot <- renderPlot({
-    # Names of the HCRs and PIs in the pistore that we want to plot
+  output$bigpitable_medium <- renderTable({
+      tabdat <- get_pi_table(period_choice="Medium")
+    },
+    rownames = FALSE,
+    caption= "Performance indicators in the medium-term",
+    auto=TRUE
+  )
+
+  output$bigpitable_long <- renderTable({
+      tabdat <- get_pi_table(period_choice="Long")
+    },
+    rownames = FALSE,
+    caption= "Performance indicators in the long-term",
+    auto=TRUE
+  )
+
+  plot_barbox_comparehcr <- function(plot_type="median_bar"){
+    rPlot <- renderPlot({
+      hcr_choices <- input$hcrchoice
+      pi_choices <- input$pichoice
+      # If no HCR or PI is selected then don't do anything
+      if(is.null(hcr_choices) | is.null(pi_choices)){
+        return()
+      }
+      # Subset out variability / stability
+      dat <- subset(periodqs(), period != "Rest" & piname %in% pi_choices)
+
+
+
+      # Need to hack pi1 so that all quantiles = X50., else NA
+      #dat[dat$pi=="pi1",c("X5.", "X20.", "X80.", "X95.")] <- dat[dat$pi=="pi1","X50."]
+      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+      p <- p + ggplot2::ylim(0,NA)
+      p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
+      return(p)
+    })
+    return(rPlot)
+  }
+
+  output$plotpimed <- plot_barbox_comparehcr(plot_type="median_bar")
+  output$plotpibox <- plot_barbox_comparehcr(plot_type="box")
+
+  # Radar plot
+  output$plotpiradar <- renderPlot({
+    # Subsetting out as above
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
     # If no HCR or PI is selected then don't do anything
     if(is.null(hcr_choices) | is.null(pi_choices)){
       return()
     }
-    plot_pi_choice(pis=pistore(), hcr_choices=hcr_choices, pi_choices=pi_choices, plot_choice=input$comparisontabs)
+    #set_choices <- c(input$catchsetchoice, as.character(NA))
+    #metric_choices <- c(input$catchrelchoice,"mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #area_choices <- c("all", as.character(NA))
+    #dat <- periodqs %>% filter(period != "Rest" & pi %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+    dat <- subset(periodqs(), period != "Rest" & piname %in% pi_choices)
+    #scaling_choice <- input$radarscaling
+    p <- myradar(dat=dat, hcr_choices=hcr_choices)#, scaling_choice)
+    return(p)
   })
-  output$plotpibox <- renderPIplot
-  output$plotpimed <- renderPIplot
-  output$plotpiradar <- renderPIplot
+
+  # Time series comparisons
+  output$plottimeseries <- renderPlot({
+    hcr_choices <- input$hcrchoice
+    pi_choices <- c("sbsbf0", "catch", "ffmsy")
+    # If no HCR is selected then don't do anything
+    if(is.null(hcr_choices)){
+      return()
+    }
+
+    dat <- subset(yearqs(), pi %in% pi_choices)
+    wormdat <- subset(worms(), pi %in% pi_choices)
+
+    time_periods <- get_time_periods(app_params, nyears=dim(stock$biomass)[2])
+    years <- as.numeric(dimnames(stock$biomass)$year)
+    short_term <- years[time_periods[["short_term"]]]
+    medium_term <- years[time_periods[["medium_term"]]]
+    long_term <- years[time_periods[["long_term"]]]
+
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, time_period_lines=FALSE, show_spaghetti=input$spaghetti)
+    p <- p + ylim(c(0,NA))
+    p <- p + scale_x_continuous(expand = c(0, 0))
+    p <- p + ylab("Value")
+    return(p)
+
+
+  })
+
+
+  ## Ouputs for the PI plotting tab
+  ## You can't have the same output ID but you can set up mutltiple output ids to have the same renderPlot() function
+  #renderPIplot <- renderPlot({
+  #  # Names of the HCRs and PIs in the pistore that we want to plot
+  #  hcr_choices <- input$hcrchoice
+  #  pi_choices <- input$pichoice
+  #  # If no HCR or PI is selected then don't do anything
+  #  if(is.null(hcr_choices) | is.null(pi_choices)){
+  #    return()
+  #  }
+  #  plot_pi_choice(pis=pistore(), hcr_choices=hcr_choices, pi_choices=pi_choices, plot_choice=input$comparisontabs)
+  #})
+  #output$plotpibox <- renderPIplot
+  #output$plotpimed <- renderPIplot
+  #output$plotpiradar <- renderPIplot
 
   output$plotmajuroall <- renderPlot({
     hcr_choices <- input$hcrchoice
     if(is.null(hcr_choices)){
       return()
     }
-    plot_majuro_all_stocks(timeseries=tsstore(), hcr_choices=hcr_choices, stock_params=get_stock_params())
+  #  plot_majuro_all_stocks(timeseries=tsstore(), hcr_choices=hcr_choices, stock_params=get_stock_params())
+    plot_majuro(dat=yearqs(), hcr_choices=hcr_choices)
   })
 
-  output$plottimeseries <- renderPlot({
-    # Names of the HCRs that we want to plot
-    hcr_choices <- input$hcrchoice
-    # If no HCR is selected then don't do anything
-    if(is.null(hcr_choices)){
-      return()
-    }
-    plot_timeseries(timeseries=tsstore(), hcr_choices=hcr_choices, stock_params=get_stock_params(), show_spaghetti=input$spaghetti)
-  })
+  #output$plottimeseries <- renderPlot({
+  #  # Names of the HCRs that we want to plot
+  #  hcr_choices <- input$hcrchoice
+  #  # If no HCR is selected then don't do anything
+  #  if(is.null(hcr_choices)){
+  #    return()
+  #  }
+  #  plot_timeseries(timeseries=tsstore(), hcr_choices=hcr_choices, stock_params=get_stock_params(), show_spaghetti=input$spaghetti)
+  #})
 
   # Termination script - needed when running from bat file
   session$onSessionEnded(function() {
