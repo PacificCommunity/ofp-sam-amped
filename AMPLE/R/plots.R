@@ -50,6 +50,25 @@
   median_lty <- 2
   median_lwd <- 2
 
+
+#-------------------------------------------------------------------------------------
+# Generate vector of colours the same length as the total no of hcrs
+# Then subset out the hcrs in hcr_choices
+# see for more names: display.brewer.all(colorblindFriendly=TRUE)
+# Check the max number of colours in the palette brewer.pal.info
+# No HCRs is the total number of HCRs - not the number selected
+get_hcr_colours <- function(hcr_names, chosen_hcr_names){
+  #allcols <- colorRampPalette(brewer.pal(11,"PiYG"))(length(hcr_names))
+  #allcols <- colorRampPalette(brewer.pal(12,"Paired"))(length(hcr_names))
+  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Dark2"))(length(hcr_names))
+  allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdYlBu"))(length(hcr_names))
+  names(allcols) <- hcr_names
+  hcrcols <- allcols[chosen_hcr_names]
+  return(hcrcols)
+}
+
+
+
 # Called by a couple of plotting functions
 # Better than maintaining same code in multiple places
 get_catch_ymax <- function(catch, mp_params){
@@ -463,100 +482,100 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
 # Majuoro plotting functions
 # Plot a single stock using the stock object
 # Plotting all the stocks using the time series results
-#' @export
-plot_majuro_all_stocks <- function(timeseries, hcr_choices, stock_params){
-  # Put into one big DF
-  timeseries <- dplyr::bind_rows(timeseries, .id="hcr")
-  # Get the colour palette and add colour to the dataframe 
-  hcrcols <- get_hcr_colours(hcr_names=unique(timeseries$hcr), chosen_hcr_names=hcr_choices)
-  hcrcolsdf <- data.frame(hcr=names(hcrcols), colour=unname(hcrcols), stringsAsFactors=FALSE)
-  # Subset metrics and types
-  timeseries <- subset(timeseries, (hcr %in% hcr_choices) & (type=="quantile") & (metric %in% c("bk", "ffmsy")))
-  # Add in the colours
-  timeseries <- merge(timeseries, hcrcolsdf)
-  # Add Legend name through the the HCR number
-  hcrno <- unlist(lapply(strsplit(timeseries$hcr, "\\."),"[",1))
-  timeseries$hcrlegend <- paste("HCR ", hcrno, sep="")
-  plot_majuro(timeseries, stock_params)
-}
-
-plot_majuro_single_stock <- function(stock, stock_params, quantiles){
-  # Get the medians and percentiles
-  fmsy <- stock_params$r / 2
-  f <- stock$catch / stock$biomass 
-  ffmsy <- f / fmsy
-  ffmsyq <- get_quantiles(ffmsy, quantiles=quantiles)
-  ffmsyq <- cbind(metric="ffmsy", name="F / FMSY", level=c("lower","median","upper"),as.data.frame(ffmsyq))
-  bk <- stock$biomass / stock_params$k
-  bkq <- get_quantiles(bk, quantiles=quantiles)
-  bkq <- cbind(metric="bk", name="SB / SBF=0", level=c("lower","median","upper"),as.data.frame(bkq))
-  dat <- rbind(bkq, ffmsyq)
-  dat <- tidyr::gather(dat, key="year", value="value",-level, -metric, -name)
-  dat$hcr <- "Current"
-  dat$colour <- "black"
-  dat$hcrlegend <- NA
-  plot_majuro(dat, stock_params)
-}
-
-# For plotting with the IntroProjection app
-# stock has multiple projections as rows
-#' @export
-plot_majuro_projections <- function(stock, stock_params){
-  fmsy <- stock_params$r / 2
-  f <- stock$catch / stock$biomass 
-  ffmsy <- f / fmsy
-  ffmsy <- as.data.frame(ffmsy)
-  ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
-  ffmsy <- tidyr::gather(ffmsy, key="year", value="value", -hcr)
-  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
-  bk <- stock$biomass / stock_params$k
-  bk <- as.data.frame(bk)
-  bk <- cbind(bk, hcr=1:nrow(bk))
-  bk <- tidyr::gather(bk, key="year", value="value", -hcr)
-  bk <- cbind(bk, metric="bk", name="SB / SBF=0", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
-  # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
-  # So add 1 to the F years
-  bk$year <- as.numeric(bk$year)
-  ffmsy$year <- as.numeric(ffmsy$year)
-  ffmsy$year <- ffmsy$year + 1
-  # Only include common years between the two sets
-  common_years <- intersect(bk$year, ffmsy$year)
-  dat <- rbind(subset(bk, year %in% common_years), subset(ffmsy, year %in% common_years))
-  # Set last hcr to blue
-  last_hcr <- nrow(stock$catch)
-  dat[dat$hcr==last_hcr,"colour"] <- "blue"
-  plot_majuro(dat, stock_params)
-}
-
-#' @export
-plot_kobe_projections<- function(stock, stock_params){
-  fmsy <- stock_params$r / 2
-  f <- stock$catch / stock$biomass 
-  ffmsy <- f / fmsy
-  ffmsy <- as.data.frame(ffmsy)
-  ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
-  ffmsy <- tidyr::gather(ffmsy, key="year", value="value", -hcr)
-  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
-  # BMSY = K / 2
-  bmsy <- stock_params$k / 2
-  bbmsy <- stock$biomass / bmsy
-  bbmsy <- as.data.frame(bbmsy)
-  bbmsy <- cbind(bbmsy, hcr=1:nrow(bbmsy))
-  bbmsy <- tidyr::gather(bbmsy, key="year", value="value", -hcr)
-  bbmsy <- cbind(bbmsy, metric="bbmsy", name="B / BMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
-  # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
-  # So add 1 to the F years
-  bbmsy$year <- as.numeric(bbmsy$year)
-  ffmsy$year <- as.numeric(ffmsy$year)
-  ffmsy$year <- ffmsy$year + 1
-  # Only include common years between the two sets
-  common_years <- intersect(bbmsy$year, ffmsy$year)
-  dat <- rbind(subset(bbmsy, year %in% common_years), subset(ffmsy, year %in% common_years))
-  # Set last hcr to blue
-  last_hcr <- nrow(stock$catch)
-  dat[dat$hcr==last_hcr,"colour"] <- "blue"
-  plot_kobe(dat, stock_params)
-}
+# @export
+#plot_majuro_all_stocks <- function(timeseries, hcr_choices, stock_params){
+#  # Put into one big DF
+#  timeseries <- dplyr::bind_rows(timeseries, .id="hcr")
+#  # Get the colour palette and add colour to the dataframe 
+#  hcrcols <- get_hcr_colours(hcr_names=unique(timeseries$hcr), chosen_hcr_names=hcr_choices)
+#  hcrcolsdf <- data.frame(hcr=names(hcrcols), colour=unname(hcrcols), stringsAsFactors=FALSE)
+#  # Subset metrics and types
+#  timeseries <- subset(timeseries, (hcr %in% hcr_choices) & (type=="quantile") & (metric %in% c("bk", "ffmsy")))
+#  # Add in the colours
+#  timeseries <- merge(timeseries, hcrcolsdf)
+#  # Add Legend name through the the HCR number
+#  hcrno <- unlist(lapply(strsplit(timeseries$hcr, "\\."),"[",1))
+#  timeseries$hcrlegend <- paste("HCR ", hcrno, sep="")
+#  plot_majuro(timeseries, stock_params)
+#}
+#
+#plot_majuro_single_stock <- function(stock, stock_params, quantiles){
+#  # Get the medians and percentiles
+#  fmsy <- stock_params$r / 2
+#  f <- stock$catch / stock$biomass 
+#  ffmsy <- f / fmsy
+#  ffmsyq <- get_quantiles(ffmsy, quantiles=quantiles)
+#  ffmsyq <- cbind(metric="ffmsy", name="F / FMSY", level=c("lower","median","upper"),as.data.frame(ffmsyq))
+#  bk <- stock$biomass / stock_params$k
+#  bkq <- get_quantiles(bk, quantiles=quantiles)
+#  bkq <- cbind(metric="bk", name="SB / SBF=0", level=c("lower","median","upper"),as.data.frame(bkq))
+#  dat <- rbind(bkq, ffmsyq)
+#  dat <- tidyr::gather(dat, key="year", value="value",-level, -metric, -name)
+#  dat$hcr <- "Current"
+#  dat$colour <- "black"
+#  dat$hcrlegend <- NA
+#  plot_majuro(dat, stock_params)
+#}
+#
+## For plotting with the IntroProjection app
+## stock has multiple projections as rows
+## @export
+#plot_majuro_projections <- function(stock, stock_params){
+#  fmsy <- stock_params$r / 2
+#  f <- stock$catch / stock$biomass 
+#  ffmsy <- f / fmsy
+#  ffmsy <- as.data.frame(ffmsy)
+#  ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
+#  ffmsy <- tidyr::gather(ffmsy, key="year", value="value", -hcr)
+#  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
+#  bk <- stock$biomass / stock_params$k
+#  bk <- as.data.frame(bk)
+#  bk <- cbind(bk, hcr=1:nrow(bk))
+#  bk <- tidyr::gather(bk, key="year", value="value", -hcr)
+#  bk <- cbind(bk, metric="bk", name="SB / SBF=0", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
+#  # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
+#  # So add 1 to the F years
+#  bk$year <- as.numeric(bk$year)
+#  ffmsy$year <- as.numeric(ffmsy$year)
+#  ffmsy$year <- ffmsy$year + 1
+#  # Only include common years between the two sets
+#  common_years <- intersect(bk$year, ffmsy$year)
+#  dat <- rbind(subset(bk, year %in% common_years), subset(ffmsy, year %in% common_years))
+#  # Set last hcr to blue
+#  last_hcr <- nrow(stock$catch)
+#  dat[dat$hcr==last_hcr,"colour"] <- "blue"
+#  plot_majuro(dat, stock_params)
+#}
+#
+## @export
+#plot_kobe_projections<- function(stock, stock_params){
+#  fmsy <- stock_params$r / 2
+#  f <- stock$catch / stock$biomass 
+#  ffmsy <- f / fmsy
+#  ffmsy <- as.data.frame(ffmsy)
+#  ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
+#  ffmsy <- tidyr::gather(ffmsy, key="year", value="value", -hcr)
+#  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
+#  # BMSY = K / 2
+#  bmsy <- stock_params$k / 2
+#  bbmsy <- stock$biomass / bmsy
+#  bbmsy <- as.data.frame(bbmsy)
+#  bbmsy <- cbind(bbmsy, hcr=1:nrow(bbmsy))
+#  bbmsy <- tidyr::gather(bbmsy, key="year", value="value", -hcr)
+#  bbmsy <- cbind(bbmsy, metric="bbmsy", name="B / BMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
+#  # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
+#  # So add 1 to the F years
+#  bbmsy$year <- as.numeric(bbmsy$year)
+#  ffmsy$year <- as.numeric(ffmsy$year)
+#  ffmsy$year <- ffmsy$year + 1
+#  # Only include common years between the two sets
+#  common_years <- intersect(bbmsy$year, ffmsy$year)
+#  dat <- rbind(subset(bbmsy, year %in% common_years), subset(ffmsy, year %in% common_years))
+#  # Set last hcr to blue
+#  last_hcr <- nrow(stock$catch)
+#  dat[dat$hcr==last_hcr,"colour"] <- "blue"
+#  plot_kobe(dat, stock_params)
+#}
 
 
 # Dat is a data.frame with columns:
@@ -632,60 +651,60 @@ plot_kobe_projections<- function(stock, stock_params){
 # colour
 # hcrlegend
 # As majuro - would be good to combine the two - only difference is B metric and colours
-plot_kobe <- function(dat, stock_params){
-  ymax <- max(c(2.0, 1.1*subset(dat, metric=="ffmsy" & level=="upper")$value, 1.1*subset(dat, metric=="ffmsy" & level=="median")$value), na.rm=TRUE)
-  ymax <- min(ymax, 5.0) # In case of stock collapse
-  xmax <- max(c(2.0, 1.1*subset(dat, metric=="bbmsy" & level=="upper")$value, 1.1*subset(dat, metric=="bbmsy" & level=="median")$value), na.rm=TRUE)
-  # Set up the axes
-  plot(x=c(0,xmax), y=c(0,ymax), type="n", xlim=c(0,xmax), ylim=c(0,ymax), xlab = "B / BMSY", ylab = "F / FMSY", xaxs="i", yaxs="i")
-  # Set the colour panels
-  # The red one - top right
-  rect(0.0,1.0,1.0,ymax, border="black", col="red", lty=1, lwd=1)
-  # Bottom left - yellow
-  rect(0.0, 0.0, 1.0, 1.0, border="black", col="yellow", lty=1, lwd=1)
-  # Top right - yellow
-  rect(1.0, 1.0, xmax, ymax, border="black", col="yellow", lty=1, lwd=1)
-  # Bottom right - green
-  rect(1.0, 0.0, xmax, 1.0, border="black", col="green", lty=1, lwd=1)
-  # Loop over HCRs
-  hcrs <- unique(dat$hcr)
-  for (hcrcount in hcrs){
-    hcrdat <- subset(dat, hcr==hcrcount)
-    colour <- hcrdat$colour[1]
-    # Add the medians as points and a line to tell the story
-    medbbmsy <- subset(hcrdat, metric == "bbmsy" & level=="median")$value
-    medffmsy <- subset(hcrdat, metric == "ffmsy" & level=="median")$value
-    points(x=medbbmsy, y=medffmsy, pch=16, col=colour)
-    # Do a thick black line then overlay the real line
-    lines(x=medbbmsy, y=medffmsy, lty=1, lwd=4, col="black")
-    lines(x=medbbmsy, y=medffmsy, lty=1, lwd=3, col=colour)
-    # Add quantile lines
-    lowerbbmsy <- subset(hcrdat, metric == "bbmsy" & level=="lower")$value
-    lowerffmsy <- subset(hcrdat, metric == "ffmsy" & level=="lower")$value
-    upperbbmsy <- subset(hcrdat, metric == "bbmsy" & level=="upper")$value
-    upperffmsy <- subset(hcrdat, metric == "ffmsy" & level=="upper")$value
-    # We always have one more B value so use FFMsy for final year
-    finalyr <- max(which(!is.na(medffmsy))) 
-    for (yr in 1:finalyr){
-      lines(x=c(medbbmsy[yr],medbbmsy[yr]), y=c(lowerffmsy[yr],upperffmsy[yr]), lty=1, lwd=4, col="black")
-      lines(x=c(medbbmsy[yr],medbbmsy[yr]), y=c(lowerffmsy[yr],upperffmsy[yr]), lty=1, lwd=3, col=colour)
-      lines(x=c(lowerbbmsy[yr], upperbbmsy[yr]),y=c(medffmsy[yr], medffmsy[yr]), lty=1, lwd=4, col="black")
-      lines(x=c(lowerbbmsy[yr], upperbbmsy[yr]),y=c(medffmsy[yr], medffmsy[yr]), lty=1, lwd=3, col=colour)
-    }
-    # Blob at the end
-    finalbbmsy <- medbbmsy[finalyr]
-    finalffmsy <- medffmsy[finalyr]
-    points(x=finalbbmsy, y=finalffmsy, pch=21, col=colour, bg="white")
-  }
-  # Add legend
-  # Adapt HCR name text
-  # This is wrong - numbers not necessarily 1:X 
-  #if (!("Current" %in% hcrs )){ # Match single stock name in above function - bit dodgy
-  if(!any(is.na(dat$hcrlegend))){
-    hcrnames <- unique(dat$hcrlegend)
-    legend(x="bottomright", legend=hcrnames, lty=1, lwd=4, col=unique(dat$colour), cex=1.0)
-  }
-}
+#plot_kobe <- function(dat, stock_params){
+#  ymax <- max(c(2.0, 1.1*subset(dat, metric=="ffmsy" & level=="upper")$value, 1.1*subset(dat, metric=="ffmsy" & level=="median")$value), na.rm=TRUE)
+#  ymax <- min(ymax, 5.0) # In case of stock collapse
+#  xmax <- max(c(2.0, 1.1*subset(dat, metric=="bbmsy" & level=="upper")$value, 1.1*subset(dat, metric=="bbmsy" & level=="median")$value), na.rm=TRUE)
+#  # Set up the axes
+#  plot(x=c(0,xmax), y=c(0,ymax), type="n", xlim=c(0,xmax), ylim=c(0,ymax), xlab = "B / BMSY", ylab = "F / FMSY", xaxs="i", yaxs="i")
+#  # Set the colour panels
+#  # The red one - top right
+#  rect(0.0,1.0,1.0,ymax, border="black", col="red", lty=1, lwd=1)
+#  # Bottom left - yellow
+#  rect(0.0, 0.0, 1.0, 1.0, border="black", col="yellow", lty=1, lwd=1)
+#  # Top right - yellow
+#  rect(1.0, 1.0, xmax, ymax, border="black", col="yellow", lty=1, lwd=1)
+#  # Bottom right - green
+#  rect(1.0, 0.0, xmax, 1.0, border="black", col="green", lty=1, lwd=1)
+#  # Loop over HCRs
+#  hcrs <- unique(dat$hcr)
+#  for (hcrcount in hcrs){
+#    hcrdat <- subset(dat, hcr==hcrcount)
+#    colour <- hcrdat$colour[1]
+#    # Add the medians as points and a line to tell the story
+#    medbbmsy <- subset(hcrdat, metric == "bbmsy" & level=="median")$value
+#    medffmsy <- subset(hcrdat, metric == "ffmsy" & level=="median")$value
+#    points(x=medbbmsy, y=medffmsy, pch=16, col=colour)
+#    # Do a thick black line then overlay the real line
+#    lines(x=medbbmsy, y=medffmsy, lty=1, lwd=4, col="black")
+#    lines(x=medbbmsy, y=medffmsy, lty=1, lwd=3, col=colour)
+#    # Add quantile lines
+#    lowerbbmsy <- subset(hcrdat, metric == "bbmsy" & level=="lower")$value
+#    lowerffmsy <- subset(hcrdat, metric == "ffmsy" & level=="lower")$value
+#    upperbbmsy <- subset(hcrdat, metric == "bbmsy" & level=="upper")$value
+#    upperffmsy <- subset(hcrdat, metric == "ffmsy" & level=="upper")$value
+#    # We always have one more B value so use FFMsy for final year
+#    finalyr <- max(which(!is.na(medffmsy))) 
+#    for (yr in 1:finalyr){
+#      lines(x=c(medbbmsy[yr],medbbmsy[yr]), y=c(lowerffmsy[yr],upperffmsy[yr]), lty=1, lwd=4, col="black")
+#      lines(x=c(medbbmsy[yr],medbbmsy[yr]), y=c(lowerffmsy[yr],upperffmsy[yr]), lty=1, lwd=3, col=colour)
+#      lines(x=c(lowerbbmsy[yr], upperbbmsy[yr]),y=c(medffmsy[yr], medffmsy[yr]), lty=1, lwd=4, col="black")
+#      lines(x=c(lowerbbmsy[yr], upperbbmsy[yr]),y=c(medffmsy[yr], medffmsy[yr]), lty=1, lwd=3, col=colour)
+#    }
+#    # Blob at the end
+#    finalbbmsy <- medbbmsy[finalyr]
+#    finalffmsy <- medffmsy[finalyr]
+#    points(x=finalbbmsy, y=finalffmsy, pch=21, col=colour, bg="white")
+#  }
+#  # Add legend
+#  # Adapt HCR name text
+#  # This is wrong - numbers not necessarily 1:X 
+#  #if (!("Current" %in% hcrs )){ # Match single stock name in above function - bit dodgy
+#  if(!any(is.na(dat$hcrlegend))){
+#    hcrnames <- unique(dat$hcrlegend)
+#    legend(x="bottomright", legend=hcrnames, lty=1, lwd=4, col=unique(dat$colour), cex=1.0)
+#  }
+#}
 
 
 
@@ -730,20 +749,6 @@ plot_kobe <- function(dat, stock_params){
 #  points(x=bkqs[2,final_yr], y=ffmsyqs[2,final_yr], pch=16, cex=1.5, col="yellow")
 #}
 
-# Generate vector of colours the same length as the total no of hcrs
-# Then subset out the hcrs in hcr_choices
-# see for more names: display.brewer.all(colorblindFriendly=TRUE)
-# Check the max number of colours in the palette brewer.pal.info
-# No HCRs is the total number of HCRs - not the number selected
-get_hcr_colours <- function(hcr_names, chosen_hcr_names){
-  #allcols <- colorRampPalette(brewer.pal(11,"PiYG"))(length(hcr_names))
-  #allcols <- colorRampPalette(brewer.pal(12,"Paired"))(length(hcr_names))
-  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Dark2"))(length(hcr_names))
-  allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdYlBu"))(length(hcr_names))
-  names(allcols) <- hcr_names
-  hcrcols <- allcols[chosen_hcr_names]
-  return(hcrcols)
-}
 #------------------------------------------------------------
 # Yield curve
 
@@ -1016,33 +1021,64 @@ plot_yieldcurve_projections <- function(stock, stock_params, app_params){
 
 #----------------------------------------------------------------
 # Comparison plotting routines
+# For Measuring Performance and PIMPLE
 # Originally held in the PIMPLE app (except the Majuro)
 
 # Can we get Kobe in here too - just change the background colour and the X data
 # SB/SBF=0, B/BMSY
-plot_majuro <- function(dat, hcr_choices){
+#' @importFrom ggplot2 "geom_rect"
+#' @importFrom ggplot2 "scale_x_continuous"
+#' @importFrom ggplot2 "scale_y_continuous"
+#' @importFrom ggplot2 "geom_point"
+#' @importFrom ggplot2 "geom_errorbar"
+#' @importFrom ggplot2 "geom_errorbarh"
+#' @export
+plot_majuro <- function(dat, hcr_choices, stock_params){
+  hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
 
-#  ymax <- max(c(2.0, 1.1*subset(dat, metric=="ffmsy" & level=="upper")$value, 1.1*subset(dat, metric=="ffmsy" & level=="median")$value), na.rm=TRUE)
-#  ymax <- min(ymax, 5.0) # In case of stock collapse
-#  # Set up the axes
-#  plot(x=c(0,1), y=c(0,ymax), type="n", xlim=c(0,1), ylim=c(0,ymax), xlab = "SB / SBF=0", ylab = "F / FMSY", xaxs="i", yaxs="i")
-#  # Set the colour panels
-#  # The big red one
-#  rect(0.0,0.0,stock_params$lrp,ymax, border="black", col="red", lty=1, lwd=1)
-#  # The orange one
-#  rect(stock_params$lrp,1.0,1.0,ymax, border="black", col="orange", lty=1, lwd=1)
-#  # The other one - leave white for now
-#  rect(stock_params$lrp,0.0,1.0,1.0, border="black", col="white", lty=1, lwd=1)
+  # Need a dataset with X20 X80 Y20 Y80
+  majdat <- subset(dat, pi %in% c("ffmsy", "sbsbf0"))
+  majdat <- dplyr::select(majdat, pi, year, X20., X80., X50., hcrref)
+  majdat <- tidyr::gather(majdat, key="XX", value="data", -pi, -year, -hcrref)
+  majdat$pix <- paste(majdat$pi,majdat$XX,sep="")
+  majdat <- tidyr::spread(dplyr::select(majdat, year, hcrref, data, pix), key="pix", value="data")
 
-  # Can we ggplot it?
-  browser()
+  lrp <- stock_params[["lrp"]]
+  ymax <- min(max(majdat$ffmsyX80., na.rm=TRUE) * 0.1, 2.0)
+  
+  p <- ggplot(majdat)
+  # Big red
+  p <- p + geom_rect(data=data.frame(xmin=0, xmax=lrp, ymin=0, ymax=ymax), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="red", colour="black")
+  # Orange one
+  p <- p + geom_rect(data=data.frame(xmin=lrp, xmax=1.0, ymin=1.0, ymax=ymax), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="orange", colour="black")
+  # White one
+  p <- p + geom_rect(data=data.frame(xmin=lrp, xmax=1.0, ymin=0.0, ymax=1.0), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="white", colour="black")
 
+  # Put the lines on - Do twice, once in fat black , then thin with colour
+  # Lines and crosses
+  # Fat black
+  p <- p + geom_line(aes(x=sbsbf0X50., y=ffmsyX50.), colour="black", size=2)
+  p <- p + geom_errorbar(aes(x=sbsbf0X50., ymin=ffmsyX20., ymax=ffmsyX80., group=year), colour="black", size=2)
+  p <- p + geom_errorbarh(aes(y=ffmsyX50., xmin=sbsbf0X20., xmax=sbsbf0X80., group=year), colour="black", size=2)
+  # Thin colour
+  p <- p + geom_line(aes(x=sbsbf0X50., y=ffmsyX50., colour=hcrref), size=1.3)
+  p <- p + geom_errorbar(aes(x=sbsbf0X50., ymin=ffmsyX20., ymax=ffmsyX80., group=year, colour=hcrref), size=1.3)
+  p <- p + geom_errorbarh(aes(y=ffmsyX50., xmin=sbsbf0X20., xmax=sbsbf0X80., group=year, colour=hcrref), size=1.3)
+  # Black point
+  p <- p + geom_point(aes(x=sbsbf0X50., y=ffmsyX50.))
+  # Final point in white
+  maxyear <- max(majdat$year)
+  p <- p + geom_point(data=subset(majdat, year==maxyear), aes(x=sbsbf0X50., y=ffmsyX50.), colour="white")
 
-  p <- 5
+  p <- p + scale_colour_manual(values=hcrcols)
+  p <- p + xlab("SB/SBF=0") + ylab("F/FMSY")
+  p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+  p <- p + theme(legend.position="bottom", legend.title=element_blank())
+
+  p <- p + scale_x_continuous(expand = c(0, 0))
+  p <- p + scale_y_continuous(expand = c(0, 0), limits=c(0,ymax))
 
   return(p)
-
-
 }
 
 # Quantile plot - for time series

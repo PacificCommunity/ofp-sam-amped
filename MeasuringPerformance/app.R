@@ -526,7 +526,7 @@ server <- function(input, output,session) {
       return()
     }
   #  plot_majuro_all_stocks(timeseries=tsstore(), hcr_choices=hcr_choices, stock_params=get_stock_params())
-    plot_majuro(dat=yearqs(), hcr_choices=hcr_choices)
+    plot_majuro(dat=yearqs(), hcr_choices=hcr_choices, stock_params=get_stock_params())
   })
 
   #output$plottimeseries <- renderPlot({
