@@ -256,10 +256,10 @@ server <- function(input, output,session) {
 
   output$MajKobeplot  <- renderPlot({
     if(input$kobemajuro == "kobe"){
-      plot_kobe_projections(stock=stock, stock_params=get_stock_params())
+      plot_kobe_majuro_projections(stock=stock, stock_params=get_stock_params(), choice="kobe")
     }
     if(input$kobemajuro == "majuro"){
-      plot_majuro_projections(stock=stock, stock_params=get_stock_params())
+      plot_kobe_majuro_projections(stock=stock, stock_params=get_stock_params(), choice="majuro")
     }
     if(input$kobemajuro == "yieldcurve"){
       plot_yieldcurve_projections(stock=stock, stock_params=get_stock_params(), app_params=app_params)
