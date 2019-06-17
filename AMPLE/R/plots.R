@@ -2,7 +2,10 @@
 # 
 # Copyright 2019 Finlay Scott. Distributed under the GPL 3 or later
 # Maintainer: Finlay Scott, SPC
-#
+
+# A metric fuckton of imports
+#' @importFrom graphics "plot" "polygon" "lines"
+#' @importFrom ggplot2 "geom_rect" "scale_x_continuous" "scale_y_continuous" "geom_point" "geom_errorbar" "geom_errorbarh" "geom_ribbon" "geom_line" "geom_vline" "scale_x_continuous" "aes" "ggplot" "geom_bar" "geom_boxplot" "facet_wrap" "element_blank" "element_text" "scale_fill_manual" "theme" "xlab" "ylab" "CoordPolar" "ggproto" "scale_colour_manual" "geom_polygon" "ylim" "xlim" 
 
 # Plotting functions
 # Globals - eesh!
@@ -104,6 +107,7 @@ sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="bl
 # Try to keep it flexible
 # type - are we stepping or projecting? Better way of doing this
 # Use ... instead of passing in more args like timestep?
+
 #' @export
 plot_hcr <- function(stock, stock_params, mp_params, app_params, timestep=NULL, show_last=TRUE, ...){
 
@@ -684,12 +688,6 @@ plot_yieldcurve_projections <- function(stock, stock_params, app_params){
 
 # Can we get Kobe in here too - just change the background colour and the X data
 # SB/SBF=0, B/BMSY
-#' @importFrom ggplot2 "geom_rect"
-#' @importFrom ggplot2 "scale_x_continuous"
-#' @importFrom ggplot2 "scale_y_continuous"
-#' @importFrom ggplot2 "geom_point"
-#' @importFrom ggplot2 "geom_errorbar"
-#' @importFrom ggplot2 "geom_errorbarh"
 #' @export
 plot_majuro <- function(dat, hcr_choices, stock_params){
 
@@ -747,10 +745,6 @@ plot_majuro <- function(dat, hcr_choices, stock_params){
 
 # Quantile plot - for time series
 # All HCRs on same plot
-#' @importFrom ggplot2 "geom_ribbon"
-#' @importFrom ggplot2 "geom_line"
-#' @importFrom ggplot2 "geom_vline"
-#' @importFrom ggplot2 "scale_x_continuous"
 #' @export
 quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
                           alpha20_80 = 0.6, linetype_worm=1,
@@ -804,21 +798,12 @@ quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
 }
 
 # Bar plots and box plots
-#' @importFrom ggplot2 "aes"
-#' @importFrom ggplot2 "ggplot"
-#' @importFrom ggplot2 "geom_bar"
-#' @importFrom ggplot2 "geom_boxplot"
-#' @importFrom ggplot2 "facet_wrap"
-#' @importFrom ggplot2 "element_blank"
-#' @importFrom ggplot2 "element_text"
-#' @importFrom ggplot2 "scale_fill_manual"
-#' @importFrom ggplot2 "theme"
-#' @importFrom ggplot2 "xlab"
-#' @importFrom ggplot2 "ylab"
 #' @export
 myboxplot <- function(dat, hcr_choices, plot_type="median_bar"){
   hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
+  # Fucking subset and fucking non standard evaluation - why is this so shit??????
   dat <- subset(dat, hcrref %in% hcr_choices)
+  #dat <- dat[dat$hcrref %in% hcr_choices,]
 
   if (plot_type=="median_bar"){
     p <- ggplot(dat, aes(x=period, y=X50., fill=hcrref))
@@ -843,11 +828,6 @@ myboxplot <- function(dat, hcr_choices, plot_type="median_bar"){
 }
 
 # Radar plot
-#' @importFrom ggplot2 "CoordPolar"
-#' @importFrom ggplot2 "ggproto"
-#' @importFrom ggplot2 "scale_colour_manual"
-#' @importFrom ggplot2 "geom_polygon"
-#' @importFrom ggplot2 "ylim"
 #' @export
 myradar <- function(dat, hcr_choices, scaling="scale", polysize=2){
     hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
@@ -904,6 +884,53 @@ pitable <- function(dat){
 }
 
 
+
+#-------------------------------------------------------------------------------------
+# PIMPLE HCR plots
+
+# Prep all the data in the PI calculation script
+#' @export
+hcr_plot <- function(hcr_choices, hcr_shape, hcr_points, lrp, trp, blacklinesize=4, linesize=3, pointsize=4.2, stroke=3){
+    hcrcols <- get_hcr_colours(hcr_names=unique(hcr_shape$msectrl), chosen_hcr_names=hcr_choices)
+    # Select the chosen HCRs only - could do this in the call to plot in app?
+    shapedat <- subset(hcr_shape, msectrl %in% hcr_choices)
+    pointsdat <- subset(hcr_points, msectrl %in% hcr_choices)
+    p <- ggplot(shapedat, aes(x=x, y=y))
+    p <- p + geom_line(aes(group=msectrl), colour="black", size=blacklinesize) # outline
+    p <- p + geom_line(aes(colour=msectrl), size=linesize)
+    p <- p + xlab("Estimated SB/SBF=0") + ylab("Effort multiplier")
+    p <- p + theme(legend.position="bottom", legend.title=element_blank())
+    p <- p + scale_fill_manual(values=hcrcols)
+    p <- p + scale_colour_manual(values=hcrcols)
+    p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+    p <- p + scale_x_continuous(expand = c(0, 0))
+    # Add points to it
+    #p <- p + geom_point(dat=pointsdat, aes(x=sbsbf0, y=scaler, fill=msectrl), colour="black", shape=21, size=pointsize, alpha=0.3, stroke=stroke)
+    #p <- p + geom_jitter(dat=pointsdat, aes(x=sbsbf0, y=scaler, fill=msectrl), colour="black", shape=21, size=pointsize, alpha=0.3, stroke=stroke)
+    # Add LRP and TRP
+    p <- p + geom_vline(aes(xintercept=lrp), linetype=2)
+    p <- p + geom_vline(aes(xintercept=trp), linetype=2)
+    p <- p + ylim(0, NA)
+    return(p)
+}
+
+# Histograms for HCRs
+
+#' @export
+hcr_histo_plot <- function(hcr_choices, histodat){
+  hcrcols <- get_hcr_colours(hcr_names=unique(histodat$msectrl), chosen_hcr_names=hcr_choices)
+  hdat <- subset(histodat, msectrl %in% hcr_choices)
+  p <- ggplot(hdat, aes(x=bin, y=prop))
+  p <- p + geom_bar(aes(fill=msectrl), stat='identity', position='identity',colour="black", alpha=0.7)
+  p <- p + facet_wrap(~period)
+  p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+  p <- p + xlab("Effort scaler") + ylab("Proportion")
+  p <- p + theme(legend.position="bottom", legend.title=element_blank())
+  p <- p + ylim(0, NA)
+  p <- p + xlim(0, NA)
+  p <- p + scale_fill_manual(values=hcrcols)
+  return(p)
+}
 
 
 

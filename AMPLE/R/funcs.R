@@ -4,7 +4,22 @@
 # Maintainer: Finlay Scott, SPC
 #
 
+# A metric fuckton of imports
+#' @importFrom grDevices "colorRampPalette"
+#' @importFrom graphics  "arrows" "barplot" "grid" "hist" "layout" "legend" "par" "points" "rect"
+#' @importFrom stats "dnorm" "quantile" "rlnorm" "rnorm" "sd"
+#' @importFrom utils "data"
+#' @import shiny
+
+# A metric fuckton of global variables because the non standard evaluation is absolute cack
+globalVariables(c("X20.", "X5.", "X50.", "X80.", "X95.", "bin", "ffmsyX20.", "ffmsyX50.", "ffmsyX80.", "hcr", "hcrref", "iter", "level", "metric", "msectrl", "period", "piname", "pix", "prop", "sbsbf0X20.", "sbsbf0X50.", "sbsbf0X80.", "upsidedown", "value", "wormid", "x", "xmax", "xmin", "y", "year", "ymin", "."))
+
+
 # This looks pretty crummy
+
+#' Show the maintainer and licence for AMPED
+#' 
+#' @return A bunch of tags for use in Shiny apps
 #' @export
 amped_maintainer_and_licence <- function(){
   out <- tags$html(
@@ -20,12 +35,33 @@ amped_maintainer_and_licence <- function(){
   return(out)
 }
 
+#' Show the maintainer and licence for PIMPLR
+#' 
+#' @return A bunch of tags for use in Shiny apps
+#' @export
+pimple_maintainer_and_licence <- function(){
+  out <- tags$html(
+    tags$h1("PIMPLE"),
+    tags$p("Performance Indicators and Management Procedures Explorer"),
+    tags$footer(
+      tags$p("version 0.1.0 Kebab Spider"),
+      tags$p("Copyright 2019 OFP SPC MSE Team."),
+      tags$p("Distributed under the GPL 3")
+    )
+  )
+  return(out)
+}
 
 # Make the empty reactive stock object
 # The stock object is not reactive, but the elements inside it are (it's like a list)
 # stock cannot just be a calculated value returned from a reactive() as it needs to persist
 # i.e. here the next timestep depends on the previous timestep
 # it's empty but has structure
+
+#' Make the empty reactive stock object for AMPED apps
+#' 
+#' A stock is made up of biomass, hcr_ip, hcr_op, effort and catch.
+#' @return A reactiveValues object with bits for the stock
 #' @export
 create_stock <- function(){
   stock <- reactiveValues(

@@ -7,7 +7,7 @@ Authors@R:
            family = "Scott",
            role = c("aut", "cre"),
            email = "finlays@spc,int")
-Description: Common code for the AMPED and PIMPLE Shiny applications
+Description: This package contains common code for the AMPED and PIMPLE Shiny applications but doesn't really do much on its own.
 License: GPL-3
 Depends:
   shiny (>= 1.3.2)
