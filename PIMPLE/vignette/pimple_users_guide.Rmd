@@ -1,0 +1,562 @@
+---
+title: "Performance Indicators and Management Procedures Explorer - PIMPLE"
+subtitle: "Users Guide"
+author: "Finlay Scott - OFP, SPC"
+date: "2019-31-05"
+colorlinks: true
+urlcolor: blue
+geometry: "left=3cm,right=3cm,top=2cm,bottom=2cm"
+output:
+  pdf_document: 
+    toc: true
+    highlight: zenburn
+mainfont: Calibri Light
+fontsize: 12pt
+header-includes:
+  \usepackage{float}
+  \usepackage{tabularx}
+---
+
+# Introdution
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'H', out.extra = '', results='hide', echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r, echo=FALSE}
+# Libraries
+#library(ggplot2)
+#library(RColorBrewer)
+#library(dplyr)
+library(AMPLE)
+```
+
+
+```{r, echo=FALSE}
+# Loading the data
+load("../data/pimple_test_const4.Rdata")
+source("../plots.R")
+```
+
+```{r, echo=FALSE}
+# Sorting out the time periods
+short_term <- sort(unique(subset(worms, period=="Short")$year))
+medium_term <- sort(unique(subset(worms, period=="Medium")$year))
+long_term <- sort(unique(subset(worms, period=="Long")$year))
+last_plot_year <- max(long_term)
+nhcrs <- length(unique(worms$msectrl))
+lrp <- 0.2
+trp <- 0.5
+nworms <- 5
+wormiters <- sample(unique(worms$iter), nworms)
+```
+
+## What is it?
+
+PIMPLE is a tool for exploring and comparing the performance of alternative candidate harvest control rules (HCRs).
+The performance can be explored using a range of different plots and tables.
+This allows trade-offs between the different HCRs to be evaluated.
+The performance of each HCR is measured using different *performance indicators* (PIs). More details of the PIs are given in the Appendix.
+
+This guide gives a brief overview of how to use PIMPLE to explore the results and some guidance on how to interpret the various plots.
+
+Note that when evaluating the performance of different HCRs we are more interested in comparing their relative performance (e.g. is HCR 1 better than HCR 2?) rather than comparing the performance of the HCRs to some period in the past (e.g. is HCR 1 better than some situation 10 years ago?).
+
+In the current data base there are `r nhcrs` HCRs, including some 'status quo' options with constant fishing effort.
+The indicators are calculated over three different time periods: short-, medium- and long-term.
+The length of each period is three management cycles, where one management cycle is three years.
+The year range of each period is:
+short-term (`r short_term[1]`:`r short_term[length(short_term)]`)
+medium-term (`r medium_term[1]`:`r medium_term[length(medium_term)]`)
+long-term (`r long_term[1]`:`r long_term[length(long_term)]`).
+
+## How do I use PIMPLE?
+
+There are three main sections to PIMPLE, accessible by the tabs at the top of the screen.
+The tabs are: **The HCRs** (the tab that is open when you start PIMPLE), **PI Inspector** and **Comparing MPS**.
+A description of each tab is given below.
+Briefly, **The HCRs** tab shows the shapes of the different candidate HCRs and which parts of the HCR were active during the evaluations; **PI Inspector** allows detailed inspection of each type of PI and metric; **Comparing MPs** allows HCRs to be compared across the full range of PIs.
+
+Depending on which tab is open, you will be able to select different candidate HCRs and different PIs using the selection boxes on the left of the screen.
+It may take some time to update the plots after selecting and unselecting the HCRs or PIs - sorry.
+
+When you first open PIMPLE you will be on **The HCRs** tab.
+You will see a screen with plots of the HCRs in the main panel and selection boxes on the left that allow you to choose the HCRs you wish to inspect.
+
+For a description of each indicator see the Appendix at the bottom of this document.
+A desciption of the different plot types is found in the **Comparing MPs** section below.
+
+# The HCRs tab
+
+This tab has two plots.
+The first shows the shape of each of the HCRs. 
+<!--The circles on the shapes indicate when that part of the HCR was 'activated' during the simulations.-->
+
+```{r, echo=FALSE, fig.cap="Example HCR shapes from the HCRs tab."}
+hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp, blacklinesize=2, linesize=1, pointsize=1.5, stroke=1)
+p <- p + theme(axis.text=element_text(size=10), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
+p
+#ggsave(filename="hcrs.png", p)
+```
+
+The second plot shows the distribution of the resulting HCR outputs (e.g. resulting effort scaler) in each of the time periods.
+
+```{r, echo=FALSE, fig.cap="Example distributions of HCR outputs (effort scaler) in the HCRs tab."}
+# Copied from app - update if necessary
+breaks <- seq(from=0,to=2,by=0.05)
+freqs <- cut(hcr_points$scaler, breaks, labels=FALSE)
+hcr_points$bin <- breaks[freqs]
+histodat <- hcr_points %>% group_by(msectrl, period, bin) %>% summarise(sum=n())
+nobs <- hcr_points %>% group_by(msectrl, period) %>% summarise(tnobs=n())
+histodat <- left_join(histodat, nobs)
+histodat$prop <- histodat$sum / histodat$tnobs
+p <- hcr_histo_plot(hcr_choices, histodat)
+p <- p + theme(axis.text=element_text(size=10), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
+p
+#ggsave(filename="hcrs_op.png", p)
+```
+
+The HCRs under inspection can be chosen using the **HCR selection** boxes on the left.
+
+# PI Inspector tab
+
+This tab offers the ability to explore the performance of the HCRs in detail.
+The HCRs under inspection can be chosen using the **HCR selection** boxes on the left.
+
+There are several subtabs, each one offering different plots of the same indicator or theme.
+
+## PI 1 & 8: Biomass
+
+This tab shows metrics and indicators related to biomass and PIs 1 and 8.
+
+There is a time series plot of *SB/SBF=0* and bar charts and box plots of average *SB/SBF=0* and PI 8 (proximity of *SB/SBF=0* to the TRP) in the different time periods.
+There is also a bar chart showing PI 1 (the probablity of *SB/SBF=0* being below the Limit Reference Point (LRP)).
+
+Note that for PI 8, a value of 1 indicates being at the TRP and a value of 0 indicates being far from the TRP in any direction.
+
+
+## PI 3: Catches
+
+This tab shows metrics and indicators related to the expected catches (PI 3).
+
+There is a time series of catches as well a bar chart and box plot of the average catches in the different time periods.
+Using the options on the left of the screen, the catches can be displayed as either *absolute* expected values or *relative* to the catches in the period 2013-15.
+Additionally, either the catches relating to the whole region, or only purse seine catches in assessment regions 2, 3, and 5 can be shown.
+
+## PI 4: Relative CPUE
+
+This tab is concerned with the CPUE relative to the CPUE in 2010.
+Note that the CPUE is only calculated for purse seine fisheries in assessment regions 2, 3 and 5 excluding the associated purse seines in region 5.
+
+This tab has a time series of relative CPUE as well a bar chart and box plot of the average relative CPUE in the different time periods.
+
+## PI 6: Catch stability
+
+The catch stability is presented either as the variability and the stability.
+The higher the variability, the lower the stability.
+A stability of 1 means that the catches do not change over time. The lower value of stability, the more the catches change over time.
+Both the variability and stability are presented as bar charts and box plots.
+
+Like the **PI 3: Catches** tab, the catches can be presented as *absolute* expected values, or *relative* to the average catches in the period 2013-15 and as either the total catches in the whole region or only for the purse seine catches in assessment regions 2, 3 and 5.
+
+Note that the size of the boxes in the box plots do not reflect the uncertainty in the catches, but uncertainty in how stable or variable the catches will be.
+
+## PI 7: Relative effort variability
+
+Relative effort is the effort relative to the effort in 2010.
+Note that the relative effort is only calculated for purse seine fisheries in assessment regions 2, 3 and 5 excluding the associated purse seines in region 5.
+
+The relative effort variability is presented either as the variability and the stability.
+A stability of 1 means that the relative effort does not change over time. The lower value of stability, the more the relative effort changes over time.
+Both the variability and stability are presented as bar charts and box plots.
+
+## Mean weight of an individual
+
+This tab shows the mean weight of an individual in the population, not the catches.
+It has been proposed as a possible indicator for changes in stock structure.
+
+The mean weight of an individual is presented as a time series and also a bar chart and a box plot of the average value in each time period.
+
+# Comparing MPs
+
+The plots and tables in this tab enable the comparison of the candidate HCRs across multiple PIs.
+This allows trade-offs to be evaluated.
+
+At the time of writing there were five subtabs under the **Comparing MPs** tab. Each subtab offers a different method of presenting the information.
+These tabs are:
+
+* Bar charts
+* Box plots
+* Radar plots
+* Time series plots
+* Table
+
+These are described in more detail below.
+
+The HCRs under inspection can be chosen using the **HCR selection** boxes on the left.
+The PIs of interest can be chosen using the **PI selection** boxes on the left.
+As you choose different PIs and HCRs the plots and tables will update to reflect the selection.
+It may take a little time to update the plots.
+
+Like the **PI 3: Catches** tab, the catch based indicators can be presented as absolute expected values, or relative to the average catches in the period 2013-15 and as either the total catches in the whole region or only for the purse seine catches in assessment regions 2, 3 and 5.
+
+
+## Bar charts
+
+The bar charts in PIMPLE gives the *median* value of the indicator.
+This means that they do not consider the range of values for each indicator and therefore do not consider the uncertainty.
+The median value is calculated for each of the time periods (short-, medium- and long-term).
+
+The results from the different HCRs have different colours, as shown by the legend.
+
+```{r, fig.cap="Example bar chart showing median values of two indicators for three HCRs across the three time periods."}
+hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+plot_type <- "median_bar"
+pi_choices <- c("biomass", "pi4")
+set_choices <- as.character(NA)
+metric_choices <- c("mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+area_choices <- c("all", as.character(NA))
+dat <- periodqs %>% filter(period != "Rest" & pi %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+# Need to hack pi1 so that all quantiles = X50., else NA
+dat[dat$pi=="pi1",c("X5.", "X20.", "X80.", "X95.")] <- dat[dat$pi=="pi1","X50."]
+p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+p <- p + ylim(0,NA)
+p <- p + ylab("Value") + xlab("Time period")
+p <- p + theme(axis.text=element_text(size=10), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
+p
+#ggsave(filename="barplot_example.png", p)
+```
+
+
+
+
+## Box plots
+
+The box plots allow the uncertainty of the different indicators and metrics to be explored.
+The coloured box covers the 20-80th percentile.
+The vertical whisker covers the 5-95th percentile.
+The horizontal line shows the median.
+The median line will be in the same position as the height of the bar charts.
+The larger the box and the longer the whisker, the greater uncertainty there is about the indicator.
+
+As with the bar charts the results from the selected HCRs have different colours, as shown by the legend.
+The value in each of the time periods (short-, medium- and long-term) is also shown.
+
+```{r, fig.cap="Example box plot showing median values of two indicators for three HCRs across the three time periods."}
+hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+plot_type <- "box"
+pi_choices <- c("biomass", "pi4")
+set_choices <- as.character(NA)
+metric_choices <- c("mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+area_choices <- c("all", as.character(NA))
+dat <- periodqs %>% filter(period != "Rest" & pi %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+# Need to hack pi1 so that all quantiles = X50., else NA
+dat[dat$pi=="pi1",c("X5.", "X20.", "X80.", "X95.")] <- dat[dat$pi=="pi1","X50."]
+p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+p <- p + ylim(0,NA)
+p <- p + ylab("Value") + xlab("Time period")
+p <- p + theme(axis.text=element_text(size=10), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
+p
+#ggsave(filename="boxplot_example.png", p)
+```
+
+## Radar plots
+
+Radar plots look quite interesting but they must be handled with care.
+The indicators are spread around a circle and the median value for each indicator for each HCR is shown.
+The bigger the area covered by each HCR the better it is performing, assuming that each PI is of equal importance.
+
+A radar plot is shown for each time period.
+As with the bar charts the results from the selected HCRs have different colours, as shown by the legend.
+Only the selected PIs are shown which means that you need at least three PIs selected for the plot to make any sense.
+
+As the indicators have different ranges of values it is necessary to scale the values to allow comparison on the same plot.
+PIMPLE has two ways of scaling the values and you should understand the difference between them because they can strongly affect the result.
+
+Option 1 is *Scale by max*. This means that the values within each indicator are scaled by the maximum value within each indicator.
+The relative values of the indicators are preserved.
+This means that if the values within an indicator are similar the difference between them will be difficult to see.
+
+```{r, fig.cap="Example radar plot for three HCRs and 8 indicators with results being scaled by the max. Note that there is not much contrast between the HCRs. Only the long-term period is shown"}
+hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+pi_choices <- unique(periodqs$pi)
+set_choices <- c("total", as.character(NA))
+metric_choices <- c("catch","mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+area_choices <- c("all", as.character(NA))
+dat <- periodqs %>% filter(period != "Rest" & pi %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+scaling_choice <- "scale"
+dat <- subset(dat, period=="Long")
+p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice, polysize=1)
+p <- p + theme(axis.text=element_text(size=5), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
+p
+#ggsave(filename="radar1_example.png", p)
+```
+
+Option 2 is *Rank*. This means that the values within each indicator are ordered by size and assigned a rank between 0 and 1.
+For example, if there are three HCRs, the values for the catch indicator will be 0.33, 0.66 and 1.0.
+This means that the differences between the HCRs can be exagerated.
+HCRs that actually have very similar indicator values can look very different when plotted using the *Rank* scaling.
+Use it with care.
+
+```{r, fig.cap="Example radar plot for three HCRs and 8 indicators with results being ranked. Note that these HCRs and PIs are the same as in the previous radar plot above but now that there is a lot of contrast due to ranking. This shows that ranking can exagerate the differences in performance between the HCRs. Only the long-term period is shown"}
+hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+pi_choices <- unique(periodqs$pi)
+set_choices <- c("total", as.character(NA))
+metric_choices <- c("catch","mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+area_choices <- c("all", as.character(NA))
+dat <- periodqs %>% filter(period != "Rest" & pi %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+scaling_choice <- "rank"
+dat <- subset(dat, period=="Long")
+p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice, polysize=1)
+p <- p + theme(axis.text=element_text(size=5), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
+p
+#ggsave(filename="radar2_example.png", p)
+```
+
+## Time series plots
+
+The time series plots show a coloured envelope for each HCR.
+The envelope contains the 20-80th percentile of the values.
+The black dashed line shows the median value.
+The vertical lines mark the short-, medium- and long-term periods.
+Several individual trajectories (known as worms or spaghetti) are shown as an illustration.
+The results from the selected HCRs have different colours as shown by the legend.
+
+The **Time series plots** tab shows time series plots for *SB/SBF=0*, *Catch* and *Relative CPUE*.
+
+```{r, fig.cap="Example time series plot of the relative CPUE for three HCRs. The envelope contains the 20-80th percentile of the values. The black dashed line shows the median value. The coloured lines are example individual trajectories."}
+dat <- yearqs %>% filter(pi=="pi4") 
+wormdat <- worms %>% filter(pi=="pi4" & iter %in% wormiters) 
+p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term)
+p <- p + ylab("Relative CPUE")
+p <- p + ylim(c(0,NA))
+p <- p + scale_x_continuous(expand = c(0, 0))
+p <- p + theme(axis.text=element_text(size=10), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
+p
+#ggsave(filename="timeplot_example.png", p)
+```
+
+## Table
+
+The **Table** subtab shows the values of the selected indicators and HCRs in each of the three time periods.
+The values are presented as a value, and then two more values inside parenthesis e.g. 0.46 (0.42, 0.5).
+The value outside the parenthesis is the median value, the values inside are the 20-80th percentile respectively.
+
+PI 1 (the probability of being above the LRP) only has a single value because it is a probability.
+
+# Appendix 1:  Performance indicators
+
+The calculations for these indicators were presented at the WCPFC Scientific Committee Fourteenth Regular Session (SC14) in Busan, Korea in the working paper
+*Performance indicators for comparing management procedures using the MSE modelling framework* (WCPFC-SC14-2018/MI-WP-04).
+That report included a description of how the performance indicators are calculated.
+Those calculations and description are included here.
+
+## Summary table of objectives and corresponding indicators 
+
+\begin{table}[H]
+\scriptsize
+    \begin{tabularx}{\textwidth}{|p{0.03\linewidth}|p{0.1\textwidth}|X|X|}
+    \hline
+       PI & Objective type & MOW4 Strawman & Performance Indicator (WP14)\\
+    \hline
+        1 & Biological & Maintain SKJ (and YFT and BET) biomass at or above levels that provide fishery sustainability throughout their range & Probability of $SB/SB_{F=0} > 0.2$ as determined from MSE.\\
+    \hline
+        3 & Economic    & Maximise economic yield from the fishery & Average expected catch. \\
+    \hline
+        4 & Economic    & Maintain acceptable CPUE & Average deviation of predicted SKJ CPUE from reference period levels. \\
+    \hline
+        6 & Economic   & Catch stability & Average annual variation or stability in catch. \\
+    \hline
+        7 & Economic   & Stability and continuity of market supply & Effort variation or stability relative to reference period level. \\
+    \hline
+        8 & Economic   & Stability and continuity of market supply & Deviation from $SB/SB_{F=0} > TRP$ (SKJ) in the short-, medium- and long-term as determined from MSE. \\
+    \hline
+\end{tabularx}
+    \caption{\label{tab:execPIs} Summary of proposed performance indicators that can be calculated for the purse seine skipjack tuna fishery presented at SC14, Korea.}
+\end{table}
+
+## Indicator 1. Maintain SKJ biomass at or above levels that provide fishery sustainability throughout their range
+
+The indicator is the probability of $SB/SB_{F=0} > 0.2$ where 0.2 is the LRP for skipjack.
+
+The model for evaluating HCRs reports the biomass ($SB$) and the unfished biomass ($SB_{F=0}$) by season and region.
+The indicator is based on the mean annual biomass which is calculated by taking the mean biomass over the seasons.
+Although it is possible to calculate the indicator for each of the five regions in the model, here only the total biomass across all regions is considered.
+The unfished biomass is taken as the mean of the unfished biomass over a ten year moving window.
+
+The probability of $SB/SB_{F=0} > 0.2$ in a particular year is calculated as the proportion of the simulations in a year in which $SB/SB_{F=0} > 0.2$:
+
+$PI1_{y}=\dfrac{\displaystyle\sum_{n=1}^{N} SB/SB_{F=0,n,y} > 0.2}{N}$
+
+where $PI1_{y}$ is the probability of $SB/SB_{F=0} > 0.2$ in year $y$ and $N$ is the number of simulations.
+
+The indicator in each time period is then calculated as the average probability over the different time periods (short-, medium-, long-term).
+
+$PI1 = \displaystyle\sum_{y=y_{1}}^{y_{2}} Pr_{y}/ Y$
+%$PI1 = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} PI1_{y}}{Y}$
+
+where $y_{1}$ and $y_{2}$ are the start and end years of the time period and $Y$ is in the number of years in the time period.
+
+
+## Indicator 3. Maximise economic yield from the fishery (average expected catch)
+
+This indicator is based on the average expected catch.
+The model used for evaluating the HCRs reports catches at the region and fishery level. It is therefore possible to calculate this indicator for each fishery and each region in the model.
+However, this would result in a large number of values for this indicator, making it challenging to understand the overall relative performances of the candidate HCRs.
+Here the indicator is calculated for the total expected catches across all regions and fisheries and also for the total of the expected catches from the tropical purse seine fisheries operating in regions 2, 3, and 5 .
+
+The indicator is calculated by taking the average catch of each simulation over the desired year range (short-, medium- and long-term):
+
+$PI3_{n} = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} C_{n,y}}{Y}$
+
+Where $C$ is either the total catch of the whole region or of only the tropical purse seine fisheries in regions 2, 3 and 5.
+This gives a distribution of $N$ expected catches in each time period.
+The median value and 20th and 80th percentiles of the distribution are then calculated.
+
+The indicator is also rescaled so that the catches are relative to the average catches in the period 2013-2015.
+
+## Indicator 4. Maintain acceptable CPUE
+
+This indicator is based on the average deviation of predicted skipjack CPUE from reference period levels.
+It is calculated as the CPUE relative to the CPUE in a reference period. 
+Here the reference period is taken to be 2010. 
+
+The HCR evaluation model reports effort and catch at the fishery level which means it could be possible to calculate the indicator at the fishery, region and total level.
+However, it is not always possible to combine the fishing effort from the different fisheries in the model as the historical effort of each fishery may or may not have been standardised (this does not affect the simulations as internally the effort is scaled).
+This indicator is therefore calculated in each year for the purse seine fisheries operating in regions 2, 3 and 5 excluding the associated purse seine fishery in region 5 which has a standardised effort index:
+
+$PI4_{n,y} = CPUE_{n,y} / CPUE_{ref}$
+
+The average relative CPUE is calculated for each simulation over the desired year range (short-, medium- and long-term).
+
+$PI4_{n} = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} PI4_{n,y}}{Y}$
+
+This gives a distribution of $N$ values of relative CPUE in each time period.
+The median value and 20th and 80th percentiles of the distribution are then calculated.
+
+
+## Indicator 6. Catch stability
+
+This indicator is concerned with the average annual variation in catch.
+As with indicator 3, it is possible to calculate this indicator by fishery and region.
+Here it is calculated over the whole region and for the combined purse seine fisheries in regions 2, 3 and 5.
+
+The indicator is calculated by taking the absolute annual difference of the catch for each simulation and in each year:
+
+$PI6_{y,n} = |C_{y+1,n} - C_{y,n}|$
+
+The absolute annual difference is then averaged over the desired year range (short-, medium- and long-term): 
+
+$PI6_{n} = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} PI6_{n,y}}{Y}$
+
+This gives a distribution of $N$ values in each time period.
+The median value and 20th and 80th percentiles of the distribution are then calculated.
+
+This indicator measures the variation in the catch, i.e. the higher the value of the indicator, the less stable the catch is.
+It is assumed that an HCR that produces a lower catch variation, i.e. a low value of the indicator, would be preferred.
+
+As well as the variability in the catch, the stability (the inverse of the variability) can be calculated.
+This involves rescaling the variability so that it is between 0 and 1. A stability of 1 implies that the catch does not change at all over time, i.e. it is completely stable.
+A stability of 0 means that the catch is very variable in time.
+
+To calculate stability it is necessary to decide what level of variability gives a stability of 0.
+Here it is assumed that the variability that implies a stability of 0 is the 95th percentile of the observed catch variability across all time periods and HCRs.
+This assumption means that the stability can only be interpreted in relative terms (i.e. when comparing between HCRs and time periods) and does not mean much when a HCR is considered in isolation.
+
+The advantage of using stability instead of variability is that a large value is preferred to a small value.
+This is in line with the other indicators where a large value is preferred.
+
+## Indicator 7. Stability and continuity of market supply (effort variation relative to a reference period)
+
+This indicator is concerned with effort variation relative to the effort in a reference period, i.e. stability of the relative effort.
+Here the reference period is taken to be 2010. 
+As mentioned above, the evaluation model reports effort at the fishery level which means this indicator could be calculated at the fishery, region and total level.
+Here, as with performance indicator 4, this indicator is calculated for the purse seine fisheries operating in regions 2, 3 and 5 excluding the associated purse seine fishery in region 5 which has a standardised effort index.
+
+The indicator is calculated in a similar way to performance indicator 6.
+The absolute annual difference of the effort relative to the base effort (in 2010) is calculated for each simulation in each year: 
+
+$PI7_{y,n} = |E_{y+1,n}/E_{ref} - E_{y,n}/E_{ref}|$
+
+The absolute annual difference is averaged over the desired year range (short-, medium- and long-term):
+
+$PI7_{n} = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} PI7_{n,y}}{Y}$
+
+This gives a distribution of the average absolute annual differences.
+The median value and 20th and 80th percentiles of the distribution are then calculated.
+
+Like indicator 6, this indicator measures the variation in the relative effort, i.e. the higher the value of the indicator, the less stable the relative effort is.
+It is assumed that MPs that produce a low value of this indicator are considered to be perform better.
+
+An alternative indicator that measures the stability (the inverse of the variability) is also calculated.
+It is calculated in the same way as the stability of the catches (indicator 6).
+
+## Indicator 8. Stability and continuity of market supply
+
+This indicator is concerned with maintaining the stock size around the TRP levels (where the interim TRP for skipjack is $SB/SB_{F=0} = 0.5$).
+It is assumed that the further away $SB/SB_{F=0}$ is from 0.5, the worse the HCR can be thought to be performing, i.e. it is better to have $SB/SB_{F=0}$ close to 0.5 on average.
+
+The deviation is calculated as the absolute difference between $SB/SB_{F=0}$ and the TRP, scaled by the maximum distance from the TRP (for skipjack this is 0.5).
+This value is substracted from 1 to rescale it so that an indicator value of 1 implies that $SB/SB_{F=0}$ is exactly at the TRP and a value of 0 is as far from the TRP as possible.
+This indicator value is calculated for each simulation in each year.
+
+$PI8_{n,y} = 1 - (|SB/SB_{n,y,F=0} - 0.5| / 0.5)$
+
+The average over the three time periods is then taken to give a distribution of $N$ values for each time period.
+
+$PI8_{n} = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} PI8_{n,y}}{Y}$
+
+The median value and 20th and 80th percentiles of the distribution are then calculated.
+The lower the value the better the MP is considered to be performing at maintaining $SB/SB_{F=0}$ at the TRP, i.e. a value of 1 means that $SB/SB_{F=0}$ is always exactly equal to the TRP and never deviates from it.
+
+## Mean weight of an individual in the population
+
+This indicator measures the mean weight of an individual in the population, not the catch.
+It is calulated by taking the dividing the total weight of individuals across the region and dividing it by the total number of individuals across the region.
+
+These kind of indicators are important because they can provide information on changes to the size structure of a population as a result of fishing and changes in environmental conditions. 
+
+## Summary table of indicator equations
+
+\begin{table}[H]
+\small
+\begin{tabularx}{\textwidth}{|p{0.03\linewidth}|X|X|}
+    \hline
+    & Performance Indicator & Equation \\
+    \hline
+    1 & Probability of $SB/SB_{F=0} > 0.2$. &  $PI1_{y}=\displaystyle\sum_{n=1}^{N} SB/SB_{F=0,n,y} > 0.2/N$ \\
+      & &  $PI1 = \displaystyle\sum_{y=y_{1}}^{y_{2}} PI1_{y}/Y$ \\
+    \hline
+    3 & Average expected catch & $PI3_{n} = \displaystyle\sum_{y=y_{1}}^{y_{2}} C_{n,y}/Y$ \\
+    \hline
+    4 & Average deviation of predicted SKJ CPUE from reference period levels & $PI4_{n,y} = CPUE_{n,y} / CPUE_{ref}$ \\
+    \hline
+    6 & Average annual variation in catch& $PI6_{y,n} = |C_{y+1,n} - C_{y,n}|$ \\
+    \hline
+    7 & Effort variation relative to reference period level& $PI7_{y,n} = |E_{y+1,n}/E_{ref} - E_{y,n}/E_{ref}|$ \\
+    \hline
+    8 & Deviation of $SB/SB_{F=0}$ from TRP (0.5) & $PI8_{n,y} = 1 - (|SB/SB_{n,y,F=0} - 0.5| / 0.5)$ \\
+    \hline
+     \multicolumn{3}{|l|}{PI 4,5,6,7,8 are summarised over the different time periods:
+     $PIX_{n} = \displaystyle\sum_{y=y_{1}}^{y_{2}} PIX_{n,y}/Y$ } \\
+    %\multicolumn{3}{|l|}{}\\
+    \hline
+    \end{tabularx}
+    \caption{\label{tab:PIeqs} Equations for calculating the the proposed performance indicators for the purse seine skipjack tuna fishery.
+    $SB$ is the adult biomass, $E$ is the effort, $C$ is catch, $CPUE$ is the catch per unit of effort, $N$ is the number of simulations, $n$ an individual simulation, $y_{1}$ and $y_{2}$ are the start and end years of the time period, $Y$ is in the number of years in the time period, $y$ is an individual year.
+        }
+    \end{table}
+
+
+
+
+
+
+<!--
+To compile this Rmarkdown document:
+Open R load the rmarkdown and knitr libraries
+render("pimple_users_guide.Rmd", output_format = "all")
+ 
+
+-->
