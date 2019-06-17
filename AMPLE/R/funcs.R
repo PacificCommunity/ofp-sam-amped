@@ -417,6 +417,7 @@ constant <- function(mp_params, ...){
 #  return(out)
 #}
 
+#' @export
 get_time_periods <- function(app_params, nyears){
   nyears <- nyears - app_params$last_historical_timestep
   term_length <- floor(nyears / 3)
@@ -577,7 +578,7 @@ next_corrnoise <- function(x, b, sd=0.1){
 #----------------------------------------------------
 # Function to get the perfomance indicators in same format as PIMPLE
 
-
+#' @export
 get_summaries <- function(stock, stock_params, app_params, quantiles){
   # worms - a sample of iters by year
   # yearqs - the quantiles by year

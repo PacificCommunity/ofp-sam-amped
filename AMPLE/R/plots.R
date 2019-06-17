@@ -885,6 +885,7 @@ myradar <- function(dat, hcr_choices, scaling="scale", polysize=2){
 
 # Not a plot - but included here anyway
 # The big PI tables
+#' @export
 pitable <- function(dat){
     # Rows are the PIs, columns are the HCRs
     signif <- 2

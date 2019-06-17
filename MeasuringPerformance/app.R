@@ -451,9 +451,9 @@ server <- function(input, output,session) {
     long_term <- years[time_periods[["long_term"]]]
 
     p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, time_period_lines=FALSE, show_spaghetti=input$spaghetti)
-    p <- p + ylim(c(0,NA))
-    p <- p + scale_x_continuous(expand = c(0, 0))
-    p <- p + ylab("Value")
+    p <- p + ggplot2::ylim(c(0,NA))
+    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+    p <- p + ggplot2::ylab("Value")
     return(p)
 
 
