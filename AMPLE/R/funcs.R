@@ -482,49 +482,21 @@ get_time_periods <- function(app_params, nyears){
 #  return(qs)
 #}
 
-## @export
-#current_pi_table <- function(pis){
-#  pis$piqs
-#  piqs <- pis$piqs
-#  # Beat this into a table
-#  # Each row is a PI
-#  # 4 Columns: Name, short, medium, long
-#  # median (quantile)
-#
-#  signif <- 2
-#  upis <- as.character(unique(piqs$pi))
-#  uterm <- as.character(unique(piqs$term))
-#  out <- data.frame()
-#  for (upi in upis){
-#    tempdat <- subset(piqs, term =="short" & pi==upi)
-#    svalues <- signif(sort(subset(piqs, term =="short" & pi==upi)$value),signif)
-#    mvalues <- signif(sort(subset(piqs, term =="medium" & pi==upi)$value),signif)
-#    lvalues <- signif(sort(subset(piqs, term =="long" & pi==upi)$value),signif)
-#    # If no uncertainty
-#    if ((svalues[2] == svalues[1]) & (svalues[4] == svalues[5]) &
-#        (mvalues[2] == mvalues[1]) & (mvalues[4] == mvalues[5]) &
-#        (lvalues[2] == lvalues[1]) & (lvalues[4] == lvalues[5])){
-#      sval <- as.character(svalues[3])
-#      mval <- as.character(mvalues[3])
-#      lval <- as.character(lvalues[3])
-#    }
-#    else {
-#      sval <- paste(svalues[3], " (", svalues[2], ",", svalues[4],")", sep="")
-#      mval <- paste(mvalues[3], " (", mvalues[2], ",", mvalues[4],")", sep="")
-#      lval <- paste(lvalues[3], " (", lvalues[2], ",", lvalues[4],")", sep="")
-#    }
-#    out <- rbind(out, data.frame(name = tempdat$name[1], short = sval, medium=mval, long=lval))
-#  }
-#  rownames(out) <- out$name
-#  # Drop rownames column
-#  out <- out[,colnames(out) != "name"]
-#  term_years <- pis$term
-#  colnames(out) <- c(paste("Short (", term_years$short[1], "-", term_years$short[length(term_years$short)],")", sep=""),
-#                     paste("Med. (", term_years$medium[1], "-", term_years$medium[length(term_years$medium)],")", sep=""),
-#                     paste("Long (", term_years$long[1], "-", term_years$long[length(term_years$long)],")", sep=""))
-#
-#  return(out)
-#}
+#' @export
+current_pi_table <- function(dat, pichoice=c("pi1", "sbsbf0", "catch")){
+  out <- subset(dat, period != "Rest" & pi %in% pichoice)
+  signif <- 2
+  out$value <- paste(signif(out$X50., signif), " (", signif(out$X20., signif), ",", signif(out$X80., signif),")", sep="")
+  # Except pi1 as it is a probability
+  pi1value <- signif(out$X50.)
+  out[out$pi=="pi1","value"] <- pi1value[out$pi=="pi1"]
+  out <- out[,c("piname","period","value")]
+  out <- tidyr::spread(out, key="period", value="value")
+  rownames(out) <- out$piname
+  # Drop rownames column
+  out <- out[,colnames(out) != "piname"]
+  return(out)
+}
 
 #-------------------------------------------------------------------
 
@@ -611,7 +583,6 @@ get_summaries <- function(stock, stock_params, app_params, quantiles){
   # yearqs - the quantiles by year
   # periodqs - average over the periods and take quantiles
 
-
   # SBSBF0
   sbsbf0 <- as.data.frame(stock$biomass / stock_params$k)
   sbsbf0$iter <- 1:nrow(sbsbf0)
@@ -677,7 +648,12 @@ get_summaries <- function(stock, stock_params, app_params, quantiles){
   yearqs <- dplyr::do(yearqs, data.frame(t(quantile(.$data, probs=quantiles, na.rm=TRUE))))
   # Get worms
   nworms <- 5
-  wormiters <- sample(unique(dat$iter),nworms)
+  if (length(unique(dat$iter)) < nworms){
+    wormiters <- unique(dat$iter)
+  }
+  else {
+    wormiters <- sample(unique(dat$iter),nworms)
+  }
   worms <- subset(dat, iter %in% wormiters)
   # rename iter column to wormid
   worms <- dplyr::rename(worms, wormid = iter)

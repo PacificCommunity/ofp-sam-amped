@@ -179,17 +179,9 @@ ui <- navbarPage(
 server <- function(input, output,session) {
   # Global parameters
   app_params <- list(initial_year = 2009, last_historical_timestep = 10)
-  # Storage for stocks - not actually needed - we only use the tsstore and pistore - make both reactive
   # pitemp is the pis for a single stock (HCR) - shown on the front page
-  #pitemp <- reactiveVal(NULL)
-  # Storage for the PIs (all stocks / HCRs)
-  #pistore <- reactiveVal(list())
-  # Storage for the timeseries
-  #tsstore <- reactiveVal(list())
-  # It is not possible to store something until you have projected
-  #OKtostore <- FALSE
+  pitemp <- reactiveVal(NULL)
   OKtostore <- reactiveVal(FALSE)
-  #quantiles <- c(0.05,0.2, 0.8, 0.95)
   quantiles <- c(0.01, 0.05, 0.20, 0.5, 0.80, 0.95, 0.99)
   # Objects for the PI summaries
   worms <- reactiveVal(data.frame())
@@ -225,50 +217,30 @@ server <- function(input, output,session) {
       return()
     }
     # Store the stock, stockparams and mpparams
+    # Add summaries to existing summaries
     stock_params <- get_stock_params()
     mp_params <- get_mp_params()
-    # Add stock and summary PIs to lists
-    #hcrno <- length(pistore())+1
-    #name <- paste(hcrno, ". ",mp_params$name,sep="")
-    # Bit faffy to update the stores
-    #temp <- pistore()
-    #temp[[eval(name)]] <- pitemp()
-    #pistore(temp)
-    #temp <- tsstore()
-    #temp[[eval(name)]] <- get_timeseries(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=quantiles[c(2,3)])
-    #tsstore(temp)
-
-
-    # Scrub the above
-    # Remove old plotting
-    # Add in new plottin
-
-    temp <- get_summaries(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=quantiles)
     hcrno <- length(unique(worms()$hcrref)) + 1
     hcrname <- paste(hcrno, ". ",mp_params$name,sep="")
     hcrref <- paste("HCR ", hcrno, sep="") # Used for legends
-    worms(rbind(worms(), cbind(temp$worms, hcrref=hcrref, hcrname=hcrname)))
-    periodqs(rbind(periodqs(), cbind(temp$periodqs, hcrref=hcrref, hcrname=hcrname)))
-    yearqs(rbind(yearqs(), cbind(temp$yearqs, hcrref=hcrref, hcrname=hcrname)))
+    worms(rbind(worms(), cbind(pitemp()$worms, hcrref=hcrref, hcrname=hcrname)))
+    periodqs(rbind(periodqs(), cbind(pitemp()$periodqs, hcrref=hcrref, hcrname=hcrname)))
+    yearqs(rbind(yearqs(), cbind(pitemp()$yearqs, hcrref=hcrref, hcrname=hcrname)))
 
     # Update the available PIs checkboces - although this doesn't really dynamically change
     # It just saves having to maintain a list in the UI at the top AND in the PI calculation function
     # Because the options come from the pistore and if no pistore yet, no names
-
-
     # Drop F/FMSY and others from list
     drop_pis <- c("ffmsy") 
     drop_pinames <- unique(subset(periodqs(), pi %in% drop_pis)$piname)
     pi_choices <- unique(periodqs()$piname)
     pi_choices <- pi_choices[!(pi_choices %in% drop_pinames)]
-
     updateCheckboxGroupInput(session, "pichoice",
                              choices = pi_choices,
                              selected = pi_choices
                              )
 
     # You can't store again until you project again
-    #OKtostore <<- FALSE
     OKtostore(FALSE)
   })
   
@@ -277,8 +249,7 @@ server <- function(input, output,session) {
     stock_params <- get_stock_params()
     reset_stock(stock=stock, stock_params=stock_params, mp_params=get_mp_params(), app_params=app_params, initial_biomass=stock_params$b0, nyears=input$nyears, niters=input$niters)
     # Reset the show table variable
-    #pitemp(NULL)
-    #OKtostore <<- FALSE
+    pitemp(NULL)
     OKtostore(FALSE)
   })
 
@@ -323,14 +294,10 @@ server <- function(input, output,session) {
     # Reset the stock
     isolate(reset_stock(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, initial_biomass=stock_params$b0, nyears=nyears, niters=niters))
     # Empty the storage
-    #pitemp(NULL)
-    #pistore(list()) 
-    #tsstore(list()) 
+    pitemp(NULL)
     worms(data.frame())
     periodqs(data.frame())
     yearqs(data.frame())
-
-    #OKtostore <<- FALSE
     OKtostore(FALSE)
   })
   
@@ -342,12 +309,8 @@ server <- function(input, output,session) {
                     stock_params=get_stock_params(),
                     mp_params=get_mp_params(),
                     app_params=app_params)
-    # stock is automagically updated as it's by reference - or something - so no need to update by hand
-    # Get summary PIs 
-    #piqs <- get_summary_pis(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params,
-    #                        quantiles=quantiles)
+    pitemp(get_summaries(stock=stock, stock_params=get_stock_params(), app_params=app_params, quantiles=quantiles))
     #pitemp(piqs)
-    #OKtostore <<- TRUE
     OKtostore(TRUE)
   })
   
@@ -371,26 +334,24 @@ server <- function(input, output,session) {
     plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, show_last = FALSE, quantiles=quantiles[c(3,5)])
   })
 
-  #output$plotmajuro <- renderPlot({
-  #  plot_majuro_single_stock(stock=stock, stock_params = get_stock_params(),quantiles=quantiles[c(2,3)])
-  #})
 
   output$nstoredstocks <- renderText({
-    #paste("Number of HCRs in basket: ", length(pistore()), sep="")
     paste("Number of HCRs in basket: ", length(unique(worms()$hcrref)), sep="")
   })
 
-  #output$currenthcrpis <- renderTable({
-  #  # Don't print table unless project has been pressed
-  #  if (is.null(pitemp())){
-  #    return()}
-  #  # Use pitemp() to fill table
-  #  current_pi_table(pitemp())
-  #  },
-  #  rownames = TRUE,
-  #  caption= "Performance indicators",
-  #  auto=TRUE
-  #)
+  output$currenthcrpis <- renderTable({
+    # Don't print table unless project has been pressed
+    if (is.null(pitemp())){
+      return()
+    }
+    # Use pitemp() to fill table
+    #current_pi_table(pitemp())
+    current_pi_table(pitemp()$periodqs)
+    },
+    rownames = TRUE,
+    caption= "Performance indicators",
+    auto=TRUE
+  )
 
   #------------------------------------------------------------
   # Comparison plotting events
@@ -441,11 +402,6 @@ server <- function(input, output,session) {
       }
       # Subset out variability / stability
       dat <- subset(periodqs(), period != "Rest" & piname %in% pi_choices)
-
-
-
-      # Need to hack pi1 so that all quantiles = X50., else NA
-      #dat[dat$pi=="pi1",c("X5.", "X20.", "X80.", "X95.")] <- dat[dat$pi=="pi1","X50."]
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylim(0,NA)
       p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
