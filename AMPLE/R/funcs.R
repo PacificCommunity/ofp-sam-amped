@@ -20,6 +20,7 @@ globalVariables(c("X20.", "X5.", "X50.", "X80.", "X95.", "bin", "ffmsyX20.", "ff
 #' Show the maintainer and licence for AMPED
 #' 
 #' @return A bunch of tags for use in Shiny apps
+#' @rdname maintainer_and_licence
 #' @export
 amped_maintainer_and_licence <- function(){
   out <- tags$html(
@@ -38,6 +39,7 @@ amped_maintainer_and_licence <- function(){
 #' Show the maintainer and licence for PIMPLR
 #' 
 #' @return A bunch of tags for use in Shiny apps
+#' @rdname maintainer_and_licence
 #' @export
 pimple_maintainer_and_licence <- function(){
   out <- tags$html(
@@ -139,7 +141,19 @@ fill_initial_stock <- function(stock, stock_params, mp_params, initial_biomass, 
   return(stock)
 }
 
-# Clear out stock and refill initial period
+#' Clear out stock and refill initial period
+#'
+#' Fills the stock depending on stock status option (over, fully, underexploited).
+#'
+#' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
+#' @param stock_params A vector of life history and stochasticy parameters.
+#' @param mp_params A vector of management procedure parameters.
+#' @param app_params A vector of application parameters.
+#' @param initial_biomass The initial biomass of the population.
+#' @param nyears The numbers of years to set the stock up for.
+#' @param niters The numbers of iters to set the stock up for.
+#' 
+#' @return A filled stock object (a reactiveValues object with bits for the stock)
 #' @export
 reset_stock <- function(stock, stock_params, mp_params, app_params, initial_biomass, nyears, niters){
   # Set up current_corrnoise object to store the current noise value for each iteration
@@ -152,58 +166,6 @@ reset_stock <- function(stock, stock_params, mp_params, app_params, initial_biom
   # Not sure this return statement is needed but means we can call this function from tests
   return(stock)
 }
-
-# quantiles is of length 2, lower and upper
-# @export
-#get_timeseries <- function(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=quantiles, nspaghetti=5){
-#  # Make a data.frame with year, metric, quantile, value
-#  # quantile are based on the lower and upper quantile
-#  # Do we also want spaghetti? could do
-#  # metrics are B/K, Catch, Rel. CPUE, F/FMSY 
-#  bk <- stock$biomass / stock_params$k
-#  bkq <- get_quantiles(bk, quantiles)
-#  bkq <- cbind(metric="bk", name="SB/SBF=0", level=c("lower","median","upper"),as.data.frame(bkq))
-#
-#  catchq <- get_quantiles(stock$catch, quantiles)
-#  catchq <- cbind(metric="catch", name="Catch", level=c("lower","median","upper"),as.data.frame(catchq))
-#
-#  cpue <- stock$catch / stock$effort
-#  rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
-#  rel_cpueq <- get_quantiles(rel_cpue, quantiles)
-#  rel_cpueq <- cbind(metric="relcpue", name="Rel. CPUE", level=c("lower","median","upper"),as.data.frame(rel_cpueq))
-#
-#  fmsy <- stock_params$r / 2
-#  f <- stock$catch / stock$biomass 
-#  ffmsy <- f / fmsy
-#  ffmsyq <- get_quantiles(ffmsy, quantiles)
-#  ffmsyq <- cbind(metric="ffmsy", name="F / FMSY", level=c("lower","median","upper"),as.data.frame(ffmsyq))
-#
-#  qout <- rbind(bkq, catchq, rel_cpueq, ffmsyq)
-#  qout <- tidyr::gather(qout, key="year", value="value",-level, -metric, -name)
-#  qout <- cbind(qout, type="quantile")
-#
-#  # Spaghetti
-#  # Pick 5 iters at random
-#  nspaghetti <- min(nspaghetti, dim(bk)[1])
-#  spaghetti_iters <- round(runif(nspaghetti, min=1, max=dim(bk)[1]))
-#  bksp <- cbind(metric="bk", name="SB/SBF=0", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(bk[spaghetti_iters,]))
-#  catchsp <- cbind(metric="catch", name="Catch", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(stock$catch[spaghetti_iters,]))
-#  ffmsysp <- cbind(metric="ffmsy", name="F / FMSY", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(ffmsy[spaghetti_iters,]))
-#  rel_cpuesp <- cbind(metric="relcpue", name="Rel. CPUE", level=paste("spag",as.character(spaghetti_iters),sep=""),as.data.frame(rel_cpue[spaghetti_iters,]))
-#  spout <- rbind(bksp, catchsp, rel_cpuesp, ffmsysp)
-#  spout <- tidyr::gather(spout, key="year", value="value",-level, -metric, -name)
-#  spout <- cbind(spout, type="spaghetti")
-#  
-#  out <- rbind(qout,spout)
-#  # Producing warnings about factors?
-#  out$level <- as.character(out$level)
-#  out$type <- as.character(out$type)
-#  out$metric <- as.character(out$metric)
-#  out$name <- as.character(out$name)
-#  out$year <- as.numeric(out$year)
-#  return(out)
-#}
-
 
 # Observation error is a combination of bias and lognormally distributed noise
 estimation_error <- function(input, sigma, bias){
@@ -231,6 +193,17 @@ estimation_error <- function(input, sigma, bias){
 # Biomass at the start of the timestep
 # Biomass is one year ahead of catch
 # Relative effort is capped
+
+#' Projects the stock over the timesteps given and updates the biomass, HCR ip / op and catches
+#'
+#' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
+#' @param timesteps The timesteps to project over.
+#' @param stock_params A vector of life history and stochasticy parameters.
+#' @param mp_params A vector of management procedure parameters.
+#' @param app_params A vector of application parameters.
+#' @param max_releffort The maximum relative effort.
+#' 
+#' @return A stock object (a reactiveValues object with bits for the stock)
 #' @export
 project <- function(stock, timesteps, stock_params, mp_params, app_params, max_releffort = 10){
   # Check timesteps - should be a range of two values
@@ -334,6 +307,19 @@ get_hcr_ip <- function(stock, stock_params, mp_params, yr){
 # Outputs from the HCR can be different (e.g. catch, catch multiplier, effort, effort multiplier)
 # Evaluates one timestep (yr), multiple iterations (chance of multiple timesteps? maybe - need to be careful with dims)
 # yr is the yr of the stock$hcr$input to be used
+
+#' Evaluates the HCR 
+#'
+#' Inputs to the HCRs have already been calculated and are stored in hcr_ip element of the stock.
+#' Outputs from the HCR can be different (e.g. catch, catch multiplier, effort, effort multiplier).
+#' Evaluates one timestep (yr), for multiple iterations.
+#'
+#' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
+#' @param stock_params A vector of life history and stochasticy parameters.
+#' @param mp_params A vector of management procedure parameters.
+#' @param yr Evaluate the HCR in a particular year (timestep).
+#' 
+#' @return A vector of outputs from the HCR.
 #' @export
 get_hcr_op <- function(stock, stock_params, mp_params, yr){
   # Shape is not NA
@@ -381,78 +367,14 @@ constant <- function(mp_params, ...){
 #-------------------------------------------------------------------
 # Performance indicators
 
-## Other methods are available
-#transform_upside_down_pis <- function(x){
-#  #min_value <- 1e-6
-#  #adjuster <- -1.0001
-#  #x <- pmax(x, min_value)
-#  #x <- log(x) + log(min_value) * adjuster # Now x is between just greater than 0 and something positive
-#  #x <- (log(min_value) + log(min_value) * adjuster) / (x)
-#  #return(x)
-#  return(-x) # Just return the negative - simple!
-#}
-#
-## Get pis by year and iter
-## Stick into a single data.frame
-## @export
-#get_pis <- function(stock, stock_params, mp_params, app_params, pi_choices = NULL){
-#  rel_year <- app_params$initial_year + app_params$last_historical_timestep - 1
-#  bkm <- stock$biomass / stock_params$k
-#  # B/K
-#  bk <- cbind(pi="bk", iter=1:nrow(bkm), as.data.frame(bkm), name="SB/SBF=0")
-#  # Total catch
-#  catch <- cbind(pi="catch", iter=1:nrow(stock$catch), as.data.frame(stock$catch), name="Catch")
-#  # Variability in catch
-#  diffcatch <- abs(t(apply(stock$catch, 1, diff))) # Need to transpose due to odd apply() behaviour
-#  #diffcatch <- transform_upside_down_pis(diffcatch)
-#  # Stick some NAs for the first column and name column
-#  diffcatch <- cbind(NA, diffcatch)
-#  colnames(diffcatch)[1] <- colnames(stock$catch)[1]
-#  diffcatch <- cbind(pi="diffcatch", iter=1:nrow(diffcatch), as.data.frame(diffcatch), name="Catch variability")
-#  # Relative effort
-#  # Base effort is effort in the last historical timestep
-#  releffort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
-#  releffort <- cbind(pi="releffort", iter=1:nrow(releffort), as.data.frame(releffort), name=paste("Effort (rel. ", rel_year," )", sep=""))
-#  # Variability of relative effort
-#  diffeffort <- abs(t(apply(stock$effort, 1, diff))) # Need to transpose due to odd apply() behaviour
-#  #diffeffort <- transform_upside_down_pis(diffeffort)
-#  diffeffort <- cbind(NA, diffeffort)
-#  colnames(diffeffort)[1] <- colnames(stock$effort)[1]
-#  diffeffort <- cbind(pi="diffeffort", iter=1:nrow(diffeffort), as.data.frame(diffeffort), name="Effort variability")
-#  # Relative CPUE
-#  cpue <- stock$catch / stock$effort
-#  relcpuem <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
-#  relcpue <- cbind(pi="relcpue", iter=1:nrow(relcpuem), as.data.frame(relcpuem), name=paste("CPUE (rel. ", rel_year, " )", sep=""))
-#  # Variability of relative CPUE
-#  diffcpue <- abs(t(apply(relcpuem, 1, diff))) # Need to transpose due to odd apply() behaviour
-#  #diffcpue <- transform_upside_down_pis(diffcpue)
-#  diffcpue <- cbind(NA, diffcpue)
-#  colnames(diffcpue)[1] <- colnames(stock$effort)[1]
-#  diffcpue <- cbind(pi="diffcpue", iter=1:nrow(diffcpue), as.data.frame(diffcpue), name="CPUE variability")
-#
-#  # Probabilities in each year
-#  problrp <- apply(bkm > stock_params$lrp,2,mean)
-#  # A bit of mucking about to get a data.frame
-#  problrp <- cbind(pi="problrp", iter=1, as.data.frame(t(problrp)), name="Prob. SB > LRP")
-#  
-#  # pi_choices is a character string of these objects
-#  # Put altogether and reshape
-#  if (is.null(pi_choices)){
-#    out <- rbind(bk, problrp, catch, diffcatch, releffort, diffeffort, relcpue, diffcpue)
-#  }
-#  # Else only bind together the chosen pis
-#  else{
-#    out <- do.call(rbind, lapply(pi_choices,function(x) get(x)))
-#  }
-#  
-#  # Use tidyr or something else to put into a single df
-#  out <- tidyr::gather(out, key="year", value="value", -iter, -pi, -name)
-#
-#  # F***ing factors!
-#  out$name <- as.character(out$name)
-#  return(out)
-#}
-
+#' Get timesteps for the short-, medium- and long term time periods.
+#'
+#' Used when calculating the performance indicators over the three time periods.
+#'
+#' @param app_params A vector of application parameters.
+#' @param nyears The number of years.
+#' 
+#' @return A list of the timesteps that make up each time period.
 #' @export
 get_time_periods <- function(app_params, nyears){
   nyears <- nyears - app_params$last_historical_timestep
@@ -474,51 +396,14 @@ get_time_periods <- function(app_params, nyears){
   return(list(short_term=short_term, medium_term=medium_term, long_term=long_term))
 }
 
-# Calc the PIs
-# @export
-#get_summary_pis <- function(stock, stock_params, mp_params, app_params, quantiles, ...){
-#  years <- dimnames(stock$biomass)$year
-#  # Average them over years? S, M, L?
-#  # Average over years - then calc quantiles
-#  time_periods <- get_time_periods(app_params, nyears=dim(stock$biomass)[2])
-#  short_term <- years[time_periods[["short_term"]]]
-#  medium_term <- years[time_periods[["medium_term"]]]
-#  long_term <- years[time_periods[["long_term"]]]
-#
-#  pis <- get_pis(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, ...)
-#  pis <- pis[pis$year %in% c(short_term, medium_term, long_term),]
-#
-#  # Add timeperiod column - as.data.frame to use stringsAsFactors
-#  pis <- as.data.frame(cbind(pis, term=as.character(NA), stringsAsFactors=FALSE))
-#  pis[pis$year %in% short_term,"term"] <- "short"
-#  pis[pis$year %in% long_term,"term"] <- "long"
-#  pis[pis$year %in% medium_term,"term"] <- "medium"
-#  # Drop the rows that do not have a term
-#  # This seems to take a long time
-#
-#  # Take median value over the timeperiods
-#
-#  #yearav <- pis %>% group_by(pi, iter, term, name) %>% summarise(value=median(value, na.rm=TRUE))
-#  temp <- dplyr::group_by(pis, pi, iter, term, name) 
-#  yearav <- dplyr::summarise(temp, value=median(value, na.rm=TRUE))
-#
-#  # Take the quantiles - 
-#  qmed <- c(quantiles, 0.5)
-#  #piqs <- yearav %>% group_by(pi, term, name) %>% summarise(quantiles = list(paste("q",qmed*100,sep="")), value = list(quantile(value, qmed))) %>% unnest
-#  temp <- dplyr::group_by(yearav, pi, term, name)
-#  temp <- dplyr::summarise(temp, quantiles = list(paste("q",qmed*100,sep="")), value = list(quantile(value, qmed)))
-#  piqs <- tidyr::unnest(temp)
-#
-#
-#
-#  return(list(piqs=piqs, terms=list(short=short_term, medium=medium_term, long=long_term)))
-#}
 
-#get_quantiles <- function(dat, quantiles){
-#  qs <- apply(dat, 2, function(x){quantile(x, probs=c(quantiles[1], 0.5, quantiles[2]), na.rm=TRUE)})
-#  return(qs)
-#}
-
+#' Format and produce a table of previously calculated performance indicators
+#'
+#'
+#' @param dat A data.frame with the 20th, 80th and 50th percentile value of each indicator.
+#' @param pichoice A character vector of the indicator names to be included in the table
+#' 
+#' @return A formatted data.frame
 #' @export
 current_pi_table <- function(dat, pichoice=c("pi1", "sbsbf0", "catch")){
   out <- subset(dat, period != "Rest" & pi %in% pichoice)
@@ -537,8 +422,14 @@ current_pi_table <- function(dat, pichoice=c("pi1", "sbsbf0", "catch")){
 
 #-------------------------------------------------------------------
 
-# PIs for the IntroProjection app
-# Each row in the stock is a separate projection
+#' Get the performance indicators for the Introduction to Projections AMPED app
+#'
+#' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
+#' @param stock_params A vector of life history and stochasticy parameters.
+#' @param app_params A vector of application parameters.
+#' @param current_timestep The current timestep.
+#' 
+#' @return A filled stock object (a reactiveValues object with bits for the stock)
 #' @export
 get_projection_pis <- function(stock, stock_params, app_params, current_timestep){
   # Return a data.frame of:
@@ -614,6 +505,16 @@ next_corrnoise <- function(x, b, sd=0.1){
 #----------------------------------------------------
 # Function to get the perfomance indicators in same format as PIMPLE
 
+#' Get the summary performance indicators 
+#'
+#' Current indicators include SB/SBF=0, catch and the probability of being above the limit reference point.
+#'
+#' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
+#' @param stock_params A vector of life history and stochasticy parameters.
+#' @param app_params A vector of application parameters.
+#' @param quantiles The quantiles to calculate the indicators over.
+#' 
+#' @return A list of various data.frames with summaries in different formats.
 #' @export
 get_summaries <- function(stock, stock_params, app_params, quantiles){
   # worms - a sample of iters by year
@@ -630,7 +531,6 @@ get_summaries <- function(stock, stock_params, app_params, quantiles){
   problrp <- dplyr::group_by(sbsbf0, year)
   problrp <- dplyr::summarise(problrp, data=mean(data > stock_params$lrp, na.rm=TRUE))
   problrp <- cbind(problrp, pi="pi1", piname="Prob. SB > LRP", upsidedown=FALSE, iter=1) # Called pi1 inline with PIMPLE
-
 
   # Catch
   catch <- as.data.frame(stock$catch)

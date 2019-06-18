@@ -7,6 +7,23 @@
 # Just means combining the two lists of values before dispatching them to the functions
 
 # Module for the stochasticity options 
+
+#' Modules for common features of the AMPED Shiny apps.
+#'
+#' stoch_params_setterUI() is the interface for the stochasticity options.
+#'
+#' @param id Shiny magic id
+#' @param show_biol_prod_sigma Show the biological productivity variability option.
+#' @param show_biol_est_sigma Show the estimation variability option.
+#' @param show_biol_est_bias Show the estimation bias option.
+#' @param init_prod_sigma Default value for biological productivity variability.
+#' @param init_est_sigma Default value for estimation variability.
+#' @param init_est_bias Default value for estimation bias. 
+#' @param show_var Show the variability options.
+#' 
+#' @return A taglist
+#' @rdname AMPED_modules
+#' @name AMPED modules
 #' @export
 stoch_params_setterUI <- function(id, show_biol_prod_sigma = TRUE, show_biol_est_sigma = TRUE, show_biol_est_bias = TRUE, init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=TRUE){
   ns <- NS(id)
@@ -31,6 +48,17 @@ stoch_params_setterUI <- function(id, show_biol_prod_sigma = TRUE, show_biol_est
   return(out)
 }
 
+#' stoch_params_setter
+#'
+#' stoch_params_setter() does the setting.
+#'
+#' @param input The UI input.
+#' @param output Shiny magic.
+#' @param session Shiny magic.
+#' 
+#' @return A list of stochasticity options.
+#' @rdname AMPED_modules
+#' @name AMPED modules
 #' @export
 stoch_params_setter<- function(input, output, session){
   get_stoch_params <- reactive({
@@ -69,7 +97,13 @@ set_stoch_params <- function(input){
     return(out)
 }
 
-# Choose if we want fast or slow growth etc
+#' stock_params_setterUI
+#'
+#' stock_params_setterUI() is the interface for the stock options (e.g. life history and exploitation status).
+#'
+#' @return A taglist
+#' @rdname AMPED_modules
+#' @name AMPED modules
 #' @export
 stock_params_setterUI <- function(id){
   ns <- NS(id)
@@ -86,23 +120,13 @@ stock_params_setterUI <- function(id){
   return(tagList(stock_lh, stock_history))
 }
 
-# From Andre's original code
-#Population <- list(
-#	list(K = 5964.506,r=0.6929,dmsy2=0.36788*2,PType="Fox"),
-#	list(K = 4868.650,r=1.1621,dmsy2=0.36788*2,PType="Fox"),
-#	list(K = 4241.026,r=1.5753,dmsy2=0.36788*2,PType="Fox")
-# )
-
-# Or use the stocks from Polacheck
-# Fitting Surplus Production Models: Comparing Methods and Measuring Uncertainty
-# Article in Canadian Journal of Fisheries and Aquatic Sciences · December 1993
-#Fitting Surplus Production Models: Comparing Methods and Measuring Uncertainty
-#Tom Polacheck, , Ray Hilborn, and , Andre E. Punt
-#Canadian Journal of Fisheries and Aquatic Sciences, 1993, 50(12): 2597-2607, https://doi.org/10.1139/f93-284
-# SA Albacore: r=0.328, k=239.6
-# New Zealand Rock Lobster: r=0.0659 k=129
-# Northern Namibian Hake: r=0.379 k= 2772.6
-
+#' stock_params_setter
+#'
+#' stock_params_setter() does the setting.
+#'
+#' @return A list of stock options.
+#' @rdname AMPED_modules
+#' @name AMPED modules
 #' @export
 stock_params_setter <- function(input, output, session){
   get_stock_params <- reactive({
@@ -133,6 +157,22 @@ get_lh_params <- function(input){
 
 # Modules for setting the MP parameters
 # Bit fiddly with the conditional panels inside a module
+
+#' mp_params_setterUI
+#'
+#' mp_params_setterUI() is the interface for the HCR options
+#'
+#' @param mp_visible Which HCR types to show.
+#' @param title The title.
+#' @param init_thresh_max_catch Initial value of the maximum catch for the catch threshold HCR.
+#' @param init_thresh_belbow Initial value of the belbow for the catch threshold HCR.
+#' @param init_constant_catch Initial value of constant catch for the constant catch HCR.
+#' @param init_constant_effort Initial value of constant effort for the constant effort HCR.
+#' @param input_label The label of the menu.
+#' 
+#' @return A taglist
+#' @rdname AMPED_modules
+#' @name AMPED modules
 #' @export
 mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HCR you want to test.", init_thresh_max_catch=140, init_thresh_belbow=0.5, init_constant_catch=50, init_constant_effort=1.0, input_label="HCR Type"){
   ns <- NS(id)
@@ -171,6 +211,13 @@ mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HC
   return(out)
 }
 
+#' mp_params_setter
+#'
+#' mp_params_setter() does the setting.
+#'
+#' @return A list of HCR options.
+#' @rdname AMPED_modules
+#' @name AMPED modules
 #' @export
 mp_params_setter <- function(input, output, session){
   get_mp_params <- reactive({

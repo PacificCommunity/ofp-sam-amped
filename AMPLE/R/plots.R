@@ -9,8 +9,6 @@
 
 # Plotting functions
 # Globals - eesh!
-# Plot params - could make arguments
-#, app_params=app_params WTF? There are so many of them - reduce this madness
 
 # Maybe put them all as part of the pkg_env?
 # Or some kind of theme?
@@ -106,10 +104,23 @@ sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="bl
 # Input can be SB/SBF=0, or some output from empirical MP
 # Try to keep it flexible
 # type - are we stepping or projecting? Better way of doing this
-# Use ... instead of passing in more args like timestep?
 
+#' Plots for the front page of the Introduction to HCRs and other AMPED apps.
+#'
+#' plot_hcr() plots the shape of the HCR.
+#'
+#' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
+#' @param stock_params A vector of life history and stochasticy parameters.
+#' @param mp_params A vector of management procedure parameters.
+#' @param app_params A vector of application parameters.
+#' @param timestep The current timestep (optional).
+#' @param show_last Show the previous iters as ghosts (optional).
+#' 
+#' @return A plot
+#' @rdname front_page_plots
+#' @name Front page plots
 #' @export
-plot_hcr <- function(stock, stock_params, mp_params, app_params, timestep=NULL, show_last=TRUE, ...){
+plot_hcr <- function(stock, stock_params, mp_params, app_params, timestep=NULL, show_last=TRUE){
 
   if (mp_params$output_type=="catch"){
     ymax <- get_catch_ymax(stock$catch, mp_params)
@@ -206,7 +217,24 @@ draw_ribbon <- function(x, y, quantiles){
 }
 
 # Biomass / K
-# Plot 'true' and only plot observed if model based MP
+
+#' plot_biomass
+#'
+#' plot_biomass() plots time series of 'true' and observed depletion (SB/SBF=0).
+#'
+#' @param max_spaghetti_iters The number of iterations to show as spaghetti before ribbons are shown.
+#' @param quantiles Quantiles of the ribbons.
+#' @param nspaghetti The number of spaghetti iterations to plot on top of the ribbons.
+#' @param add_grid Add a grid.
+#' @param xlab The x-label.
+#' @param ghost_col Colours of the ghost iterations.
+#' @param last_col Colours of the last iteration.
+#' @param ylim Y limits
+#' @param ... Other arguments to pass to the plot() function.
+#' 
+#' @return A plot
+#' @rdname front_page_plots
+#' @name Front page plots
 #' @export
 plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col="grey", last_col="blue", ylim=c(0,1), ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
@@ -260,6 +288,15 @@ plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_las
 # If we have timestep we also need app_params
 # quantiles of length 2
 # If time, try to use the generic plot below
+#' plot_catch
+#'
+#' plot_catch() plots time series of catches.
+#'
+#' @param true_col Colour of the current iteration.
+#' 
+#' @return A plot
+#' @rdname front_page_plots
+#' @name Front page plots
 #' @export
 plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col="grey", true_col="black", ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
@@ -399,6 +436,14 @@ plot_F <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TR
 
 # Move to main app window?
 # Projection plots for the IntroProjections app
+#' plot_projection
+#'
+#' plot_projection() plots time series of depletion, catch and relative effort for the Introduction to Projections app.
+#'
+#' 
+#' @return A plot
+#' @rdname front_page_plots
+#' @name Front page plots
 #' @export
 plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
   current_col <- "blue"
@@ -416,6 +461,14 @@ plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, sho
   plot_releffort(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, ghost_col=prev_col, true_col=current_col, ...)
 }
 
+#' plot_hcr_intro_arrow
+#'
+#' plot_hcr_intro_arrow() draws an arrow between the depletion plot and the HCR plot for the Introduction to HCRs app.
+#'
+#' 
+#' @return A plot
+#' @rdname front_page_plots
+#' @name Front page plots
 #' @export
 plot_hcr_intro_arrow <- function(stock, timestep){
   # Arrow from B/K to HCR
@@ -435,6 +488,15 @@ plot_hcr_intro_arrow <- function(stock, timestep){
 
 # Could combine with function above into a single 
 # quantiles of length 2: lower and upper
+#' plot_metric_with_histo
+#'
+#' plot_metric_with_histo() is the generic plotting routine for plotting time series of metrics with histograms of the final time step. 
+#'
+#' @param metric The name of the metric to plot (catch, biomass or relcpue).
+#' 
+#' @return A plot
+#' @rdname front_page_plots
+#' @name Front page plots
 #' @export
 plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_params=NULL, show_last=TRUE, quantiles=c(0.2,0.8)){
   # Plot the metric with an extra sideways histogram
@@ -490,6 +552,15 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
 
 # Uses own Kobe / Majuro plot (not the ggplot2 one)
 # As doing each iteration of a stock individually, not a summary (also quicker)
+#' plot_kobe_majuro_projections
+#'
+#' plot_kobe_majuro_projections() plots a Kobe or Majuro plot for the Introduction to Projections app.
+#'
+#' @param choice Either kobe or majuro.
+#' 
+#' @return A plot
+#' @rdname front_page_plots
+#' @name Front page plots
 #' @export
 plot_kobe_majuro_projections <- function(stock, stock_params, choice="kobe"){
   # F/FMSY for Kobe and Majuro
@@ -648,6 +719,13 @@ plot_kobe_majuro_stock <- function(dat, stock_params, choice="kobe"){
 #}
 
 # Yield curve
+#' plot_yieldcurve_projections
+#'
+#' plot_yieldcurve_projections() plots a yield curve (catch against effort) for the Introduction to Projections app.
+#' 
+#' @return A plot
+#' @rdname front_page_plots
+#' @name Front page plots
 #' @export
 plot_yieldcurve_projections <- function(stock, stock_params, app_params){
   # x-axis = Effort
@@ -688,6 +766,18 @@ plot_yieldcurve_projections <- function(stock, stock_params, app_params){
 
 # Can we get Kobe in here too - just change the background colour and the X data
 # SB/SBF=0, B/BMSY
+
+#' Plots for comparing HCR performance
+#'
+#' plot_majuro() plots a Majuro plot.
+#'
+#' @param dat The data.frame with the data to be plotted.
+#' @param hcr_choices The names of the HCRs to plot.
+#' @param stock_params A vector of life history and stochasticy parameters.
+#' 
+#' @return A ggplot2 plot object.
+#' @rdname comparison_plots
+#' @name Comparison plots
 #' @export
 plot_majuro <- function(dat, hcr_choices, stock_params){
 
@@ -745,6 +835,28 @@ plot_majuro <- function(dat, hcr_choices, stock_params){
 
 # Quantile plot - for time series
 # All HCRs on same plot
+# Why sometimes worms and sometime spaghetti?
+
+#' quantile_plot
+#'
+#' quantile_plot() plots times series of indicators for each HCR.
+#'
+#' @param wormdat Data set of the spaghetti (worms).
+#' @param alpha20_80 Alpha of the ribbons.
+#' @param linetype_worm Line type of the spaghetti.
+#' @param colour_worm Colour of the spaghetti.
+#' @param size_worm Thickness of the spaghetti.
+#' @param add_start_line Add a line to the start of the projection (TRUE / FALSE).
+#' @param time_period_lines Add a lines to show the time periods (TRUE / FALSE).
+#' @param short_term Year range for the short-term.
+#' @param medium_term Year range for the medium-term.
+#' @param long_term Year range for the long-term.
+#' @param last_plot_year Last year to plot.
+#' @param show_spaghetti Show the spaghetti (worms) (TRUE / FALSE).
+#' 
+#' @return A ggplot2 plot object.
+#' @rdname comparison_plots
+#' @name Comparison plots
 #' @export
 quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
                           alpha20_80 = 0.6, linetype_worm=1,
@@ -798,6 +910,16 @@ quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
 }
 
 # Bar plots and box plots
+
+#' myboxplot
+#'
+#' myboxplot() plots box plots or bar charts of the median values of the indicators for each HCR.
+#'
+#' @param plot_type Either median_bar or box.
+#' 
+#' @return A ggplot2 plot object.
+#' @rdname comparison_plots
+#' @name Comparison plots
 #' @export
 myboxplot <- function(dat, hcr_choices, plot_type="median_bar"){
   hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
@@ -828,6 +950,17 @@ myboxplot <- function(dat, hcr_choices, plot_type="median_bar"){
 }
 
 # Radar plot
+
+#' myradar
+#'
+#' myradar() plots a radar chart in each time period, scaled either by the maximum or by ranking.
+#'
+#' @param scaling Either scale or rank.
+#' @param polysize The thickness of the radar.
+#' 
+#' @return A ggplot2 plot object.
+#' @rdname comparison_plots
+#' @name Comparison plots
 #' @export
 myradar <- function(dat, hcr_choices, scaling="scale", polysize=2){
     hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
@@ -865,6 +998,14 @@ myradar <- function(dat, hcr_choices, scaling="scale", polysize=2){
 
 # Not a plot - but included here anyway
 # The big PI tables
+
+#' pitable
+#'
+#' pitable() is not a plot but a table comparing PIs across HCRs and periods.
+#'
+#' @return A data.frame to be shown as a table.
+#' @rdname comparison_plots
+#' @name Comparison plots
 #' @export
 pitable <- function(dat){
     # Rows are the PIs, columns are the HCRs
@@ -889,6 +1030,23 @@ pitable <- function(dat){
 # PIMPLE HCR plots
 
 # Prep all the data in the PI calculation script
+
+#' hcr_plot
+#'
+#' hcrplot() plots the shape of each HCR.
+#'
+#' @param hcr_shape The shape parameters of each HCR,
+#' @param hcr_points Optionally show the bits of the HCR that triggered (currently not used).
+#' @param lrp The limit reference point.
+#' @param trp The target reference point.
+#' @param blacklinesize Size of the underlying black lines.
+#' @param linesize Size of the coloured lines.
+#' @param pointsize Size of the points (currently not used).
+#' @param stroke Mmmmm, stroking.
+#' 
+#' @return A ggplot2 plot object.
+#' @rdname comparison_plots
+#' @name Comparison plots
 #' @export
 hcr_plot <- function(hcr_choices, hcr_shape, hcr_points, lrp, trp, blacklinesize=4, linesize=3, pointsize=4.2, stroke=3){
     hcrcols <- get_hcr_colours(hcr_names=unique(hcr_shape$msectrl), chosen_hcr_names=hcr_choices)
@@ -916,6 +1074,15 @@ hcr_plot <- function(hcr_choices, hcr_shape, hcr_points, lrp, trp, blacklinesize
 
 # Histograms for HCRs
 
+#' hcr_histo_plot
+#'
+#' hcr_histo_plot() plots histograms of the HCR outputs in each time period.
+#'
+#' @param histodat Data for the histograms.
+#' 
+#' @return A ggplot2 plot object.
+#' @rdname comparison_plots
+#' @name Comparison plots
 #' @export
 hcr_histo_plot <- function(hcr_choices, histodat){
   hcrcols <- get_hcr_colours(hcr_names=unique(histodat$msectrl), chosen_hcr_names=hcr_choices)

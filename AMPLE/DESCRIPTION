@@ -1,13 +1,13 @@
 Package: AMPLE
-Title: Grab yourself a handful
+Title: Grab Yourself a Handful
 Version: 0.0.1
-Maintainer: Finlay Scott <finlay.scott@spc.int>
+Maintainer: Finlay Scott <finlays@spc.int>
 Authors@R: 
     person(given = "Finlay",
            family = "Scott",
            role = c("aut", "cre"),
-           email = "finlays@spc,int")
-Description: This package contains common code for the AMPED and PIMPLE Shiny applications but doesn't really do much on its own.
+           email = "finlays@spc.int")
+Description: A collection of common code for the AMPED and PIMPLE Shiny applications.
 License: GPL-3
 Depends:
   shiny (>= 1.3.2)
