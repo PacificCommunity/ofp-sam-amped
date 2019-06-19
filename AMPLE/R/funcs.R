@@ -17,10 +17,15 @@ globalVariables(c("X20.", "X5.", "X50.", "X80.", "X95.", "bin", "ffmsyX20.", "ff
 
 # This looks pretty crummy
 
-#' Show the maintainer and licence for AMPED
+#' Maintainer and licence information.
+#'
+#' Show the maintainer and licence for use in the AMPED PIMPLE applications.
 #' 
-#' @return A bunch of tags for use in Shiny apps
+#' @return A shiny.tag for use in Shiny apps
 #' @rdname maintainer_and_licence
+#' @examples
+#' amped_maintainer_and_licence()
+#' pimple_maintainer_and_licence()
 #' @export
 amped_maintainer_and_licence <- function(){
   out <- tags$html(
@@ -36,9 +41,6 @@ amped_maintainer_and_licence <- function(){
   return(out)
 }
 
-#' Show the maintainer and licence for PIMPLR
-#' 
-#' @return A bunch of tags for use in Shiny apps
 #' @rdname maintainer_and_licence
 #' @export
 pimple_maintainer_and_licence <- function(){
@@ -59,22 +61,6 @@ pimple_maintainer_and_licence <- function(){
 # stock cannot just be a calculated value returned from a reactive() as it needs to persist
 # i.e. here the next timestep depends on the previous timestep
 # it's empty but has structure
-
-#' Make the empty reactive stock object for AMPED apps
-#' 
-#' A stock is made up of biomass, hcr_ip, hcr_op, effort and catch.
-#' @return A reactiveValues object with bits for the stock
-#' @export
-create_stock <- function(){
-  stock <- reactiveValues(
-    biomass = NULL,
-    hcr_ip = NULL,
-    hcr_op = NULL,
-    effort = NULL,
-    catch = NULL
-  )
-  return(stock)
-}
 
 # Stock is sort of passed by reference as when this function is called the return value is not stored but stock is updated
 # But stock does need to be passed in - i.e. it is not found in the calling environment
@@ -141,9 +127,32 @@ fill_initial_stock <- function(stock, stock_params, mp_params, initial_biomass, 
   return(stock)
 }
 
-#' Clear out stock and refill initial period
+#' Functions for creating and filling stock objects.
 #'
-#' Fills the stock depending on stock status option (over, fully, underexploited).
+#' A stock is made up of biomass, hcr_ip, hcr_op, effort and catch.
+#' create_stock() makes the empty reactive stock object for AMPED apps.
+#' It has the elements but they are empty.
+#'
+#' @return A reactiveValues object with bits for the stock.
+#' @rdname stock_creators
+#' @examples
+#' # Makeing a NULL stock
+#' create_stock()
+#' @export
+create_stock <- function(){
+  stock <- reactiveValues(
+    biomass = NULL,
+    hcr_ip = NULL,
+    hcr_op = NULL,
+    effort = NULL,
+    catch = NULL
+  )
+  return(stock)
+}
+
+#' Functions for creating and filling stock objects.
+#'
+#' reset_stock() clears out an existing stock and refills the initial period depending on the stock status option (over, fully, underexploited).
 #'
 #' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
 #' @param stock_params A vector of life history and stochasticy parameters.
@@ -153,7 +162,45 @@ fill_initial_stock <- function(stock, stock_params, mp_params, initial_biomass, 
 #' @param nyears The numbers of years to set the stock up for.
 #' @param niters The numbers of iters to set the stock up for.
 #' 
-#' @return A filled stock object (a reactiveValues object with bits for the stock)
+#' @return A filled stock object (a reactiveValues object with bits for the stock).
+#' @rdname stock_creators
+#' @examples
+#' # Resetting a stock
+#' # Managment procedure bits - should come from Shiny app inputs
+#' input_mp <- list(
+#'   blim_belbow = c(0.2, 0.5),
+#'   cmin_cmax = c(10, 140), 
+#'   constant_catch_level = 50,
+#'   constant_effort_level = 1,
+#'   emin_emax = c(0.1, 0.5),
+#'   hcr_type = "threshold_catch")
+#' mp_params <- mp_params_switcheroo(input_mp)
+#'
+#' # Stochasticity bits - should come from Shiny app inputs
+#' input_stoch <- list(
+#'   biol_est_bias = 0,
+#'   biol_est_sigma = 0,
+#'   biol_prod_sigma = 0, 
+#'   show_var <- TRUE)
+#' stoch_params <- set_stoch_params(input_stoch)
+#'
+#' # Life history bits - should come from Shiny app inputs
+#' input_lh <- list(
+#'   stock_history = "fully",
+#'   stock_lh = "medium")
+#' lh_params <- get_lh_params(input_lh)
+#'
+#' # Stitch together and make other parameters - should be inside an Shiny app 
+#' stock_params <- c(stoch_params, lh_params)
+#' app_params <- list(initial_year = 2009, last_historical_timestep = 10)
+#'
+#' # Make the null stock and fill it up
+#' # In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
+#' #stock <- create_stock()
+#' stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
+#'
+#' # Reset the stock
+#' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
 #' @export
 reset_stock <- function(stock, stock_params, mp_params, app_params, initial_biomass, nyears, niters){
   # Set up current_corrnoise object to store the current noise value for each iteration
@@ -196,14 +243,57 @@ estimation_error <- function(input, sigma, bias){
 
 #' Projects the stock over the timesteps given and updates the biomass, HCR ip / op and catches
 #'
+#' project() uses a simple biomass dynamic model where the catches or fishing effort are set every timestep by the harvest control rule.
+#'
 #' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
-#' @param timesteps The timesteps to project over.
+#' @param timesteps The timesteps to project over. A vector of length 2 (start and end).
 #' @param stock_params A vector of life history and stochasticy parameters.
 #' @param mp_params A vector of management procedure parameters.
 #' @param app_params A vector of application parameters.
 #' @param max_releffort The maximum relative effort.
-#' 
 #' @return A stock object (a reactiveValues object with bits for the stock)
+#' @examples
+#' # Set up all the bits for a projection - should be done inside a Shiny app
+#' # Managment procedure bits - should come from Shiny app inputs
+#' input_mp <- list(
+#'   blim_belbow = c(0.2, 0.5),
+#'   cmin_cmax = c(10, 140), 
+#'   constant_catch_level = 50,
+#'   constant_effort_level = 1,
+#'   emin_emax = c(0.1, 0.5),
+#'   hcr_type = "threshold_catch")
+#' mp_params <- mp_params_switcheroo(input_mp)
+#' 
+#' # Stochasticity bits - should come from Shiny app inputs
+#' input_stoch <- list(
+#'   biol_est_bias = 0,
+#'   biol_est_sigma = 0,
+#'   biol_prod_sigma = 0, 
+#'   show_var <- TRUE)
+#' stoch_params <- set_stoch_params(input_stoch)
+#' 
+#' # Life history bits - should come from Shiny app inputs
+#' input_lh <- list(
+#'   stock_history = "fully",
+#'   stock_lh = "medium")
+#' lh_params <- get_lh_params(input_lh)
+#' 
+#' # Stitch together and make other parameters - should be inside an Shiny app 
+#' stock_params <- c(stoch_params, lh_params)
+#' app_params <- list(initial_year = 2009, last_historical_timestep = 10)
+#' 
+#' # Make the null stock and fill it up
+#' # In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
+#' #stock <- create_stock()
+#' stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
+#' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
+#'
+#' # Finally project over the timesteps
+#' out <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_params = mp_params, app_params = app_params)
+#'
+#' # Or just get the HCR op in a single timestep
+#' hcr_op <- get_hcr_op(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=10)
+#' @rdname project_functions
 #' @export
 project <- function(stock, timesteps, stock_params, mp_params, app_params, max_releffort = 10){
   # Check timesteps - should be a range of two values
@@ -254,6 +344,23 @@ project <- function(stock, timesteps, stock_params, mp_params, app_params, max_r
   }
   return(stock)
 }
+
+#' Projects the stock over the timesteps given and updates the biomass, HCR ip / op and catches
+#'
+#' get_hcr_op() evaluates the harvest control rule in a single year (timestep) for multiple iterations.
+#'
+#' @param yr Evaluate the HCR in a particular year (timestep).
+#' @return A vector of outputs from the HCR.
+#' @rdname project_functions
+#' @export
+get_hcr_op <- function(stock, stock_params, mp_params, yr){
+  # Shape is not NA
+  # Call HCR with the lagged input
+  #hcr_op <- do.call(mp_params$hcr_shape, args=list(stock=stock, mp_params=mp_params, stock_params=stock_params, yr=yr))
+  hcr_op <- do.call(mp_params$hcr_shape, args=list(input=stock$hcr_ip[,yr,drop=FALSE], mp_params=mp_params, stock_params=stock_params, yr=yr))
+  return(hcr_op)
+}
+
 
 # The surplus production model
 # General form:
@@ -307,27 +414,6 @@ get_hcr_ip <- function(stock, stock_params, mp_params, yr){
 # Outputs from the HCR can be different (e.g. catch, catch multiplier, effort, effort multiplier)
 # Evaluates one timestep (yr), multiple iterations (chance of multiple timesteps? maybe - need to be careful with dims)
 # yr is the yr of the stock$hcr$input to be used
-
-#' Evaluates the HCR 
-#'
-#' Inputs to the HCRs have already been calculated and are stored in hcr_ip element of the stock.
-#' Outputs from the HCR can be different (e.g. catch, catch multiplier, effort, effort multiplier).
-#' Evaluates one timestep (yr), for multiple iterations.
-#'
-#' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
-#' @param stock_params A vector of life history and stochasticy parameters.
-#' @param mp_params A vector of management procedure parameters.
-#' @param yr Evaluate the HCR in a particular year (timestep).
-#' 
-#' @return A vector of outputs from the HCR.
-#' @export
-get_hcr_op <- function(stock, stock_params, mp_params, yr){
-  # Shape is not NA
-  # Call HCR with the lagged input
-  #hcr_op <- do.call(mp_params$hcr_shape, args=list(stock=stock, mp_params=mp_params, stock_params=stock_params, yr=yr))
-  hcr_op <- do.call(mp_params$hcr_shape, args=list(input=stock$hcr_ip[,yr,drop=FALSE], mp_params=mp_params, stock_params=stock_params, yr=yr))
-  return(hcr_op)
-}
 
 #-------------------------------------------------------------------
 # HCR functions
