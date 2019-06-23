@@ -77,7 +77,7 @@ To use PIMPLE you need to install the *AMPLE* package from CRAN.
 ## How do I use PIMPLE?
 
 There are three main sections to PIMPLE, accessible by the tabs at the top of the screen.
-The tabs are: **The HCRs** (the tab that is open when you start PIMPLE), **PI Inspector** and **Comparing MPS**.
+The tabs are: **The HCRs** (the tab that is open when you start PIMPLE), **PI Inspector** and **Comparing MPs**.
 **The HCRs** tab shows the shapes of the different candidate HCRs and which parts of the HCR were active during the evaluations; **PI Inspector** allows detailed inspection of each type of PI and metric; **Comparing MPs** allows HCRs to be compared across the full range of PIs.
 These tabs are explained in more detail in the rest of this user guide.
 
@@ -147,40 +147,39 @@ A higher value is therefore considered better than a low value.
 
 This tab shows metrics and indicators related to the expected catches (PI 3).
 
-There is a time series of catches as well a bar chart and box plot of the average catches in the different time periods.
+There is a time series of catches as well as a bar chart and box plot of the average catches in the different time periods.
 Using the options on the left of the screen, the catches can be displayed as either *absolute* expected values or *relative* to the catches in the period 2013-15.
-Additionally, either the catches relating to the whole region, or only purse seine catches in assessment regions 2, 3, and 5 can be shown.
+Additionally, either the catches relating to the whole region, or only purse seine catches in regions 2, 3, and 5 of the stock assessment model can be shown.
 
 ## PI 4: Relative CPUE
 
 This tab is concerned with the CPUE relative to the CPUE in 2010 (PI 4).
 Note that the CPUE is only calculated for purse seine fisheries in assessment regions 2, 3 and 5 excluding the associated purse seines in region 5.
-
-This tab has a time series plot of relative CPUE as well a bar chart and box plot of the average relative CPUE in the different time periods.
+This tab has a time series plot of relative CPUE as well as a bar chart and box plot of the average relative CPUE in the different time periods.
 
 ## PI 6: Catch stability
 
-The catch stability through time is presented either as the variability and the stability (PI 6).
+The catch stability through time is presented as both the *variability* and the *stability* (PI 6).
 The higher the variability, the lower the stability.
-A stability of 1 means that the catches do not change over time. The lower value of stability, the more the catches change over time.
+A stability of 1 means that the catches do not change over time. The lower the value of stability, the more catches change over time.
 Both the variability and stability are presented as bar charts and box plots in the three time periods.
 
-Like the **PI 3: Catches** tab, the catches can be presented as *absolute* expected values, or *relative* to the average catches in the period 2013-15 and as either the total catches in the whole region or only for the purse seine catches in assessment regions 2, 3 and 5.
+Like the **PI 3: Catches** tab, the catches used to calculate the stability and variability are based on either the *absolute* expected values, or *relative* to the average catches in the period 2013-15 and on either the total catches in the whole region or only for the purse seine catches in assessment regions 2, 3 and 5.
 
 Note that the size of the boxes in the box plots do not reflect the uncertainty in the catches, but uncertainty in what the stability or variability of the catches will be.
 
 ## PI 7: Relative effort variability
 
 Relative effort is the effort relative to the effort in 2010 (PI 7).
-Note that the relative effort is only calculated for purse seine fisheries in assessment regions 2, 3 and 5 excluding the associated purse seines in region 5.
+Note that the relative effort is only calculated for purse seine fisheries in regions 2, 3 and 5 of the stock assessment excluding the associated purse seines in region 5.
 
-The relative effort variability is presented either as the variability and the stability.
+The relative effort variability is presented as both the *variability* and the *stability*.
 A stability of 1 means that the relative effort does not change over time. The lower value of stability, the more the relative effort changes over time.
 Both the variability and stability are presented as bar charts and box plots.
 
 ## Mean weight of an individual
 
-This tab shows the mean weight of an individual in the population, not the catches.
+This tab shows the mean weight of an individual fish in the population, not the catches.
 It has been proposed as a possible indicator for changes in stock structure.
 
 The mean weight of an individual is presented as a time series and also a bar chart and a box plot of the average value in each time period.
@@ -202,7 +201,7 @@ These tabs are:
 These are described in more detail below.
 
 The HCRs under inspection can be chosen using the **HCR selection** boxes on the left.
-The PIs of interest can be chosen using the **PI selection** boxes on the left.
+The PIs of interest can also be chosen using the **PI selection** boxes on the left.
 As you choose different PIs and HCRs the plots and tables will update to reflect the selection.
 It may take a little time to update the plots.
 By selecting different HCRs and PIs it is possible to 'drill' down into the results.
@@ -288,7 +287,7 @@ Option 1 is *Scale by max*. This means that the values within each indicator are
 The relative values of the indicators are preserved.
 This means that if the values of an indicator are similar for all the HCRs, the difference between them will be difficult to see.
 
-```{r, fig.cap="Example radar plot for three HCRs and 8 indicators with results being scaled by the max. Note that there is not much contrast between the HCRs. Only the long-term period is shown"}
+```{r, fig.cap="Example radar plot for three HCRs and 8 indicators with results being scaled by the max. Note that there is not much contrast between the HCRs. Only the long-term period is shown."}
 hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
 pi_choices <- unique(periodqs$pi)
 set_choices <- c("total", as.character(NA))
@@ -309,7 +308,7 @@ This means that the differences between the HCRs can be exaggerated.
 HCRs that have very similar indicator values can look very different when plotted using the *Rank* scaling.
 Use it with care.
 
-```{r, fig.cap="Example radar plot for three HCRs and 8 indicators with results being ranked. Note that these HCRs and PIs are the same as in the previous radar plot above but now there is a lot of contrast due to ranking. This shows that ranking can exagerate the differences in performance between the HCRs. Only the long-term period is shown"}
+```{r, fig.cap="Example radar plot for three HCRs and 8 indicators with results being ranked. Note that these HCRs and PIs are the same as in the previous radar plot above but now there is a lot of contrast due to ranking. This shows that ranking can exagerate the differences in performance between the HCRs. Only the long-term period is shown."}
 hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
 pi_choices <- unique(periodqs$pi)
 set_choices <- c("total", as.character(NA))
@@ -343,10 +342,9 @@ yearqs$piname <- yearqs$name
 worms$hcrref <- worms$msectrl
 worms$piname <- worms$name
 
-
 dat <- yearqs %>% filter(pi=="pi4") 
 wormdat <- worms %>% filter(pi=="pi4" & iter %in% wormiters) 
-p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term)
+p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
 p <- p + ylab("Relative CPUE")
 p <- p + ylim(c(0,NA))
 p <- p + scale_x_continuous(expand = c(0, 0))
@@ -358,8 +356,8 @@ p
 ## Table
 
 The **Table** subtab shows the values of the selected indicators and HCRs in each of the three time periods.
-The values are presented as a value, and then two more values inside parenthesis e.g. *0.46 (0.42, 0.5)*.
-The value outside the parenthesis is the median value, the values inside are the 20-80th percentile respectively.
+The indicators are presented as the median value, and then two more values inside parentheses e.g. *0.46 (0.42, 0.5)*.
+The values inside the parentheses are the 20-80th percentile respectively.
 
 PI 1 (the probability of being above the LRP) only has a single value because it is a probability.
 
