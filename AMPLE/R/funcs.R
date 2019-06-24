@@ -200,7 +200,8 @@ create_stock <- function(){
 #' stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
 #'
 #' # Reset the stock
-#' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
+#' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params,
+#'   app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
 #' @export
 reset_stock <- function(stock, stock_params, mp_params, app_params, initial_biomass, nyears, niters){
   # Set up current_corrnoise object to store the current noise value for each iteration
@@ -286,10 +287,12 @@ estimation_error <- function(input, sigma, bias){
 #' # In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
 #' #stock <- create_stock()
 #' stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
-#' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
+#' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params,
+#'   app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
 #'
 #' # Finally project over the timesteps
-#' out <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_params = mp_params, app_params = app_params)
+#' out <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_params = mp_params,
+#'   app_params = app_params)
 #'
 #' # Or just get the HCR op in a single timestep
 #' hcr_op <- get_hcr_op(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=10)
@@ -601,11 +604,7 @@ next_corrnoise <- function(x, b, sd=0.1){
 #'
 #' get_summaries() gets the current indicators including SB/SBF=0, catch and the probability of being above the limit reference point.
 #'
-#' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
-#' @param stock_params A vector of life history and stochasticy parameters.
-#' @param app_params A vector of application parameters.
 #' @param quantiles The quantiles to calculate the indicators over.
-#' 
 #' @return Various data.frames with summaries in different formats.
 #' @rdname performance_indicators
 #' @examples
@@ -642,15 +641,18 @@ next_corrnoise <- function(x, b, sd=0.1){
 #' # In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
 #' #stock <- create_stock()
 #' stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
-#' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
+#' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params,
+#'   app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
 #' # Finally project over the timesteps
-#' out <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_params = mp_params, app_params = app_params)
+#' out <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_params = mp_params,
+#'   app_params = app_params)
 #' # Get the summaries
-#' pisums <- get_summaries(stock=out, stock_params=stock_params, app_params=app_params, quantiles=c(0.01,0.05,0.20,0.5,0.80,0.95,0.99))
+#' pisums <- get_summaries(stock=out, stock_params=stock_params, app_params=app_params,
+#'   quantiles=c(0.01,0.05,0.20,0.5,0.80,0.95,0.99))
 #' # Get the current PI table in a neat format from one of the summary tables
 #' current_pi_table(dat=pisums$periodqs, pichoice=c("pi1", "sbsbf0", "catch"))
 #'
-#' Get the PIs for the Introduction to Projections app
+#' # Get the PIs for the Introduction to Projections app
 #' get_projection_pis(stock=out, stock_params=stock_params, app_params=app_params, current_timestep=15)
 #' @export
 get_summaries <- function(stock, stock_params, app_params, quantiles){

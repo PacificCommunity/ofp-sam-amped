@@ -23,7 +23,8 @@
 #'@examples
 #'\dontrun{
 #' Put something like this in the Shiny apps UI code
-#' mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort"))
+#' mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch",
+#' "Threshold effort", "Constant effort"))
 #' And then something like in the Shiny server code
 #' get_mp_params <- callModule(mp_params_setter, "mpparams") 
 #'}
@@ -74,6 +75,13 @@ stoch_params_setter<- function(input, output, session){
 }
 
 # Defined outside of reactive so we can use it in tests
+#' mp_params_setter
+#'
+#' set_stoch_params() Sets up default values. Only exported to get the examples to work.
+#'
+#' @rdname AMPED_modules
+#' @name AMPED modules
+#' @export
 set_stoch_params <- function(input){
     # Check which stochasticity options we are using
     # If null, we're not using them
@@ -142,6 +150,13 @@ stock_params_setter <- function(input, output, session){
 }
 
 # Defined outside of above reactive so we can call it elsewhere
+#' mp_params_setter
+#'
+#' get_lh_params() Sets up default values. Only exported to get the examples to work.
+#'
+#' @rdname AMPED_modules
+#' @name AMPED modules
+#' @export
 get_lh_params <- function(input){
     # Set r and k depending on the stock choice radio button
     # Set MSY to be a 100 for each stock
@@ -234,6 +249,14 @@ mp_params_setter <- function(input, output, session){
 }
 
 #Defined outsode of the reactive above so we can use it non-reactively
+
+#' mp_params_setter
+#'
+#' mp_params_switcheroo() Sets up default values. Only exported to get the examples to work.
+#'
+#' @rdname AMPED_modules
+#' @name AMPED modules
+#' @export
 mp_params_switcheroo <- function(input){
     out <- switch(input$hcr_type,
                           threshold_catch = list(hcr_shape = "threshold", mp_analysis = "assessment",

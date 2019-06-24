@@ -69,10 +69,12 @@ app_params <- list(initial_year = 2009, last_historical_timestep = 10)
 # In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
 #stock <- create_stock()
 stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
-stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
+stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params,
+  app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
 
 # Finally project over the timesteps
-out <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_params = mp_params, app_params = app_params)
+out <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_params = mp_params,
+  app_params = app_params)
 
 # Or just get the HCR op in a single timestep
 hcr_op <- get_hcr_op(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=10)

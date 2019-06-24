@@ -143,9 +143,11 @@ app_params <- list(initial_year = 2009, last_historical_timestep = 10)
 # In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
 #stock <- create_stock()
 stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
-stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 100)
+stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params,
+  app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 100)
 # Finally project over the timesteps
-stock <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_params = mp_params, app_params = app_params)
+stock <- project(stock, timesteps = c(11,20), stock_params = stock_params,
+  mp_params = mp_params, app_params = app_params)
 
 # The plots
 # Plot the HCR
@@ -155,11 +157,13 @@ plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, quanti
 # Plot catch timeseries
 plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
 # Plot the projection (biomass, catch and rel cpue)
-plot_projection(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, quantiles=c(0.2,0.8))
+plot_projection(stock=stock, stock_params=stock_params, mp_params=mp_params,
+  app_params=app_params, quantiles=c(0.2,0.8))
 # The arrow connecting the HCR to the biomass
 plot_hcr_intro_arrow(stock=stock, timestep=15)
 # Time series with a histogram on the end
-plot_metric_with_histo(stock=stock, stock_params=stock_params, mp_params=mp_params, metric="catch", app_params=app_params)
+plot_metric_with_histo(stock=stock, stock_params=stock_params, mp_params=mp_params,
+  metric="catch", app_params=app_params)
 # Kobe or Majuro plot
 # Just a few iters for efficiency
 stock2 <- lapply(stock, '[',1:5,)

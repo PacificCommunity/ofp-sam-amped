@@ -76,5 +76,6 @@ app_params <- list(initial_year = 2009, last_historical_timestep = 10)
 stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
 
 # Reset the stock
-stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
+stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params,
+  app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
 }

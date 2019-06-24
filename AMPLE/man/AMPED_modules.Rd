@@ -4,10 +4,13 @@
 \alias{AMPED modules}
 \alias{stoch_params_setterUI}
 \alias{stoch_params_setter}
+\alias{set_stoch_params}
 \alias{stock_params_setterUI}
 \alias{stock_params_setter}
+\alias{get_lh_params}
 \alias{mp_params_setterUI}
 \alias{mp_params_setter}
+\alias{mp_params_switcheroo}
 \title{Modules for common features of the AMPED Shiny apps.}
 \usage{
 stoch_params_setterUI(id, show_biol_prod_sigma = TRUE,
@@ -17,9 +20,13 @@ stoch_params_setterUI(id, show_biol_prod_sigma = TRUE,
 
 stoch_params_setter(input, output, session)
 
+set_stoch_params(input)
+
 stock_params_setterUI(id)
 
 stock_params_setter(input, output, session)
+
+get_lh_params(input)
 
 mp_params_setterUI(id, mp_visible = NULL,
   title = "Select the type of HCR you want to test.",
@@ -28,6 +35,8 @@ mp_params_setterUI(id, mp_visible = NULL,
   input_label = "HCR Type")
 
 mp_params_setter(input, output, session)
+
+mp_params_switcheroo(input)
 }
 \arguments{
 \item{id}{Shiny magic id}
@@ -84,18 +93,25 @@ stoch_params_setterUI() is the interface for the stochasticity options.
 
 stoch_params_setter() does the setting.
 
+set_stoch_params() Sets up default values. Only exported to get the examples to work.
+
 stock_params_setterUI() is the interface for the stock options (e.g. life history and exploitation status).
 
 stock_params_setter() does the setting.
 
+get_lh_params() Sets up default values. Only exported to get the examples to work.
+
 mp_params_setterUI() is the interface for the HCR options
 
 mp_params_setter() does the setting.
+
+mp_params_switcheroo() Sets up default values. Only exported to get the examples to work.
 }
 \examples{
 \dontrun{
 Put something like this in the Shiny apps UI code
-mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort"))
+mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch",
+"Threshold effort", "Constant effort"))
 And then something like in the Shiny server code
 get_mp_params <- callModule(mp_params_setter, "mpparams") 
 }

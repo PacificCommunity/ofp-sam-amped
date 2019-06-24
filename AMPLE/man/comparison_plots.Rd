@@ -152,11 +152,14 @@ app_params <- list(initial_year = 2009, last_historical_timestep = 10)
 # In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
 #stock <- create_stock()
 stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
-stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 40, niters = 10)
+stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params,
+  app_params = app_params, initial_biomass = stock_params$b0, nyears = 40, niters = 10)
 # Finally project over the timesteps
-stock <- project(stock, timesteps = c(11,40), stock_params = stock_params, mp_params = mp_params, app_params = app_params)
+stock <- project(stock, timesteps = c(11,40), stock_params = stock_params,
+  mp_params = mp_params, app_params = app_params)
 # Get the summaries
-pisums <- get_summaries(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=c(0.01,0.05,0.20,0.5,0.80,0.95,0.99))
+pisums <- get_summaries(stock=stock, stock_params=stock_params, app_params=app_params,
+  quantiles=c(0.01,0.05,0.20,0.5,0.80,0.95,0.99))
 # Add an HCR name (done inside Shiny app)
 pisums$worms$hcrref <- "HCR 1"
 pisums$yearqs$hcrref <- "HCR 1"
