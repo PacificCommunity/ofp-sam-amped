@@ -85,19 +85,18 @@ get_catch_ymax <- function(catch, mp_params){
 }
 
 sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="blue"){
+    def.par <- par(no.readonly = TRUE) # as seen in layout doc
     yhist <- hist(dat, plot=FALSE, breaks=seq(from=range[1], to=range[2], length.out=lhist)) 
     # Use dnorm
     yx <- seq(range[1], range[2], length.out=num.dnorm)
     yy <- dnorm(yx, mean=mean(dat), sd=sd(dat))
     yy[is.infinite(yy)] <- 1.0
     parmar <- par()$mar
-    par(mar=c(parmar[1], 0, parmar[3], 0))
+     par(mar=c(parmar[1], 0, parmar[3], 0))
     barplot(yhist$density, axes=FALSE, xlim=c(0, max(yhist$density, yy)), space=0, horiz=TRUE, xaxs="i", yaxs="i") # barplot
     lines(yy, seq(from=0, to=lhist-1, length.out=num.dnorm), col=dcol) # line
-    # Or use density
-    #dens <- density(dat)
-    #barplot(yhist$density, axes=FALSE, xlim=c(0, max(yhist$density, dens$y)), space=0, horiz=TRUE) # barplot
-    #lines(dens$y, seq(from=0, to=lhist-1, length.out=length(dens$y)), col=dcol) # line
+    # restore parameters
+    par(def.par)  #- reset to default - as seen in layout man pages
 }
 
 # Draw the HCR (output vs input)
@@ -161,16 +160,16 @@ sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="bl
 #' 
 #' # The plots
 #' # Plot the HCR
-#' plot_hcr(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params)
+#' #plot_hcr(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params)
 #' # Plot biomass timeseries
-#' plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
+#' #plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
 #' # Plot catch timeseries
-#' plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
+#' #plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
 #' # Plot the projection (biomass, catch and rel cpue)
 #' plot_projection(stock=stock, stock_params=stock_params, mp_params=mp_params,
 #'   app_params=app_params, quantiles=c(0.2,0.8))
 #' # The arrow connecting the HCR to the biomass
-#' plot_hcr_intro_arrow(stock=stock, timestep=15)
+#' #plot_hcr_intro_arrow(stock=stock, timestep=15)
 #' # Time series with a histogram on the end
 #' plot_metric_with_histo(stock=stock, stock_params=stock_params, mp_params=mp_params,
 #'   metric="catch", app_params=app_params)
@@ -507,9 +506,9 @@ plot_F <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TR
 #' @name Front page plots
 #' @export
 plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+  def.par <- par(no.readonly = TRUE) # as seen in layout doc
   current_col <- "blue"
   prev_col <- "black"
-
   par(mfrow=c(3,1))
   # And then cock about with margins
   par(mar=c(0, 4.1, 5, 2.1))
@@ -520,6 +519,8 @@ plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, sho
 
   par(mar=c(5, 4.1, 0, 2.1))
   plot_releffort(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, ghost_col=prev_col, true_col=current_col, ...)
+  # restore parameters
+  par(def.par)
 }
 
 #' plot_hcr_intro_arrow
@@ -560,12 +561,13 @@ plot_hcr_intro_arrow <- function(stock, timestep){
 #' @name Front page plots
 #' @export
 plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_params=NULL, show_last=TRUE, quantiles=c(0.2,0.8)){
+  def.par <- par(no.readonly = TRUE) # as seen in layout doc
   # Plot the metric with an extra sideways histogram
   layout(matrix(c(1,2), ncol=2), widths=c(6/7, 1/7))
   ospc <- 0.5 # outer space
   pext <- 4 # par extension down and to the left
   bspc <- 1 # space between scatter plot and bar plots
-  par. <- par(mar=c(pext, pext, bspc, bspc), oma=rep(ospc, 4)) # plot parameters
+  par(mar=c(pext, pext, bspc, bspc), oma=rep(ospc, 4)) # plot parameters
   if (metric == "biomass"){
     # The timeseries of biomass in the big window
     plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles)
@@ -601,9 +603,9 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
   if((nrow(stock$hcr_ip) > 1) & (!all(is.na(dat)))){
     # Get all iters and right timesteps (including timelag)
     sideways_histogram(dat=dat, range=range)
-    # restore parameters
   }
-  #par(par.)
+  # restore parameters
+  par(def.par)  #- reset to default - as seen in layout man pages
 }
 
 #---------------------------------------------------------------
