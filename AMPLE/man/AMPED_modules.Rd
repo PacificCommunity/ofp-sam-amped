@@ -92,3 +92,11 @@ mp_params_setterUI() is the interface for the HCR options
 
 mp_params_setter() does the setting.
 }
+\examples{
+\dontrun{
+Put something like this in the Shiny apps UI code
+mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort"))
+And then something like in the Shiny server code
+get_mp_params <- callModule(mp_params_setter, "mpparams") 
+}
+}

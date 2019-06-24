@@ -135,9 +135,6 @@ fill_initial_stock <- function(stock, stock_params, mp_params, initial_biomass, 
 #'
 #' @return A reactiveValues object with bits for the stock.
 #' @rdname stock_creators
-#' @examples
-#' # Makeing a NULL stock
-#' create_stock()
 #' @export
 create_stock <- function(){
   stock <- reactiveValues(
@@ -165,6 +162,9 @@ create_stock <- function(){
 #' @return A filled stock object (a reactiveValues object with bits for the stock).
 #' @rdname stock_creators
 #' @examples
+#' # Making a NULL stock
+#' create_stock()
+#'
 #' # Resetting a stock
 #' # Managment procedure bits - should come from Shiny app inputs
 #' input_mp <- list(
@@ -461,6 +461,11 @@ constant <- function(mp_params, ...){
 #' @param nyears The number of years.
 #' 
 #' @return A list of the timesteps that make up each time period.
+#' @examples
+#' app_params <- list(initial_year = 2009, last_historical_timestep = 10)
+#' nyears <- 40
+#' get_time_periods(app_params=app_params, nyears=nyears)
+#'
 #' @export
 get_time_periods <- function(app_params, nyears){
   nyears <- nyears - app_params$last_historical_timestep
@@ -483,13 +488,13 @@ get_time_periods <- function(app_params, nyears){
 }
 
 
-#' Format and produce a table of previously calculated performance indicators
+#' Routines for calculating and displaying various performance indicators.
 #'
+#' current_pi_table() takes the processed indicators and formats them into a table.
 #'
 #' @param dat A data.frame with the 20th, 80th and 50th percentile value of each indicator.
 #' @param pichoice A character vector of the indicator names to be included in the table
-#' 
-#' @return A formatted data.frame
+#' @rdname performance_indicators
 #' @export
 current_pi_table <- function(dat, pichoice=c("pi1", "sbsbf0", "catch")){
   out <- subset(dat, period != "Rest" & pi %in% pichoice)
@@ -508,14 +513,15 @@ current_pi_table <- function(dat, pichoice=c("pi1", "sbsbf0", "catch")){
 
 #-------------------------------------------------------------------
 
-#' Get the performance indicators for the Introduction to Projections AMPED app
+#' peformance_indicators
+#'
+#' get_projection_pis() get the performance indicators for the Introduction to Projections AMPED app
 #'
 #' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
 #' @param stock_params A vector of life history and stochasticy parameters.
 #' @param app_params A vector of application parameters.
 #' @param current_timestep The current timestep.
-#' 
-#' @return A filled stock object (a reactiveValues object with bits for the stock)
+#' @rdname performance_indicators
 #' @export
 get_projection_pis <- function(stock, stock_params, app_params, current_timestep){
   # Return a data.frame of:
@@ -589,18 +595,63 @@ next_corrnoise <- function(x, b, sd=0.1){
 }
 
 #----------------------------------------------------
-# Function to get the perfomance indicators in same format as PIMPLE
+# Function to get the performance indicators in same format as PIMPLE
 
-#' Get the summary performance indicators 
+#' peformance_indicators
 #'
-#' Current indicators include SB/SBF=0, catch and the probability of being above the limit reference point.
+#' get_summaries() gets the current indicators including SB/SBF=0, catch and the probability of being above the limit reference point.
 #'
 #' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
 #' @param stock_params A vector of life history and stochasticy parameters.
 #' @param app_params A vector of application parameters.
 #' @param quantiles The quantiles to calculate the indicators over.
 #' 
-#' @return A list of various data.frames with summaries in different formats.
+#' @return Various data.frames with summaries in different formats.
+#' @rdname performance_indicators
+#' @examples
+#' # Set up all the bits for a projection - should be done inside a Shiny app
+#' # Managment procedure bits - should come from Shiny app inputs
+#' input_mp <- list(
+#'   blim_belbow = c(0.2, 0.5),
+#'   cmin_cmax = c(10, 140), 
+#'   constant_catch_level = 50,
+#'   constant_effort_level = 1,
+#'   emin_emax = c(0.1, 0.5),
+#'   hcr_type = "threshold_catch")
+#' mp_params <- mp_params_switcheroo(input_mp)
+#' 
+#' # Stochasticity bits - should come from Shiny app inputs
+#' input_stoch <- list(
+#'   biol_est_bias = 0,
+#'   biol_est_sigma = 0,
+#'   biol_prod_sigma = 0, 
+#'   show_var <- TRUE)
+#' stoch_params <- set_stoch_params(input_stoch)
+#' 
+#' # Life history bits - should come from Shiny app inputs
+#' input_lh <- list(
+#'   stock_history = "fully",
+#'   stock_lh = "medium")
+#' lh_params <- get_lh_params(input_lh)
+#' 
+#' # Stitch together and make other parameters - should be inside an Shiny app 
+#' stock_params <- c(stoch_params, lh_params)
+#' app_params <- list(initial_year = 2009, last_historical_timestep = 10)
+#' 
+#' # Make the null stock and fill it up
+#' # In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
+#' #stock <- create_stock()
+#' stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
+#' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 10)
+#' # Finally project over the timesteps
+#' out <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_params = mp_params, app_params = app_params)
+#' # Get the summaries
+#' pisums <- get_summaries(stock=out, stock_params=stock_params, app_params=app_params, quantiles=c(0.01,0.05,0.20,0.5,0.80,0.95,0.99))
+#' # Get the current PI table in a neat format from one of the summary tables
+#' current_pi_table(dat=pisums$periodqs, pichoice=c("pi1", "sbsbf0", "catch"))
+#'
+#' Get the PIs for the Introduction to Projections app
+#' get_projection_pis(stock=out, stock_params=stock_params, app_params=app_params, current_timestep=15)
 #' @export
 get_summaries <- function(stock, stock_params, app_params, quantiles){
   # worms - a sample of iters by year
@@ -681,6 +732,6 @@ get_summaries <- function(stock, stock_params, app_params, quantiles){
   # rename iter column to wormid
   worms <- dplyr::rename(worms, wormid = iter)
 
-  # Fucking tibble shit
+  # Data.frames only
   return(list(worms=as.data.frame(worms), yearqs=as.data.frame(yearqs), periodqs=as.data.frame(periodqs)))
 }

@@ -20,7 +20,13 @@
 #' @param init_est_sigma Default value for estimation variability.
 #' @param init_est_bias Default value for estimation bias. 
 #' @param show_var Show the variability options.
-#' 
+#'@examples
+#'\dontrun{
+#' Put something like this in the Shiny apps UI code
+#' mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort"))
+#' And then something like in the Shiny server code
+#' get_mp_params <- callModule(mp_params_setter, "mpparams") 
+#'}
 #' @return A taglist
 #' @rdname AMPED_modules
 #' @name AMPED modules

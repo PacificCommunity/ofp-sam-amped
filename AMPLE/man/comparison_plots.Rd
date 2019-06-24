@@ -110,9 +110,67 @@ myboxplot() plots box plots or bar charts of the median values of the indicators
 
 myradar() plots a radar chart in each time period, scaled either by the maximum or by ranking.
 
-pitable() is not a plot but a table comparing PIs across HCRs and periods.
+pitable() is not a plot but a table comparing PIs across HCRs and periods. Only pass in 1 time period at a time.
 
 hcrplot() plots the shape of each HCR.
 
 hcr_histo_plot() plots histograms of the HCR outputs in each time period.
+}
+\examples{
+
+
+# Set up all the bits for a projection - should be done inside a Shiny app
+# Managment procedure bits - should come from Shiny app inputs
+input_mp <- list(
+  blim_belbow = c(0.2, 0.5),
+  cmin_cmax = c(10, 140), 
+  constant_catch_level = 50,
+  constant_effort_level = 1,
+  emin_emax = c(0.1, 0.5),
+  hcr_type = "threshold_catch")
+mp_params <- mp_params_switcheroo(input_mp)
+
+# Stochasticity bits - should come from Shiny app inputs
+input_stoch <- list(
+  biol_est_bias = 0,
+  biol_est_sigma = 0.2,
+  biol_prod_sigma = 0.2, 
+  show_var <- TRUE)
+stoch_params <- set_stoch_params(input_stoch)
+
+# Life history bits - should come from Shiny app inputs
+input_lh <- list(
+  stock_history = "fully",
+  stock_lh = "medium")
+lh_params <- get_lh_params(input_lh)
+
+# Stitch together and make other parameters - should be inside an Shiny app 
+stock_params <- c(stoch_params, lh_params)
+app_params <- list(initial_year = 2009, last_historical_timestep = 10)
+
+# Make the null stock and fill it up
+# In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
+#stock <- create_stock()
+stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
+stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params, app_params = app_params, initial_biomass = stock_params$b0, nyears = 40, niters = 10)
+# Finally project over the timesteps
+stock <- project(stock, timesteps = c(11,40), stock_params = stock_params, mp_params = mp_params, app_params = app_params)
+# Get the summaries
+pisums <- get_summaries(stock=stock, stock_params=stock_params, app_params=app_params, quantiles=c(0.01,0.05,0.20,0.5,0.80,0.95,0.99))
+# Add an HCR name (done inside Shiny app)
+pisums$worms$hcrref <- "HCR 1"
+pisums$yearqs$hcrref <- "HCR 1"
+pisums$periodqs$hcrref <- "HCR 1"
+
+# Majuro plot
+plot_majuro(dat=pisums$yearqs, hcr_choices="HCR 1", stock_params=stock_params)
+# Time series quantile plot
+quantile_plot(dat=pisums$yearqs, hcr_choices="HCR 1", wormdat=pisums$worms)
+# Bar and box plots
+myboxplot(dat=pisums$periodqs, hcr_choices="HCR 1", plot_type="median_bar")
+myboxplot(dat=pisums$periodqs, hcr_choices="HCR 1", plot_type="box")
+# Radar plot
+myradar(dat=pisums$periodqs, hcr_choices="HCR 1", scaling="scale", polysize=2)
+# Table of PIs. Only pass in 1 time period
+pitable(dat=subset(pisums$periodqs, period=="Long"))
 }

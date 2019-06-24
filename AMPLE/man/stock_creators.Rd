@@ -38,8 +38,9 @@ It has the elements but they are empty.
 reset_stock() clears out an existing stock and refills the initial period depending on the stock status option (over, fully, underexploited).
 }
 \examples{
-# Makeing a NULL stock
+# Making a NULL stock
 create_stock()
+
 # Resetting a stock
 # Managment procedure bits - should come from Shiny app inputs
 input_mp <- list(
