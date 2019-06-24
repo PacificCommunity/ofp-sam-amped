@@ -1174,11 +1174,11 @@ pitable <- function(dat){
 hcr_plot <- function(hcr_choices, hcr_shape, hcr_points, lrp, trp, blacklinesize=4, linesize=3, pointsize=4.2, stroke=3){
     hcrcols <- get_hcr_colours(hcr_names=unique(hcr_shape$hcrref), chosen_hcr_names=hcr_choices)
     # Select the chosen HCRs only - could do this in the call to plot in app?
-    shapedat <- subset(hcr_shape, msectrl %in% hcr_choices)
-    pointsdat <- subset(hcr_points, msectrl %in% hcr_choices)
+    shapedat <- subset(hcr_shape, hcrref %in% hcr_choices)
+    pointsdat <- subset(hcr_points, hcrref %in% hcr_choices)
     p <- ggplot(shapedat, aes(x=x, y=y))
-    p <- p + geom_line(aes(group=msectrl), colour="black", size=blacklinesize) # outline
-    p <- p + geom_line(aes(colour=msectrl), size=linesize)
+    p <- p + geom_line(aes(group=hcrref), colour="black", size=blacklinesize) # outline
+    p <- p + geom_line(aes(colour=hcrref), size=linesize)
     p <- p + xlab("Estimated SB/SBF=0") + ylab("Effort multiplier")
     p <- p + theme(legend.position="bottom", legend.title=element_blank())
     p <- p + scale_fill_manual(values=hcrcols)
@@ -1186,8 +1186,8 @@ hcr_plot <- function(hcr_choices, hcr_shape, hcr_points, lrp, trp, blacklinesize
     p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
     p <- p + scale_x_continuous(expand = c(0, 0))
     # Add points to it
-    #p <- p + geom_point(dat=pointsdat, aes(x=sbsbf0, y=scaler, fill=msectrl), colour="black", shape=21, size=pointsize, alpha=0.3, stroke=stroke)
-    #p <- p + geom_jitter(dat=pointsdat, aes(x=sbsbf0, y=scaler, fill=msectrl), colour="black", shape=21, size=pointsize, alpha=0.3, stroke=stroke)
+    #p <- p + geom_point(dat=pointsdat, aes(x=sbsbf0, y=scaler, fill=hcrref), colour="black", shape=21, size=pointsize, alpha=0.3, stroke=stroke)
+    #p <- p + geom_jitter(dat=pointsdat, aes(x=sbsbf0, y=scaler, fill=hcrref), colour="black", shape=21, size=pointsize, alpha=0.3, stroke=stroke)
     # Add LRP and TRP
     p <- p + geom_vline(aes(xintercept=lrp), linetype=2)
     p <- p + geom_vline(aes(xintercept=trp), linetype=2)
@@ -1208,10 +1208,10 @@ hcr_plot <- function(hcr_choices, hcr_shape, hcr_points, lrp, trp, blacklinesize
 #' @name Comparison plots
 #' @export
 hcr_histo_plot <- function(hcr_choices, histodat){
-  hcrcols <- get_hcr_colours(hcr_names=unique(hcr_choices$hcrref), chosen_hcr_names=hcr_choices)
-  hdat <- subset(histodat, msectrl %in% hcr_choices)
+  hcrcols <- get_hcr_colours(hcr_names=unique(histodat$hcrref), chosen_hcr_names=hcr_choices)
+  hdat <- subset(histodat, hcrref %in% hcr_choices)
   p <- ggplot(hdat, aes(x=bin, y=prop))
-  p <- p + geom_bar(aes(fill=msectrl), stat='identity', position='identity',colour="black", alpha=0.7)
+  p <- p + geom_bar(aes(fill=hcrref), stat='identity', position='identity',colour="black", alpha=0.7)
   p <- p + facet_wrap(~period)
   p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
   p <- p + xlab("Effort scaler") + ylab("Proportion")

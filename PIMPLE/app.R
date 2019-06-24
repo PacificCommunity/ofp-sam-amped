@@ -22,19 +22,6 @@ load("data/pimple_test_const4.Rdata")
 #load("data/pimple_test_effortcreep.Rdata")
 # periodqs, worms, yearqs
 
-# Data for the histogram plots
-# Move all this to the data preparation stage
-breaks <- seq(from=0,to=2,by=0.05)
-freqs <- cut(hcr_points$scaler, breaks, labels=FALSE)
-hcr_points$bin <- breaks[freqs]
-histodat <- dplyr::group_by(hcr_points, msectrl, period, bin)
-histodat <- dplyr::summarise(histodat, sum=n())
-nobs <- dplyr::group_by(hcr_points,msectrl, period)
-nobs <- dplyr::summarise(nobs, tnobs=n())
-
-histodat <- dplyr::left_join(histodat, nobs)
-histodat$prop <- histodat$sum / histodat$tnobs
-
 # Hack for bad data!
 # Redo PI data with correct colnames
 periodqs$hcrref <- periodqs$msectrl
@@ -50,6 +37,20 @@ hcr_points$hcrref <- hcr_points$msectrl
 hcr_points$hcrname <- hcr_points$msectrl
 hcr_shape$hcrref <- hcr_shape$msectrl
 hcr_shape$hcrname <- hcr_shape$msectrl
+
+
+# Data for the histogram plots
+# Move all this to the data preparation stage
+breaks <- seq(from=0,to=2,by=0.05)
+freqs <- cut(hcr_points$scaler, breaks, labels=FALSE)
+hcr_points$bin <- breaks[freqs]
+histodat <- dplyr::group_by(hcr_points, hcrref, period, bin)
+histodat <- dplyr::summarise(histodat, sum=dplyr::n())
+nobs <- dplyr::group_by(hcr_points,msectrl, period)
+nobs <- dplyr::summarise(nobs, tnobs=dplyr::n())
+
+histodat <- dplyr::left_join(histodat, nobs)
+histodat$prop <- histodat$sum / histodat$tnobs
 
 periodqs <- periodqs[order(periodqs$hcrref),]
 
