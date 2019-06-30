@@ -151,16 +151,16 @@ stock <- project(stock, timesteps = c(11,20), stock_params = stock_params,
 
 # The plots
 # Plot the HCR
-#plot_hcr(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params)
+plot_hcr(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params)
 # Plot biomass timeseries
-#plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
+plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
 # Plot catch timeseries
-#plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
+plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
 # Plot the projection (biomass, catch and rel cpue)
 plot_projection(stock=stock, stock_params=stock_params, mp_params=mp_params,
   app_params=app_params, quantiles=c(0.2,0.8))
 # The arrow connecting the HCR to the biomass
-#plot_hcr_intro_arrow(stock=stock, timestep=15)
+plot_hcr_intro_arrow(stock=stock, timestep=15)
 # Time series with a histogram on the end
 plot_metric_with_histo(stock=stock, stock_params=stock_params, mp_params=mp_params,
   metric="catch", app_params=app_params)
