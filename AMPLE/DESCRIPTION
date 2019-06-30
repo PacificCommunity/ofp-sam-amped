@@ -7,7 +7,7 @@ Authors@R:
            family = "Scott",
            role = c("aut", "cre"),
            email = "finlays@spc.int")
-Description: A collection of common code for the 'AMPED' and 'PIMPLE' Shiny applications for stakeholder engagement in developing fisheries harvest strategies. The package is not that useful on its own but provides common functionality including plots, stochasticity options, life history options and a simple surplus production model.
+Description: A collection of common code for the 'AMPED' and 'PIMPLE' 'shiny' applications for stakeholder engagement in developing fisheries harvest strategies. The package is not that useful on its own but provides common functionality including plots, stochasticity options, life history options and a simple surplus production model.
 License: GPL-3
 Depends:
   shiny (>= 1.3.2)
