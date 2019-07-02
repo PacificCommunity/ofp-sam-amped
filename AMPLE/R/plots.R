@@ -84,19 +84,23 @@ get_catch_ymax <- function(catch, mp_params){
   return(ymax)
 }
 
+# Advice from CRAN submission about how to deal with resetting par()
+# opar <- par(mfrow = c(2,2))
+# on.exit(par(opar))
 sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="blue"){
-    def.par <- par(no.readonly = TRUE) # as seen in layout doc
+    #def.par <- par(no.readonly = TRUE) # as seen in layout doc
     yhist <- hist(dat, plot=FALSE, breaks=seq(from=range[1], to=range[2], length.out=lhist)) 
     # Use dnorm
     yx <- seq(range[1], range[2], length.out=num.dnorm)
     yy <- dnorm(yx, mean=mean(dat), sd=sd(dat))
     yy[is.infinite(yy)] <- 1.0
     parmar <- par()$mar
-     par(mar=c(parmar[1], 0, parmar[3], 0))
+    opar <- par(mar=c(parmar[1], 0, parmar[3], 0))
+    on.exit(par(opar))
     barplot(yhist$density, axes=FALSE, xlim=c(0, max(yhist$density, yy)), space=0, horiz=TRUE, xaxs="i", yaxs="i") # barplot
     lines(yy, seq(from=0, to=lhist-1, length.out=num.dnorm), col=dcol) # line
     # restore parameters
-    par(def.par)  #- reset to default - as seen in layout man pages
+    #par(def.par)  #- reset to default - as seen in layout man pages
 }
 
 # Draw the HCR (output vs input)
@@ -506,7 +510,10 @@ plot_F <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TR
 #' @name Front page plots
 #' @export
 plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
-  def.par <- par(no.readonly = TRUE) # as seen in layout doc
+  def.par <- par(no.readonly = TRUE) # as seen in layout doc.
+  # restore parameters
+  on.exit(par(def.par))
+  # Tried using opar <- par(); on.exit(opar) but because of multiple calls to par() it doesn't work
   current_col <- "blue"
   prev_col <- "black"
   par(mfrow=c(3,1))
@@ -519,8 +526,6 @@ plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, sho
 
   par(mar=c(5, 4.1, 0, 2.1))
   plot_releffort(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, ghost_col=prev_col, true_col=current_col, ...)
-  # restore parameters
-  par(def.par)
 }
 
 #' plot_hcr_intro_arrow
@@ -562,6 +567,7 @@ plot_hcr_intro_arrow <- function(stock, timestep){
 #' @export
 plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_params=NULL, show_last=TRUE, quantiles=c(0.2,0.8)){
   def.par <- par(no.readonly = TRUE) # as seen in layout doc
+  on.exit(par(def.par))
   # Plot the metric with an extra sideways histogram
   layout(matrix(c(1,2), ncol=2), widths=c(6/7, 1/7))
   ospc <- 0.5 # outer space
@@ -605,7 +611,7 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
     sideways_histogram(dat=dat, range=range)
   }
   # restore parameters
-  par(def.par)  #- reset to default - as seen in layout man pages
+  #par(def.par)  #- reset to default - as seen in layout man pages
 }
 
 #---------------------------------------------------------------
