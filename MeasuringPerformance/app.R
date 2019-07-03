@@ -195,6 +195,18 @@ ui <- navbarPage(
         p("The performance indicators and HCRs can be selected and delselected to help with the comparison.")
       )
     )
+  ),
+  tabPanel("About",
+           mainPanel(width=12,
+                     HTML("<p style='opacity: 0.5;' class='caption' align='center'>&copy; Pacific Community, 2019</P>
+                           <h1>About us:</h1>
+                           <p align='center'><img src='spc.png'></p>
+                           <p align='justify'>The Pacific Community (SPC) is the principal scientific and technical organisation in the Pacific region, proudly supporting development since 1947. It is an international development organisation owned and governed by its 26 country and territory members. The members are: American Samoa, Australia, Cook Islands, Federated States of Micronesia, Fiji, France, French Polynesia, Guam, Kiribati, Marshall Islands, Nauru, New Caledonia, New Zealand, Niue, Northern Mariana Islands, Palau, Papua New Guinea, Pitcairn Islands, Samoa, Solomon Islands, Tokelau, Tonga, Tuvalu, United States of America, Vanuatu, and Wallis and Futuna.</P> 
+                           <p align='justify'>In pursuit of sustainable development to benefit Pacific people, this unique organisation works across more than 25 sectors. SPC is renowned for its knowledge and innovation in such areas as fisheries science, public health surveillance, geoscience and conservation of plant genetic resources for food and agriculture.</p>
+                           <p align='justify'>Much of SPC's focus is on major cross-cutting issues, such as climate change, disaster risk management, food security, gender equality, human rights, non-communicable diseases and youth employment. Using a multi-sector approach in responding to its members' development priorities, SPC draws on skills and capabilities from around the region and internationally, and supports the empowerment of Pacific communities and sharing of expertise and skills between countries and territories.</p>
+                           <p align='justify'>With over 600 staff, SPC has its headquarters in Noumea, regional offices in Suva and Pohnpei, a country office in Honiara and field staff in other Pacific locations. Its working languages are English and French. See <a href=\"https://www.spc.int\">www.spc.int</a>."
+                     )
+           )
   )
 )
 
