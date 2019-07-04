@@ -149,8 +149,7 @@ stock_params <- c(stoch_params, lh_params)
 app_params <- list(initial_year = 2009, last_historical_timestep = 10)
 
 # Make the null stock and fill it up
-# In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
-#stock <- create_stock()
+# In a Shiny app use the create_stock() function but cannot do here so make an equivalent object
 stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
 stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params,
   app_params = app_params, initial_biomass = stock_params$b0, nyears = 40, niters = 10)

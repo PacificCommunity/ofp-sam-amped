@@ -153,8 +153,7 @@ sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="bl
 #' app_params <- list(initial_year = 2009, last_historical_timestep = 10)
 #' 
 #' # Make the null stock and fill it up
-#' # In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
-#' #stock <- create_stock()
+#' # In a Shiny app use the create_stock() function but cannot do here so make an equivalent object
 #' stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
 #' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params,
 #'   app_params = app_params, initial_biomass = stock_params$b0, nyears = 20, niters = 100)
@@ -880,8 +879,7 @@ plot_yieldcurve_projections <- function(stock, stock_params, app_params){
 #' app_params <- list(initial_year = 2009, last_historical_timestep = 10)
 #' 
 #' # Make the null stock and fill it up
-#' # In a Shiny app use the create_stock() function but cannot do here so just make an equivalent
-#' #stock <- create_stock()
+#' # In a Shiny app use the create_stock() function but cannot do here so make an equivalent object
 #' stock <- list(biomass = NULL, hcr_ip = NULL, hcr_op = NULL, effort = NULL, catch = NULL)
 #' stock <- reset_stock(stock = stock, stock_params = stock_params, mp_params = mp_params,
 #'   app_params = app_params, initial_biomass = stock_params$b0, nyears = 40, niters = 10)
