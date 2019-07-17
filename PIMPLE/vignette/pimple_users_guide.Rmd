@@ -15,6 +15,7 @@ fontsize: 12pt
 header-includes:
   \usepackage{float}
   \usepackage{tabularx}
+  \pagenumbering{gobble}
 ---
 
 # Introdution
@@ -50,7 +51,7 @@ wormiters <- sample(unique(worms$iter), nworms)
 
 ## What is it?
 
-Performance Indicators and Management Procedures (PIMPLE) is a tool for exploring and comparing the relative performance of alternative candidate harvest control rules (HCRs).
+Performance Indicators and Management Procedures Explorer (PIMPLE) is a tool for exploring and comparing the relative performance of alternative candidate harvest control rules (HCRs).
 The relative performance can be explored using a range of different plots and tables.
 This allows trade-offs between the different HCRs to be evaluated.
 This guide gives a brief overview of how to use PIMPLE to explore the results and some guidance on how to interpret the various plots.
@@ -97,6 +98,8 @@ The first shows the shape of each selected HCR.
 <!--The circles on the shapes indicate when that part of the HCR was 'activated' during the simulations.-->
 
 ```{r, echo=FALSE, fig.cap="Example HCR shapes from the HCRs tab."}
+hcr_shape$hcrref <- hcr_shape$msectrl # hack
+hcr_points$hcrref <- hcr_points$msectrl # hack
 hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
 p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp, blacklinesize=2, linesize=1, pointsize=1.5, stroke=1)
 p <- p + theme(axis.text=element_text(size=10), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
@@ -115,6 +118,7 @@ histodat <- hcr_points %>% group_by(msectrl, period, bin) %>% summarise(sum=n())
 nobs <- hcr_points %>% group_by(msectrl, period) %>% summarise(tnobs=n())
 histodat <- left_join(histodat, nobs)
 histodat$prop <- histodat$sum / histodat$tnobs
+histodat$hcrref <- histodat$msectrl # hack
 p <- hcr_histo_plot(hcr_choices, histodat)
 p <- p + theme(axis.text=element_text(size=10), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
 p
@@ -204,7 +208,7 @@ The HCRs under inspection can be chosen using the **HCR selection** boxes on the
 The PIs of interest can also be chosen using the **PI selection** boxes on the left.
 As you choose different PIs and HCRs the plots and tables will update to reflect the selection.
 It may take a little time to update the plots.
-By selecting different HCRs and PIs it is possible to 'drill' down into the results.
+By selecting different HCRs and PIs it is possible to 'drill down' into the results.
 
 Like the **PI 3: Catches** tab, the catch based indicators can be presented as absolute expected values, or relative to the average catches in the period 2013-15 and as either the total catches in the whole region or only for the purse seine catches in assessment regions 2, 3 and 5.
 
