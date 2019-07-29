@@ -5,11 +5,16 @@
 library(shinyjs)
 library(AMPLE)
 
+# Source helpers ----
+source("../R/funcs.R")
+source("../R/plots.R")
+source("../R/modules.R")
+
 # UI
 ui <- navbarPage(
   title="Introducing Projections",
   tabPanel("Projections",
-  useShinyjs(),  # Include shinyjs
+  useShinyjs(),  # For greying out buttons
     # Controls and what not
     sidebarLayout(
       sidebarPanel(width=3,
@@ -60,7 +65,12 @@ ui <- navbarPage(
           # Top right
           # Kobe / Majuro (with switch)
           column(6,
-            plotOutput("MajKobeplot",height="500px")
+            plotOutput("MajKobeplot",height="500px"),
+            
+            # conditional panel - only show if yield-curve = TRUE
+            conditionalPanel(condition="input.kobemajuro == 'yieldcurve'", tags$span(title="Show projection trajectories", checkboxInput(inputId="showtraj", label="Show trajectores", value=FALSE)))
+            
+            
           )
         ),
         # PI Table underneath
@@ -102,7 +112,7 @@ ui <- navbarPage(
       ),
       mainPanel(width=9,
         h1("Instructions"),
-        p("Notes")
+        p("TBD")
       )
     )
   )
@@ -262,7 +272,8 @@ server <- function(input, output,session) {
       plot_kobe_majuro_projections(stock=stock, stock_params=get_stock_params(), choice="majuro")
     }
     if(input$kobemajuro == "yieldcurve"){
-      plot_yieldcurve_projections(stock=stock, stock_params=get_stock_params(), app_params=app_params)
+      # Add an extra check box for drawing trajectories
+      plot_yieldcurve_projections(stock=stock, stock_params=get_stock_params(), app_params=app_params, draw_trajectories=input$showtraj)
     }
   })
 

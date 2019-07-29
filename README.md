@@ -1,6 +1,6 @@
 # Amazing Management Procedure Exploration Device (AMPED)
-- Version: 0.1.0 Rupert Trousers
-- Date: 2018-10-12
+- Version: 0.2.0 Drayton Manored
+- Date: 2019-04-30
 - Author: Finlay Scott, SPC
 - Maintainer: Finlay Scott <finlaysc@spc.int>
 
