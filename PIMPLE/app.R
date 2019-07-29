@@ -7,36 +7,14 @@
 # Maintainer: Finlay Scott, OFP SPC
 #--------------------------------------------------------------
 
-# Load packages ----
-#library(shiny)
-#library(tidyr)
-#library(dplyr)
-#library(ggplot2)
-#library(RColorBrewer)
+# Load packages
 library(AMPLE)
 
 # Load the data
-#load("data/pi7810.Rdata")
-#load("data/pimple_test_const3.Rdata")
-load("data/pimple_test_const4.Rdata")
-#load("data/pimple_test_effortcreep.Rdata")
-# periodqs, worms, yearqs
+load("data/preSC15_results.Rdata")
 
-# Hack for bad data!
-# Redo PI data with correct colnames
-periodqs$hcrref <- periodqs$msectrl
-periodqs$hcrname <- periodqs$msectrl
-periodqs$piname <- periodqs$name
-yearqs$hcrref <- yearqs$msectrl
-yearqs$hcrname <- yearqs$msectrl
-yearqs$piname <- yearqs$name
-worms$hcrref <- worms$msectrl
-worms$hcrname <- worms$msectrl
-worms$piname <- worms$name
-hcr_points$hcrref <- hcr_points$msectrl
-hcr_points$hcrname <- hcr_points$msectrl
-hcr_shape$hcrref <- hcr_shape$msectrl
-hcr_shape$hcrname <- hcr_shape$msectrl
+#------------------------------------------------------------------------------------------------------
+# Data processing
 
 
 # Data for the histogram plots
@@ -44,26 +22,25 @@ hcr_shape$hcrname <- hcr_shape$msectrl
 breaks <- seq(from=0,to=2,by=0.05)
 freqs <- cut(hcr_points$scaler, breaks, labels=FALSE)
 hcr_points$bin <- breaks[freqs]
-histodat <- dplyr::group_by(hcr_points, hcrref, period, bin)
+histodat <- dplyr::group_by(hcr_points, hcrref, hcrname, period, bin)
 histodat <- dplyr::summarise(histodat, sum=dplyr::n())
-nobs <- dplyr::group_by(hcr_points,msectrl, period)
+nobs <- dplyr::group_by(hcr_points,hcrref, hcrname, period)
 nobs <- dplyr::summarise(nobs, tnobs=dplyr::n())
 
 histodat <- dplyr::left_join(histodat, nobs)
 histodat$prop <- histodat$sum / histodat$tnobs
 
+# Sort everything by HCR - probably should already be OK
+histodat <- histodat[order(histodat$hcrref),]
 periodqs <- periodqs[order(periodqs$hcrref),]
-
-# piselector for the MP comparison - dropping catch and cpue variability (and any other upside down measures)
-#pinames <- unique(periodqs[!periodqs$upsidedown,c("pi","piname","upsidedown")])
-#piselector <- as.list(pinames$pi)
-#names(piselector) <- pinames$name
+yearqs <- yearqs[order(yearqs$hcrref),]
+worms <- worms[order(worms$hcrref),]
+hcr_points <- hcr_points[order(hcr_points$hcrref),]
+hcr_shape <- hcr_shape[order(hcr_shape$hcrref),]
 
 piselector <- unique(periodqs[!periodqs$upsidedown,"piname"])
 
-# Source plotting scripts etc
-#source("plots.R")
-
+#------------------------------------------------------------------------------------------------------
 # UI
 ui <- navbarPage(
   title="Performance Indicators and Management Procedures Explorer",
@@ -72,20 +49,12 @@ ui <- navbarPage(
       br(),
       img(src = "spc.png", height = 100),
       br(),
-
-      # HCR selection - all selected initially
-      #conditionalPanel(condition="input.top!='notes'",
-      #  checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", choices = sort(unique(yearqs$msectrl)), selected=sort(unique(yearqs$msectrl)))
-      #),
       # HCR selection - all selected initially
       conditionalPanel(condition="input.top!='notes'",
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
       ),
-
-
       # Only show this if compare MPs tab is selected
       conditionalPanel(condition="input.top == 'compareMPs'",
-        #checkboxGroupInput(inputId = "pichoice", label="PI selection", choices = piselector, selected=sort(unique(periodqs$pi)))
         checkboxGroupInput(inputId = "pichoice", label="PI selection", choices = piselector, selected=sort(unique(periodqs$piname)))
       ),
       # Areas and relative options for the catch metrics
@@ -621,7 +590,7 @@ server <- function(input, output, session) {
     set_choices <- c(input$catchsetchoice, as.character(NA))
     metric_choices <- c(input$catchrelchoice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
     area_choices <- c("all", as.character(NA))
-    dat <- subset(periodqs, msectrl %in% hcr_choices & period == period_choice & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+    dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
     tabdat <- pitable(dat)
     return(tabdat)
   }
