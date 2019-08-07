@@ -40,6 +40,8 @@ hcr_shape <- hcr_shape[order(hcr_shape$hcrref),]
 
 piselector <- unique(periodqs[!periodqs$upsidedown,"piname"])
 
+worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
+
 #------------------------------------------------------------------------------------------------------
 # UI
 ui <- navbarPage(
@@ -296,7 +298,7 @@ server <- function(input, output, session) {
     # Add Option for worms
     wormdat <- subset(worms, pi=="biomass" & metric=="SBSBF0" & area=="all" & iter %in% wormiters) 
     # Else wormdat <- NULL
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
     p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=3)
     p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=3)
     p <- p + ggplot2::ylab("SB/SBF=0")
@@ -361,7 +363,7 @@ server <- function(input, output, session) {
     # Add Option for worms
     wormdat <- subset(worms, pi=="pi3" & set==catch_set_choice & metric == catch_rel_choice & iter %in% wormiters) 
     # Else wormdat <- NULL
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
     p <- p + ggplot2::ylab("Catch")
     p <- p +ggplot2:: ylim(c(0,NA))
     # Axes limits set here or have tight?
@@ -401,7 +403,7 @@ server <- function(input, output, session) {
     # Add Option for worms
     wormdat <- subset(worms, pi=="pi4" & iter %in% wormiters) 
     # Else wormdat <- NULL
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
     p <- p + ggplot2::ylab("Relative CPUE")
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
@@ -478,7 +480,7 @@ server <- function(input, output, session) {
     # Add Option for worms
     wormdat <- subset(worms, pi=="mw" & iter %in% wormiters) 
     # Else wormdat <- NULL
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
     p <- p + ggplot2::ylab("Mean weight of an individual")
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
@@ -570,7 +572,7 @@ server <- function(input, output, session) {
     dat <- subset(yearqs, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
     wormdat <- subset(worms, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices & iter %in% wormiters)
 
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
     #p <- p + ylab("Catch")
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
