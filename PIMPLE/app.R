@@ -45,7 +45,7 @@ worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
 #------------------------------------------------------------------------------------------------------
 # UI
 ui <- navbarPage(
-  tags$head(includeHTML("google-analytics.html")),
+  #tags$head(includeHTML("google-analytics.html")),
   title="Performance Indicators and Management Procedures Explorer",
   sidebarLayout(
     sidebarPanel(width=3, 
@@ -61,12 +61,15 @@ ui <- navbarPage(
         checkboxGroupInput(inputId = "pichoice", label="PI selection", choices = piselector, selected=sort(unique(periodqs$piname)))
       ),
       # Areas and relative options for the catch metrics
-      conditionalPanel(condition="(input.piinspector =='pi3') || (input.piinspector =='pi6') || (input.top == 'compareMPs')",
+      conditionalPanel(condition="(input.top != 'about') & (input.top != 'notes') & (input.top != 'hcrs') & ((input.piinspector =='pi3') || (input.piinspector =='pi6') || (input.top == 'compareMPs'))",
         selectInput(inputId = "catchsetchoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="area")
       ),
-      conditionalPanel(condition="(input.piinspector =='pi3') || (input.piinspector =='pi6') || (input.top == 'compareMPs')",
+      conditionalPanel(condition="(input.top != 'about') & (input.top != 'notes') & (input.top != 'hcrs') & ((input.piinspector =='pi3') || (input.piinspector =='pi6') || (input.top == 'compareMPs'))",
         selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
       ),
+      # Show spaghetti option on some tabs - unseen tabs are still live the conditional is weird
+      #conditionalPanel(condition ="(input.top != 'about') & (input.top != 'notes') & (input.top != 'hcrs') & ((input.piinspector=='pi1') || (input.piinspector=='pi3') || (input.piinspector=='pi4') || (input.piinspector=='mw') || (input.picomparitor=='timeseriesplots'))",
+      #  checkboxInput(inputId="showspag", label="Show trajectories", value=FALSE)), 
       conditionalPanel(condition="input.top=='notes'",
           pimple_maintainer_and_licence()
       )
@@ -76,7 +79,7 @@ ui <- navbarPage(
         #------------------------------------------------------------
         # HCRs
         #------------------------------------------------------------
-        tabPanel(title="The HCRs",
+        tabPanel(title="The HCRs", value="hcrs",
           column(12, fluidRow(
             plotOutput("plot_hcrshape", height="600px"),
             plotOutput("plot_hcrhistograms"))
@@ -94,7 +97,8 @@ ui <- navbarPage(
             tabPanel(title="PI 1 & 8: Biomass",value="pi1",
               column(12, fluidRow(
                 # TS of SBSBF0
-                plotOutput("plot_ts_sbsbf0")
+                plotOutput("plot_ts_sbsbf0"),
+                checkboxInput("showspagsb", "Show trajectories", value=FALSE) 
               )),
               column(4, fluidRow(
                 # Bar plot of median SBSBF0
@@ -117,7 +121,8 @@ ui <- navbarPage(
             # *** PI 3: Catch based ones ***
             tabPanel(title="PI 3: Catches", value="pi3",
               column(12, fluidRow(
-                plotOutput("plot_ts_catch")
+                plotOutput("plot_ts_catch"),
+                checkboxInput("showspagc", "Show trajectories", value=FALSE) 
               )),
               column(6, fluidRow(
                 plotOutput("plot_bar_catch")
@@ -130,7 +135,8 @@ ui <- navbarPage(
             # *** PI 4: Relative CPUE***
             tabPanel(title="PI 4: Relative CPUE", value="pi4",
               column(12, fluidRow(
-                plotOutput("plot_ts_relcpue")
+                plotOutput("plot_ts_relcpue"),
+                checkboxInput("showspagrc", "Show trajectories", value=FALSE) 
               )),
               column(6, fluidRow(
                 plotOutput("plot_bar_relcpue")
@@ -167,7 +173,8 @@ ui <- navbarPage(
             # *** Mean weight individual ***
             tabPanel(title="Mean weight of individual", value="mw",
               column(12, fluidRow(
-                plotOutput("plot_ts_mw")
+                plotOutput("plot_ts_mw"),
+                checkboxInput("showspagmw", "Show trajectories", value=FALSE) 
               )),
               column(6, fluidRow(
                 plotOutput("plot_bar_mw")
@@ -198,7 +205,8 @@ ui <- navbarPage(
               )
             ),
             tabPanel(title="Time series plots", value="timeseriesplots",
-              plotOutput("plot_timeseries_comparehcr", height="600px")
+              plotOutput("plot_timeseries_comparehcr", height="600px"),
+              checkboxInput("showspagts", "Show trajectories", value=FALSE) 
             ),
             #tabPanel(title="Kobe / Majuro", value="kobemajuro"),
             tabPanel(title="Table", value="bigtable", 
@@ -245,7 +253,7 @@ ui <- navbarPage(
         h3("Mean weight of an individual in the population"),
         p("This indicator measures the mean weight of an individual in the population, not the catch. It is calulated by taking the total weight of individuals across the region and dividing it by the total number of individuals across the region. These kind of indicators are important because they can provide information on changes to the size structure of a population as a result of fishing and changes in environmental conditions.") 
         ),
-        tabPanel("About",
+        tabPanel("About",value="about",
                  mainPanel(width=12,
                            HTML("<p style='opacity: 0.5;' class='caption' align='center'>&copy; Pacific Community, 2019</P>
                                 <h1>About us:</h1>
@@ -292,13 +300,14 @@ server <- function(input, output, session) {
   # Timeseries
   # SBSBF0
   output$plot_ts_sbsbf0  <- renderPlot({
+    show_spaghetti <- input$showspagsb
     hcr_choices <- input$hcrchoice
     # SBSBF0 - Just combined area
     dat <- subset(yearqs, pi=="biomass" & metric=="SBSBF0" & area=="all") 
     # Add Option for worms
     wormdat <- subset(worms, pi=="biomass" & metric=="SBSBF0" & area=="all" & iter %in% wormiters) 
     # Else wormdat <- NULL
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti)
     p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=3)
     p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=3)
     p <- p + ggplot2::ylab("SB/SBF=0")
@@ -354,6 +363,7 @@ server <- function(input, output, session) {
   # Timeseries
   # PI 3: Catch
   output$plot_ts_catch <- renderPlot({
+    show_spaghetti <- input$showspagc
     hcr_choices <- input$hcrchoice
     # Choose the aggregation (set: total area or PS235 - maybe by area too?)
     catch_set_choice <- input$catchsetchoice
@@ -363,7 +373,7 @@ server <- function(input, output, session) {
     # Add Option for worms
     wormdat <- subset(worms, pi=="pi3" & set==catch_set_choice & metric == catch_rel_choice & iter %in% wormiters) 
     # Else wormdat <- NULL
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti)
     p <- p + ggplot2::ylab("Catch")
     p <- p +ggplot2:: ylim(c(0,NA))
     # Axes limits set here or have tight?
@@ -394,6 +404,7 @@ server <- function(input, output, session) {
   # Timeseries
   # PI: 4
   output$plot_ts_relcpue <- renderPlot({
+    show_spaghetti <- input$showspagrc
     hcr_choices <- input$hcrchoice
     # Choose the aggregation (set: total area or PS235 - maybe by area too?)
     #catch_set_choice <- input$catchsetchoice
@@ -403,7 +414,7 @@ server <- function(input, output, session) {
     # Add Option for worms
     wormdat <- subset(worms, pi=="pi4" & iter %in% wormiters) 
     # Else wormdat <- NULL
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti)
     p <- p + ggplot2::ylab("Relative CPUE")
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
@@ -475,12 +486,13 @@ server <- function(input, output, session) {
   # Mean weight of individual
   # PI: 4
   output$plot_ts_mw<- renderPlot({
+    show_spaghetti <- input$showspagmw
     hcr_choices <- input$hcrchoice
     dat <- subset(yearqs, pi=="mw") 
     # Add Option for worms
     wormdat <- subset(worms, pi=="mw" & iter %in% wormiters) 
     # Else wormdat <- NULL
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti)
     p <- p + ggplot2::ylab("Mean weight of an individual")
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
@@ -563,6 +575,7 @@ server <- function(input, output, session) {
 
   # Time series comparisons
   output$plot_timeseries_comparehcr <- renderPlot({
+    show_spaghetti <- input$showspagts
     hcr_choices <- input$hcrchoice
     #pi_choices <- c("biomass", "pi3", "pi4")
     pi_choices <- c("SB/SBF=0", "PI 3: Catch","PI 4: Relative CPUE")
@@ -572,7 +585,7 @@ server <- function(input, output, session) {
     dat <- subset(yearqs, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
     wormdat <- subset(worms, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices & iter %in% wormiters)
 
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=TRUE)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti)
     #p <- p + ylab("Catch")
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
