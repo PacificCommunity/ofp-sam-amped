@@ -11,7 +11,8 @@
 library(AMPLE)
 
 # Load the data
-load("data/preSC15_results.Rdata")
+#load("data/preSC15_results.Rdata")
+load("data/preKiribati_results.Rdata")
 
 #------------------------------------------------------------------------------------------------------
 # Data processing
@@ -45,7 +46,7 @@ worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
 #------------------------------------------------------------------------------------------------------
 # UI
 ui <- navbarPage(
-  tags$head(includeHTML("google-analytics.html")),
+  #tags$head(includeHTML("google-analytics.html")),
   title="Performance Indicators and Management Procedures Explorer",
   sidebarLayout(
     sidebarPanel(width=3, 

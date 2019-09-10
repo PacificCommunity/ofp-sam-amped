@@ -1,7 +1,7 @@
 # Copyright 2018 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 
-library(AMPLE)
+#library(AMPLE)
 
 # User interface ----
 ui <- navbarPage(
@@ -124,7 +124,7 @@ server <- function(input, output,session) {
   app_params <- list(initial_year = 2009, last_historical_timestep = 10)
   app_params$historical_timesteps = 1:app_params$last_historical_timestep
   #quantiles <- c(0.20, 0.80)
-  quantiles <- c(0.01, 0.05, 0.20, 0.5, 0.80, 0.95, 0.99)
+  quantiles <- c(0.01, 0.05, 0.10, 0.20, 0.5, 0.80, 0.90, 0.95, 0.99)
   # Object to store the performance indicators - gets updated through time
   pitemp <- reactiveVal(NULL)
   get_mp_params <- callModule(mp_params_setter, "mpparams") 
@@ -200,8 +200,6 @@ server <- function(input, output,session) {
     stock$catch[iter(),] <- out$catch
 
     # Get summary PIs 
-    #piqs <- get_summary_pis(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params,
-    #                        quantiles=c(0.05,quantiles, 0.95), pi_choices=c("bk", "problrp", "catch", "diffcatch", "relcpue"))
     piout <- get_summaries(stock=stock, stock_params=get_stock_params(), app_params=app_params, quantiles=quantiles)
     pitemp(piout)
   })

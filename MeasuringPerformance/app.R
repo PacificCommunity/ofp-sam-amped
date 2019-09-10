@@ -120,8 +120,8 @@ ui <- navbarPage(
           tabPanel(title="Time series",
                    value="timeseries",
                     tags$span(title="Time series plots of various metrics for the stocks under the different HCRs. The envelope contains the 20-80 percentiles of the distribution. The dashed line is the median value. Some individual trajectories can be shown by selecting the 'Show spaghetti' option.",
-                  fluidRow(column(12, plotOutput("plottimeseries", height="600px")))),
-                  fluidRow(column(12, checkboxInput("spaghetti", "Show spaghetti", FALSE)))
+                  fluidRow(column(12, checkboxInput("spaghetti", "Show spaghetti", FALSE))),
+                  fluidRow(column(12, plotOutput("plottimeseries"))))
           )
         )
       )
@@ -194,7 +194,8 @@ server <- function(input, output,session) {
   # pitemp is the pis for a single stock (HCR) - shown on the front page
   pitemp <- reactiveVal(NULL)
   OKtostore <- reactiveVal(FALSE)
-  quantiles <- c(0.01, 0.05, 0.20, 0.5, 0.80, 0.95, 0.99)
+  quantiles <- c(0.01, 0.05, 0.10, 0.20, 0.5, 0.80, 0.90, 0.95, 0.99)
+  pi_percentiles <- c(10,90)
   # Objects for the PI summaries
   worms <- reactiveVal(data.frame())
   periodqs <- reactiveVal(data.frame())
@@ -239,14 +240,16 @@ server <- function(input, output,session) {
     periodqs(rbind(periodqs(), cbind(pitemp()$periodqs, hcrref=hcrref, hcrname=hcrname)))
     yearqs(rbind(yearqs(), cbind(pitemp()$yearqs, hcrref=hcrref, hcrname=hcrname)))
 
-    # Update the available PIs checkboces - although this doesn't really dynamically change
+    # Update the available PIs checkboxes - although this doesn't really dynamically change
     # It just saves having to maintain a list in the UI at the top AND in the PI calculation function
     # Because the options come from the pistore and if no pistore yet, no names
     # Drop F/FMSY and others from list
-    drop_pis <- c("ffmsy") 
-    drop_pinames <- unique(subset(periodqs(), pi %in% drop_pis)$piname)
+    #drop_pis <- c("ffmsy") 
+    #drop_pinames <- unique(subset(periodqs(), pi %in% drop_pis)$piname)
+    pinames_include <- c("SB/SBF=0", "Prob. SB > LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP")
     pi_choices <- unique(periodqs()$piname)
-    pi_choices <- pi_choices[!(pi_choices %in% drop_pinames)]
+    #pi_choices <- pi_choices[!(pi_choices %in% drop_pinames)]
+    pi_choices <- pi_choices[(pi_choices %in% pinames_include)]
     updateCheckboxGroupInput(session, "pichoice",
                              choices = pi_choices,
                              selected = pi_choices
@@ -295,7 +298,7 @@ server <- function(input, output,session) {
   #   The empty basket button is pushed
   # Changing the MP parameters does not trigger it
   observe({
-    req(input$niters, input$nyears) # Can be NA due to numericInput
+    req(input$niters, input$nyears) # req() checks if values exist before continuing - can be NA due to numericInput
     # React to
     input$empty_basket
     stock_params <- get_stock_params() # Includes LH and stoch options
@@ -335,15 +338,15 @@ server <- function(input, output,session) {
   })
   
   output$plotbiomasshisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", show_last = FALSE, quantiles=quantiles[c(3,5)])
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", show_last = FALSE, percentile_range = pi_percentiles)
   })
 
   output$plotcatchhisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", show_last = FALSE, quantiles=quantiles[c(3,5)])
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", show_last = FALSE, percentile_range = pi_percentiles)
   })
 
   output$plotrelcpuehisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, show_last = FALSE, quantiles=quantiles[c(3,5)])
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, show_last = FALSE, percentile_range = pi_percentiles)
   })
 
 
@@ -357,8 +360,7 @@ server <- function(input, output,session) {
       return()
     }
     # Use pitemp() to fill table
-    #current_pi_table(pitemp())
-    current_pi_table(pitemp()$periodqs)
+    current_pi_table(pitemp()$periodqs, percentile_range=pi_percentiles, piname_choice=c("SB/SBF=0", "Prob. SB > LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP"))
     },
     rownames = TRUE,
     caption= "Performance indicators",
@@ -376,7 +378,7 @@ server <- function(input, output,session) {
       return()
     }
     dat <- subset(periodqs(), hcrref %in% hcr_choices & period == period_choice & piname %in% pi_choices)
-    tabdat <- pitable(dat)
+    tabdat <- pitable(dat, percentile_range = pi_percentiles)
     return(tabdat)
   }
 
@@ -445,31 +447,34 @@ server <- function(input, output,session) {
   })
 
   # Time series comparisons
+  # Can add height argument to renderPlot() instead of plotOutput
+  # https://stackoverflow.com/questions/50914398/increase-plot-size-in-shiny-when-using-ggplot-facets/50919997
+  # 300 pixels height for each PI
+  height_per_pi <- 300
+  timeseries_pinames <- c("SB/SBF=0", "Prob. SB > LRP", "Catch", "Relative CPUE", "Relative effort", "Proximity to TRP")
   output$plottimeseries <- renderPlot({
     hcr_choices <- input$hcrchoice
-    pi_choices <- c("sbsbf0", "catch", "ffmsy")
     # If no HCR is selected then don't do anything
     if(is.null(hcr_choices)){
       return()
     }
-
-    dat <- subset(yearqs(), pi %in% pi_choices)
-    wormdat <- subset(worms(), pi %in% pi_choices)
-
     time_periods <- get_time_periods(app_params, nyears=dim(stock$biomass)[2])
     years <- as.numeric(dimnames(stock$biomass)$year)
     short_term <- years[time_periods[["short_term"]]]
     medium_term <- years[time_periods[["medium_term"]]]
     long_term <- years[time_periods[["long_term"]]]
-
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, time_period_lines=FALSE, show_spaghetti=input$spaghetti)
+    # Which PIs are we plotting
+    # Grab the others from pi selection menu
+    pi_choices <- input$pichoice
+    piname_choices <- pi_choices[pi_choices %in% timeseries_pinames]
+    dat <- subset(yearqs(), piname %in% piname_choices)
+    wormdat <- subset(worms(), piname %in% piname_choices)
+    p <- quantile_plot(dat=dat, percentile_range = pi_percentiles, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, time_period_lines=FALSE, show_spaghetti=input$spaghetti)
     p <- p + ggplot2::ylim(c(0,NA))
     p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
     p <- p + ggplot2::ylab("Value")
     return(p)
-
-
-  })
+  }, height=function(){height_per_pi * length(input$pichoice[input$pichoice %in% timeseries_pinames])})
 
 
   ## Ouputs for the PI plotting tab
@@ -493,8 +498,7 @@ server <- function(input, output,session) {
     if(is.null(hcr_choices)){
       return()
     }
-  #  plot_majuro_all_stocks(timeseries=tsstore(), hcr_choices=hcr_choices, stock_params=get_stock_params())
-    plot_majuro(dat=yearqs(), hcr_choices=hcr_choices, stock_params=get_stock_params())
+    plot_majuro(dat=yearqs(), percentile_range=pi_percentiles, hcr_choices=hcr_choices, stock_params=get_stock_params())
   })
 
   #output$plottimeseries <- renderPlot({

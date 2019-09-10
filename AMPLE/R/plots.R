@@ -564,7 +564,7 @@ plot_hcr_intro_arrow <- function(stock, timestep){
 #' @rdname front_page_plots
 #' @name Front page plots
 #' @export
-plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_params=NULL, show_last=TRUE, quantiles=c(0.2,0.8)){
+plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_params=NULL, show_last=TRUE, percentile_range = c(20,80)){
   def.par <- par(no.readonly = TRUE) # as seen in layout doc
   on.exit(par(def.par))
   # Plot the metric with an extra sideways histogram
@@ -575,7 +575,7 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
   par(mar=c(pext, pext, bspc, bspc), oma=rep(ospc, 4)) # plot parameters
   if (metric == "biomass"){
     # The timeseries of biomass in the big window
-    plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles)
+    plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=percentile_range / 100)
     # The histogram should be the true B/K
     final_yr <- dim(stock$biomass)[2]
     dat <- stock$biomass[,final_yr] / stock_params$k
@@ -583,7 +583,7 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
   }
   else if (metric == "catch"){
     # The timeseries of biomass in the big window
-    plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles)
+    plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=percentile_range / 100)
     final_yr <- dim(stock$catch)[2]
     dat <- stock$catch[,final_yr]
     range <- c(0, get_catch_ymax(stock$catch, mp_params))
@@ -595,7 +595,7 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
     max_rel_cpue <- 2
     rel_cpue[rel_cpue > max_rel_cpue] <- max_rel_cpue
     ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
-    plot_relcpue(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles, ymax=ymax)
+    plot_relcpue(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=percentile_range / 100, ymax=ymax)
     # data for the histogram
     final_yr <- dim(rel_cpue)[2]
     dat <- rel_cpue[,final_yr]
@@ -906,24 +906,24 @@ plot_yieldcurve_projections <- function(stock, stock_params, app_params){
 #' # Table of PIs. Only pass in 1 time period
 #' pitable(dat=subset(pisums$periodqs, period=="Long"))
 #' @export
-plot_majuro <- function(dat, hcr_choices, stock_params){
-
+plot_majuro <- function(dat, percentile_range = c(20,80), hcr_choices, stock_params){
   hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
-
-  # Need a dataset with X20 X80 Y20 Y80
-  majdat <- subset(dat, pi %in% c("ffmsy", "sbsbf0"))
+  # Need a dataset with percentiles
+  majdat <- subset(dat, piname %in% c("F/FMSY", "SB/SBF=0"))
   # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
   # So add 1 to the F years
   majdat[majdat$pi=="ffmsy","year"] <- majdat[majdat$pi=="ffmsy","year"] + 1
-  majdat <- dplyr::select(majdat, pi, year, X20., X80., X50., hcrref)
+  majdat <- dplyr::select(majdat, c("pi", "year", paste("X",percentile_range[1],".",sep=""), paste("X",percentile_range[2],".",sep=""), X50., hcrref))
+  # Rename for simplicity
+  majdat <- dplyr::rename(majdat, "min" = paste("X",percentile_range[1],".",sep=""), "max" = paste("X",percentile_range[2],".",sep=""), "med" = "X50.")
   majdat <- tidyr::gather(majdat, key="XX", value="data", -pi, -year, -hcrref)
   majdat$pix <- paste(majdat$pi,majdat$XX,sep="")
   majdat <- tidyr::spread(dplyr::select(majdat, year, hcrref, data, pix), key="pix", value="data")
   # Remove NA years
-  majdat <- subset(majdat, !(is.na(ffmsyX50.) | is.na(sbsbf0X50.)))
+  majdat <- subset(majdat, !(is.na(ffmsymed) | is.na(biomassmed)))
 
   lrp <- stock_params[["lrp"]]
-  ymax <- max(max(majdat$ffmsyX80., na.rm=TRUE) * 0.1, 2.0)
+  ymax <- max(max(majdat$ffmsymax, na.rm=TRUE) * 0.1, 2.0)
   
   p <- ggplot(majdat)
   # Big red
@@ -936,18 +936,18 @@ plot_majuro <- function(dat, hcr_choices, stock_params){
   # Put the lines on - Do twice, once in fat black , then thin with colour
   # Lines and crosses
   # Fat black
-  p <- p + geom_line(aes(x=sbsbf0X50., y=ffmsyX50.), colour="black", size=2)
-  p <- p + geom_errorbar(aes(x=sbsbf0X50., ymin=ffmsyX20., ymax=ffmsyX80., group=year), colour="black", size=2)
-  p <- p + geom_errorbarh(aes(y=ffmsyX50., xmin=sbsbf0X20., xmax=sbsbf0X80., group=year), colour="black", size=2)
+  p <- p + geom_line(aes(x=biomassmed, y=ffmsymed), colour="black", size=2)
+  p <- p + geom_errorbar(aes(x=biomassmed, ymin=ffmsymin, ymax=ffmsymax, group=year), colour="black", size=2)
+  p <- p + geom_errorbarh(aes(y=ffmsymed, xmin=biomassmin, xmax=biomassmax, group=year), colour="black", size=2)
   # Thin colour
-  p <- p + geom_line(aes(x=sbsbf0X50., y=ffmsyX50., colour=hcrref), size=1.3)
-  p <- p + geom_errorbar(aes(x=sbsbf0X50., ymin=ffmsyX20., ymax=ffmsyX80., group=year, colour=hcrref), size=1.3)
-  p <- p + geom_errorbarh(aes(y=ffmsyX50., xmin=sbsbf0X20., xmax=sbsbf0X80., group=year, colour=hcrref), size=1.3)
+  p <- p + geom_line(aes(x=biomassmed, y=ffmsymed, colour=hcrref), size=1.3)
+  p <- p + geom_errorbar(aes(x=biomassmed, ymin=ffmsymin, ymax=ffmsymax, group=year, colour=hcrref), size=1.3)
+  p <- p + geom_errorbarh(aes(y=ffmsymed, xmin=biomassmin, xmax=biomassmax, group=year, colour=hcrref), size=1.3)
   # Black point
-  p <- p + geom_point(aes(x=sbsbf0X50., y=ffmsyX50.))
+  p <- p + geom_point(aes(x=biomassmed, y=ffmsymed))
   # Final point in white
   maxyear <- max(majdat$year)
-  p <- p + geom_point(data=subset(majdat, year==maxyear), aes(x=sbsbf0X50., y=ffmsyX50.), colour="white")
+  p <- p + geom_point(data=subset(majdat, year==maxyear), aes(x=biomassmed, y=ffmsymed), colour="white")
 
   p <- p + scale_colour_manual(values=hcrcols)
   p <- p + xlab("SB/SBF=0") + ylab("F/FMSY")
@@ -987,6 +987,7 @@ plot_majuro <- function(dat, hcr_choices, stock_params){
 #' @export
 quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
                           alpha20_80 = 0.6, linetype_worm=1,
+                          percentile_range = c(20,80),
                           colour_worm="black",
                           size_worm=0.2, add_start_line=TRUE, time_period_lines=TRUE, short_term = 2016:2024, medium_term = 2025:2033, long_term = 2034:2042, last_plot_year=2042, show_spaghetti=FALSE){
 
@@ -994,14 +995,16 @@ quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
   hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
   # Select the chosen HCRs only - could do this in the call to plot in app?
   dat <- subset(dat, hcrref %in% hcr_choices)
+  # Rename for percentiles reference
+  dat <- dplyr::rename(dat, "min" = paste("X",percentile_range[1],".",sep=""), "max" = paste("X",percentile_range[2],".",sep="")) 
   # Chop out NA rows
   dat <- dat[!is.na(dat$X50.),]
   # Start the plot
   p <- ggplot(dat, aes(x=year))
   # Ribbons and lines
-  p <- p + geom_ribbon(aes(ymin=X20., ymax=X80., fill=hcrref), alpha=alpha20_80)
-  p <- p + geom_line(aes(y=X80., group=hcrref), colour="black")
-  p <- p + geom_line(aes(y=X20., group=hcrref), colour="black")
+  p <- p + geom_ribbon(aes(ymin=min, ymax=max, fill=hcrref), alpha=alpha20_80)
+  p <- p + geom_line(aes(y=max, group=hcrref), colour="black")
+  p <- p + geom_line(aes(y=min, group=hcrref), colour="black")
   # Add median line
   p <- p + geom_line(aes(y=X50., group=hcrref), colour="black", linetype=2, size=1)
   # Plotting options
@@ -1121,34 +1124,6 @@ myradar <- function(dat, hcr_choices, scaling="scale", polysize=2){
     p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
 
     return(p)
-}
-
-# Not a plot - but included here anyway
-# The big PI tables
-
-#' pitable
-#'
-#' pitable() is not a plot but a table comparing PIs across HCRs and periods. Only pass in 1 time period at a time.
-#'
-#' @return A data.frame to be shown as a table.
-#' @rdname comparison_plots
-#' @name Comparison plots
-#' @export
-pitable <- function(dat){
-    # Rows are the PIs, columns are the HCRs
-    signif <- 2
-    dat$value <- paste(round(dat$X50.,signif), " (", round(dat$X20., signif), ",", round(dat$X80., signif), ")", sep="")
-    # Fix pi1
-    dat[dat$pi=="pi1", "value"] <- round(dat[dat$pi=="pi1", "X50."],signif)
-    tabdat <- dat[,c("hcrref", "piname", "value")]
-    tabdat[tabdat$name=="Biomass","piname"] <- "SB/SBF=0"
-    tabdat <- as.data.frame(tidyr::spread(tabdat, key="hcrref", value="value"))
-    # Have rownames?
-    #rnames <- tabdat[,1]
-    #tabdat <- tabdat[,-1]
-    #rownames(tabdat) <- rnames
-    colnames(tabdat)[1] <- "Indicator"
-    return(tabdat)
 }
 
 
