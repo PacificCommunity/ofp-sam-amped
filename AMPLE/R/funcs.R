@@ -12,7 +12,9 @@
 #' @import shiny
 
 # A metric fuckton of global variables because the non standard evaluation is absolute cack
-globalVariables(c("X20.", "X5.", "X50.", "X80.", "X95.", "bin", "ffmsyX20.", "ffmsyX50.", "ffmsyX80.", "hcr", "hcrref", "iter", "level", "metric", "msectrl", "period", "piname", "pix", "prop", "sbsbf0X20.", "sbsbf0X50.", "sbsbf0X80.", "upsidedown", "value", "wormid", "x", "xmax", "xmin", "y", "year", "ymin", "."))
+globalVariables(c("X20.", "X5.", "X50.", "X80.", "X95.", "bin", "ffmsymin", "ffmsymed", "ffmsymax",
+                  "hcr", "hcrref", "iter", "level", "metric", "msectrl", "period", "piname", "piname_wrap", "pix", "prop",
+                  "biomassmin", "biomassmed", "biomassmax", "upsidedown", "value", "wormid", "x", "xmax", "xmin", "y", "year", "ymin", "."))
 
 
 # This looks pretty crummy
@@ -494,7 +496,8 @@ get_time_periods <- function(app_params, nyears){
 #' current_pi_table() takes the processed indicators and formats them into a table.
 #'
 #' @param dat A data.frame with the 20th, 80th and 50th percentile value of each indicator.
-#' @param pichoice A character vector of the indicator names to be included in the table
+#' @param piname_choice A character vector of the indicator names to be included in the table
+#' @param percentile_range A vector of length with minimum and maximum percentile range to plot.
 #' @rdname performance_indicators
 #' @export
 current_pi_table <- function(dat, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP")){
@@ -502,7 +505,6 @@ current_pi_table <- function(dat, percentile_range = c(20,80), piname_choice=c("
   signif <- 2
   perc1 <- out[,paste("X",percentile_range[1],".",sep="")]
   perc2 <- out[,paste("X",percentile_range[2],".",sep="")]
-  #out$value <- paste(signif(out$X50., signif), " (", signif(out$X20., signif), ",", signif(out$X80., signif),")", sep="")
   out$value <- paste(signif(out$X50., signif), " (", signif(perc1, signif), ",", signif(perc2, signif),")", sep="")
   # Except pi1 as it is a probability
   pi1value <- signif(out$X50., signif)
@@ -678,7 +680,7 @@ next_corrnoise <- function(x, b, sd=0.1){
 #' pisums <- get_summaries(stock=out, stock_params=stock_params, app_params=app_params,
 #'   quantiles=c(0.01,0.05,0.20,0.5,0.80,0.95,0.99))
 #' # Get the current PI table in a neat format from one of the summary tables
-#' current_pi_table(dat=pisums$periodqs, pichoice=c("pi1", "sbsbf0", "catch"))
+#' current_pi_table(dat=pisums$periodqs, piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch"))
 #'
 #' # Get the PIs for the Introduction to Projections app
 #' get_projection_pis(stock=out, stock_params=stock_params, app_params=app_params, current_timestep=15)

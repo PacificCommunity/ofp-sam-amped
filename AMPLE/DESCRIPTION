@@ -1,6 +1,6 @@
 Package: AMPLE
 Title: Common Code for the 'AMPED' and 'PIMPLE' 'shiny' Apps for Stakeholder Engagement and Harvest Strategies
-Version: 0.0.1
+Version: 0.0.2
 Maintainer: Finlay Scott <finlays@spc.int>
 Authors@R: 
     person(given = "Finlay",

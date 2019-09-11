@@ -6,7 +6,11 @@
 \alias{get_summaries}
 \title{Routines for calculating and displaying various performance indicators.}
 \usage{
-current_pi_table(dat, pichoice = c("pi1", "sbsbf0", "catch"))
+current_pi_table(dat, percentile_range = c(20, 80),
+  piname_choice = c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE",
+  "Catch variability", "Catch stability", "Relative effort",
+  "Relative effort variability", "Relative effort stability",
+  "Proximity to TRP"))
 
 get_projection_pis(stock, stock_params, app_params, current_timestep)
 
@@ -15,7 +19,9 @@ get_summaries(stock, stock_params, app_params, quantiles)
 \arguments{
 \item{dat}{A data.frame with the 20th, 80th and 50th percentile value of each indicator.}
 
-\item{pichoice}{A character vector of the indicator names to be included in the table}
+\item{percentile_range}{A vector of length with minimum and maximum percentile range to plot.}
+
+\item{piname_choice}{A character vector of the indicator names to be included in the table}
 
 \item{stock}{A list with elements biomass, hcr_ip, hcr_op, effort and catch.}
 
@@ -79,7 +85,7 @@ out <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_para
 pisums <- get_summaries(stock=out, stock_params=stock_params, app_params=app_params,
   quantiles=c(0.01,0.05,0.20,0.5,0.80,0.95,0.99))
 # Get the current PI table in a neat format from one of the summary tables
-current_pi_table(dat=pisums$periodqs, pichoice=c("pi1", "sbsbf0", "catch"))
+current_pi_table(dat=pisums$periodqs, piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch"))
 
 # Get the PIs for the Introduction to Projections app
 get_projection_pis(stock=out, stock_params=stock_params, app_params=app_params, current_timestep=15)

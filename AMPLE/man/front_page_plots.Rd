@@ -32,7 +32,7 @@ plot_projection(stock, stock_params, mp_params, app_params = NULL,
 plot_hcr_intro_arrow(stock, timestep)
 
 plot_metric_with_histo(stock, stock_params, mp_params, metric,
-  app_params = NULL, show_last = TRUE, quantiles = c(0.2, 0.8))
+  app_params = NULL, show_last = TRUE, percentile_range = c(20, 80))
 
 plot_kobe_majuro_projections(stock, stock_params, choice = "kobe")
 
@@ -72,6 +72,8 @@ plot_yieldcurve_projections(stock, stock_params, app_params)
 \item{true_col}{Colour of the current iteration.}
 
 \item{metric}{The name of the metric to plot (catch, biomass or relcpue).}
+
+\item{percentile_range}{A vector of length with minimum and maximum percentile range to plot.}
 
 \item{choice}{Either kobe or majuro.}
 }

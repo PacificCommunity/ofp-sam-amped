@@ -122,6 +122,7 @@ sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="bl
 #' @param app_params A vector of application parameters.
 #' @param timestep The current timestep (optional).
 #' @param show_last Show the previous iters as ghosts (optional).
+#' @param percentile_range A vector of length with minimum and maximum percentile range to plot.
 #' 
 #' @return A plot
 #' @rdname front_page_plots
@@ -846,6 +847,7 @@ plot_yieldcurve_projections <- function(stock, stock_params, app_params){
 #' @param dat The data.frame with the data to be plotted.
 #' @param hcr_choices The names of the HCRs to plot.
 #' @param stock_params A vector of life history and stochasticy parameters.
+#' @param percentile_range A vector of length with minimum and maximum percentile range to plot.
 #' 
 #' @return A ggplot2 plot object.
 #' @rdname comparison_plots
