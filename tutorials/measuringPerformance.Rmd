@@ -30,7 +30,7 @@ A black window *should* appear, followed by the app opening in a browser window.
 If this does not happen, something has gone wrong. Sorry...
 
 <!-- Insert image -->
-![](figures/test.png)
+![](figures/CPstart.png)
 
 You should be presented with the familiar HCR plot and three time series plots which show SB/SBF=0, catch and CPUE relative to the CPUE in the year 2018.
 Uncertainty is already switched on (*biological productivity variability* and *estimation error*) and the time series plots already have multiple iterations (the default is 1000 iterations).
