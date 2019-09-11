@@ -5,7 +5,7 @@ library(shinyjs) # For greying out buttons
 library(AMPLE)
 
 ui <- navbarPage(
-  title="Measuring performance",
+  title="Comparing performance",
   tabPanel("HCR Selection", 
     useShinyjs(),  # Include shinyjs
     sidebarLayout(          
@@ -17,7 +17,7 @@ ui <- navbarPage(
         # HCR options
         mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort")),
         br(),
-        actionButton("project", "Project", icon=icon("fish")), # Careful with fish icon - needs particular version of R
+        actionButton("project", "Project", icon=icon("fish")), 
         actionButton("add_basket", "Add HCR to basket", icon=icon("shopping-basket")),
         # How many HCRs do we have in the store
         textOutput("nstoredstocks"),
@@ -32,23 +32,23 @@ ui <- navbarPage(
             )
           ),
           fluidRow(
-            tags$span(title="A table of various performance indicators calculated over the short-, medium- and long- term. The value is the median. The values in the brackets are the 20th and 80th percentiles respectively. See the information tab for more details", tableOutput("currenthcrpis"), style = "font-size:100%")
+            tags$span(title="A table of various performance indicators calculated over the short-, medium- and long- term. The value is the median. The values in the brackets are the 10-90 percentiles respectively. See the information tab for more details", tableOutput("currenthcrpis"), style = "font-size:100%")
           )
         ),
         # Column 3 - has 3 rows
         column(6,
           fluidRow(
-            tags$span(title="Plot of SB/SBF=0. The grey envelope contains the 20-80 percentiles. The blue dashed line is median. The black lines are several iterations to illustrate the dynamics. The histogram shows the range of values in the final year.",
+            tags$span(title="Plot of SB/SBF=0. The grey envelope contains the 10-90 percentiles. The blue dashed line is the median. The black lines are several iterations to illustrate the dynamics. The histogram shows the range of values in the final year.",
             plotOutput("plotbiomasshisto",height="250px")
           )
         ),
           fluidRow(
-            tags$span(title="Plot of the catch. The grey envelope contains the 20-80 percentiles. The blue dashed line is median. The black lines are several iterations to illustrate the dynamics. The histogram shows the range of values in the final year.",
+            tags$span(title="Plot of the catch. The grey envelope contains the 10-90 percentiles. The blue dashed line is the median. The black lines are several iterations to illustrate the dynamics. The histogram shows the range of values in the final year.",
               plotOutput("plotcatchhisto",height="250px")
             )
           ),
           fluidRow(
-            tags$span(title="Plot of the CPUE relative to the CPUE in the year 2000.  The grey envelope contains the 20-80 percentiles. The blue dashed line is median. The black lines are several iterations to illustrate the dynamics. The histogram shows the range of values in the final year.",
+            tags$span(title="Plot of the CPUE relative to the CPUE in the year 2000.  The grey envelope contains the 10-90 percentiles. The blue dashed line is the median. The black lines are several iterations to illustrate the dynamics. The histogram shows the range of values in the final year.",
               plotOutput("plotrelcpuehisto",height="250px")
             )
           )
@@ -72,7 +72,6 @@ ui <- navbarPage(
         # See: https://shiny.rstudio.com/reference/shiny/1.0.0/updateCheckboxGroupInput.html
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection",
           # character(0) means no choice is available
-          #choices = character(0)),
           choiceNames = character(0), choiceValues = character(0)),
         br()
       ),
@@ -81,45 +80,43 @@ ui <- navbarPage(
           tabPanel(title="Performance indicators - medians",
                    value="PImeds",
                    column(12, fluidRow( 
-                    tags$span(title="Bar plot of the median values of the performance indicators over the three time periods. Note that the PIs for effort and variability have been transformed so that the larger the value, the better the HCR is thought to be performing.",
+                    tags$span(title="Bar plot of the median values of the performance indicators over the three time periods. Note that the lower the PI for relative effort is, the better the HCR is thought to be performing. Also, a high value for SB/SBF=0 may not indicate that the HCR is performing well - it depends on your objectives.",
                     plotOutput("plotpimed", height="600px"))
                   ))
           ),
           tabPanel(title="Performance indicators - boxplots",
                    value="PIbox",
                    column(12, fluidRow(
-                  tags$span(title="Box plot of the values of the performance indicators over the three time periods. The box contains the 20-80 percentiles, the tails the 5-95 percentils.",
+                  tags$span(title="Box plot of the values of the performance indicators over the three time periods. Note that the lower the PI for relative effort is, the better the HCR is thought to be performing. Also, a high value for SB/SBF=0 may not indicate that the HCR is performing well - it depends on your objectives. The box contains the 20-80 percentiles, the tails the 5-95 percentiles.",
                    plotOutput("plotpibox", height="600px"))
            ))
           ),
           tabPanel(title="Performance indicators - radar",
                    value="PIradar",
                    column(12, fluidRow(
-                    tags$span(title="Radar plot of the median values of the performance indicators over the three time periods. Note that the PIs for effort and variability have been transformed so that the larger the value, the better the HCR is thought to be performing.",
-                 plotOutput("plotpiradar", height="600px"))#,
-                 #"Note that stability PIs and relative effort are not shown on the radar plot."
+                    tags$span(title="Radar plot of the median values of the performance indicators over the three time periods. Note that the PIs for effort and SB/SBF=0 are not included as large values for these indicators do not necessarily indicate that the HCR is performing well.",
+                 plotOutput("plotpiradar", height="600px"))
            ))
           ),
           tabPanel(title="Performance indicators - table",
                    value="PItable",
                    column(12, fluidRow(
-                   #"Performance indicators in the long-term",
                    "Performance indicators in the short-, medium- and long-term",
-                   div(tags$span(title="Peformance indicators in the short-term. The value is the median, the values in the parentheses are the 20-80 percentiles.", tableOutput("bigpitable_short"), style = "font-size:85%")),
-                   div(tags$span(title="Peformance indicators in the medium-term. The value is the median, the values in the parentheses are the 20-80 percentiles.", tableOutput("bigpitable_medium"), style = "font-size:85%")),
-                   div(tags$span(title="Peformance indicators in the long-term. The value is the median, the values in the parentheses are the 20-80 percentiles.", tableOutput("bigpitable_long"), style = "font-size:85%"))
+                   div(tags$span(title="Peformance indicators in the short-term. The value is the median, the values in the parentheses are the 10-90 percentiles.", tableOutput("bigpitable_short"), style = "font-size:85%")),
+                   div(tags$span(title="Peformance indicators in the medium-term. The value is the median, the values in the parentheses are the 10-90 percentiles.", tableOutput("bigpitable_medium"), style = "font-size:85%")),
+                   div(tags$span(title="Peformance indicators in the long-term. The value is the median, the values in the parentheses are the 10-90 percentiles.", tableOutput("bigpitable_long"), style = "font-size:85%"))
            ))
           ),
           tabPanel(title="Majuro plots",
                    value="majuroall",
                    column(12, fluidRow(
-                    tags$span(title="Majuro plot of the trajectories of the stocks under the different HCRs.",
+                    tags$span(title="Majuro plot of the trajectories of the stocks under the different HCRs through time. The crosses show the 10-90 percentiles. The white spot indicates the end of the time series.",
                   plotOutput("plotmajuroall", height="600px"))
            ))
           ),
           tabPanel(title="Time series",
                    value="timeseries",
-                    tags$span(title="Time series plots of various metrics for the stocks under the different HCRs. The envelope contains the 20-80 percentiles of the distribution. The dashed line is the median value. Some individual trajectories can be shown by selecting the 'Show spaghetti' option.",
+                    tags$span(title="Time series plots of various metrics for the stocks under the different HCRs. The envelope contains the 10-90 percentiles of the distribution. The dashed line is the median value. Some individual trajectories can be shown by selecting the 'Show spaghetti' option.",
                   fluidRow(column(12, checkboxInput("spaghetti", "Show spaghetti", FALSE))),
                   fluidRow(column(12, plotOutput("plottimeseries"))))
           )
@@ -162,12 +159,12 @@ ui <- navbarPage(
       ),
       mainPanel(width=9,
         h1("General idea"),
-        p("Choose HCRs from the drop down menu and set the parameters."),
-        p("Project the stock forward under the chosen HCR by clicking on the ", strong("Project HCR"), " button. If you like the look of the output, add the HCR to the basket by clicking on the ", strong("Add to basket"), " button"),
+        p("Choose an HCR type from the drop down menu and set the parameters."),
+        p("Project the stock forward under the chosen HCR by clicking on the ", strong("Project HCR"), " button. If you like the look of the output (by examining the indicator table and plots), add the HCR to the basket by clicking on the ", strong("Add to basket"), " button"),
         p("Keep adding HCRs to your basket until you are ready to compare them."),
         h1("Performance indicators"),
-        p("There are 8 PIs in the table. ", em("SB/SBF=0"), " and ", em("Catch"), " are fairly self explanatory. ", em("Effort (rel. 2018)"), " and ", em("CPUE (rel. 2018)"), " are the fishing effort and CPUE relative to their values in 2018 respectively. ", em("Prob. SB > LRP"), " is the probability of of SB/SBF=0 being above the LRP. ", em("Catch variability"), ",", em("Effort variability"), " and ", em("CPUE variability"), " measure the variability in the catch, relative effort and relative CPUE respectively. The variability PIs measure the bumpiness over time. The higher the value, the more the value changes over time."),
-        p("It should be noted that these PIs don't all point the same way.  It is generally thought that the higher the value of ", em("SB/SBF=0"), ",", em("Prob. SB > LRP"), ",", em("Catch"), " and ", em("CPUE (rel. 2018)"), " the better the HCR is performing. However, for ", em("Effort (rel. 2018)"), "and the ", em("variability"), " PIs, lower values are preferred. The higher the effort, the greater the costs. Stable catches and effort are preferred to catches and effort that varying strongly between years. Care must therefore be taken when using PIs to compare performance of HCRs."),
+        p("There are 8 PIs. ", em("SB/SBF=0"), " and ", em("Catch"), " are fairly self explanatory. ", em("Relative effort"), " and ", em("Relative CPUE"), " are the fishing effort and CPUE relative to their values in 2018 respectively. ", em("Prob. SB>LRP"), " is the probability of SB/SBF=0 being above the LRP. ", em("Catch stability"),  " and ", em("Relative effort stability"), " measure the variability in the catch and relative effort respectively, i.e. the bumpiness over time. The lower the value, the more the value changes over time (probably a bad thing). A stability value of 1 means that the indicator does not change over time, e.g. catches are perfectly stable.", em("Proximity to TRP"), " indicates how close the SB/SBF=0 is to the TRP. A value of 1 means that the SB/SBF=0 is exactly at the TRP. The further away from the TRP, either above or below it, the lower the value of the indicator."),
+        p("It should be noted that these PIs don't all point the same way.  It is generally thought that the higher the value of " , em("Prob. SB>LRP"), ",", em("Catch"), ", ", em("Relative CPUE"), ", the stability indicators and ", em("Proximity to TRP"), " the better the HCR is performing. However, for ", em("Relative effort"), " lower values are preferred because the higher the effort, the greater the costs. Also, ", em("SB/SBF=0"), "should be close to the TRP, rather than high. Care must therefore be taken when using PIs to compare performance of HCRs."),
         h1("Comparing performance"),
         p("Choose the ", strong("Compare performance"), " tab for a range of plots and tables that allow the comparison of the performance of the HCRs through performance indicators and other metrics."),
         p("The performance indicators and HCRs can be selected and delselected to help with the comparison.")
@@ -246,7 +243,7 @@ server <- function(input, output,session) {
     # Drop F/FMSY and others from list
     #drop_pis <- c("ffmsy") 
     #drop_pinames <- unique(subset(periodqs(), pi %in% drop_pis)$piname)
-    pinames_include <- c("SB/SBF=0", "Prob. SB > LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP")
+    pinames_include <- c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP")
     pi_choices <- unique(periodqs()$piname)
     #pi_choices <- pi_choices[!(pi_choices %in% drop_pinames)]
     pi_choices <- pi_choices[(pi_choices %in% pinames_include)]
@@ -360,7 +357,7 @@ server <- function(input, output,session) {
       return()
     }
     # Use pitemp() to fill table
-    current_pi_table(pitemp()$periodqs, percentile_range=pi_percentiles, piname_choice=c("SB/SBF=0", "Prob. SB > LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP"))
+    current_pi_table(pitemp()$periodqs, percentile_range=pi_percentiles, piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP"))
     },
     rownames = TRUE,
     caption= "Performance indicators",
@@ -436,10 +433,10 @@ server <- function(input, output,session) {
     if(is.null(hcr_choices) | is.null(pi_choices)){
       return()
     }
-    #set_choices <- c(input$catchsetchoice, as.character(NA))
-    #metric_choices <- c(input$catchrelchoice,"mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #area_choices <- c("all", as.character(NA))
-    #dat <- periodqs %>% filter(period != "Rest" & pi %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+    # Do not show these indicators: SB/SBF=0, variability based ones and effort
+    # Only include these ones:
+    radar_pis <- c("Prob. SB>LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort stability", "Proximity to TRP")
+    pi_choices <- pi_choices[pi_choices %in% radar_pis]
     dat <- subset(periodqs(), period != "Rest" & piname %in% pi_choices)
     #scaling_choice <- input$radarscaling
     p <- myradar(dat=dat, hcr_choices=hcr_choices)#, scaling_choice)
@@ -451,7 +448,7 @@ server <- function(input, output,session) {
   # https://stackoverflow.com/questions/50914398/increase-plot-size-in-shiny-when-using-ggplot-facets/50919997
   # 300 pixels height for each PI
   height_per_pi <- 300
-  timeseries_pinames <- c("SB/SBF=0", "Prob. SB > LRP", "Catch", "Relative CPUE", "Relative effort", "Proximity to TRP")
+  timeseries_pinames <- c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Relative effort", "Proximity to TRP")
   output$plottimeseries <- renderPlot({
     hcr_choices <- input$hcrchoice
     # If no HCR is selected then don't do anything

@@ -497,7 +497,7 @@ get_time_periods <- function(app_params, nyears){
 #' @param pichoice A character vector of the indicator names to be included in the table
 #' @rdname performance_indicators
 #' @export
-current_pi_table <- function(dat, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB > LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP")){
+current_pi_table <- function(dat, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP")){
   out <- subset(dat, period != "Rest" & piname %in% piname_choice)
   signif <- 2
   perc1 <- out[,paste("X",percentile_range[1],".",sep="")]
@@ -602,7 +602,7 @@ get_projection_pis <- function(stock, stock_params, app_params, current_timestep
                      "Average effort",
                      "Last SB/SBF=0",
                      "Average SB/SBF=0",
-                     "Prop. SB/SBF=0 > LRP",
+                     "Prop. SB/SBF=0>LRP",
                      "Prop. B > BMSY")
   return(dat)
 }
@@ -698,7 +698,7 @@ get_summaries <- function(stock, stock_params, app_params, quantiles){
   # Prob SBSBF0 > LRP
   problrp <- dplyr::group_by(sbsbf0, year)
   problrp <- dplyr::summarise(problrp, data=mean(data > stock_params$lrp, na.rm=TRUE))
-  problrp <- cbind(problrp, pi="pi1", piname="Prob. SB > LRP", upsidedown=FALSE, iter=1) # Called pi1 inline with PIMPLE
+  problrp <- cbind(problrp, pi="pi1", piname="Prob. SB>LRP", upsidedown=FALSE, iter=1) # Called pi1 inline with PIMPLE
 
   # Catch
   catch <- as.data.frame(stock$catch)
@@ -742,7 +742,7 @@ get_summaries <- function(stock, stock_params, app_params, quantiles){
   rel_effort <- as.data.frame(rel_effort)
   rel_effort$iter <- 1:nrow(rel_effort)
   rel_effort <- tidyr::gather(rel_effort, key="year", value="data", -iter, convert=TRUE)
-  rel_effort <- cbind(rel_effort, pi="pi20", piname="Relative effort", upsidedown=FALSE)
+  rel_effort <- cbind(rel_effort, pi="pi20", piname="Relative effort", upsidedown=TRUE)
 
   rel_effort_diff <- as.data.frame(rel_effort_diff)
   rel_effort_diff$iter <- 1:nrow(rel_effort_diff)

@@ -15,7 +15,7 @@ Imports:
   ggplot2 (>= 3.1.1),
   dplyr (>= 0.8.1),
   tidyr (>= 0.8.3),
-  RColorBrewer (>= 1.1.2),
+  wesanderson (>= 0.3.6),
   shinyjs (>= 1.0)
 Encoding: UTF-8
 LazyData: true

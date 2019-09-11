@@ -59,10 +59,14 @@
 # Check the max number of colours in the palette brewer.pal.info
 # No HCRs is the total number of HCRs - not the number selected
 get_hcr_colours <- function(hcr_names, chosen_hcr_names){
-  #allcols <- colorRampPalette(brewer.pal(11,"PiYG"))(length(hcr_names))
-  #allcols <- colorRampPalette(brewer.pal(12,"Paired"))(length(hcr_names))
-  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Dark2"))(length(hcr_names))
-  allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdYlBu"))(length(hcr_names))
+  # Looks OK
+  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdYlBu"))(length(hcr_names))
+  #  Wes Anderson palette - use Steve Zissou
+  allcols <- wesanderson::wes_palette("Zissou1", length(hcr_names), type = "continuous")
+  # See these notes:
+  #type: Either "continuous" or "discrete". Use continuous if you want
+  #      to automatically interpolate between colours. @importFrom
+  #      graphics rgb rect par image text
   names(allcols) <- hcr_names
   hcrcols <- allcols[chosen_hcr_names]
   return(hcrcols)
@@ -1107,10 +1111,13 @@ myradar <- function(dat, hcr_choices, scaling="scale", polysize=2){
       dat <- dplyr::group_by(dat, period, pi)
       dat <- dplyr::mutate(dat, value = order(X50.) / length(hcr_choices))
     }
-    # Reorder PI
-    dat <- dat[order(dat$piname),]
 
-    p <- ggplot(data=dat, aes(x=piname, y=value,group=hcrref))
+    # Need to wrap text of piname
+    max_len <- 10 # max length of label in characters
+    dat$piname_wrap <- sapply(dat$piname, function(y) paste(strwrap(y, max_len), collapse = "\n"), USE.NAMES = FALSE)
+    dat <- dat[order(dat$piname_wrap),]
+
+    p <- ggplot(data=dat, aes(x=piname_wrap, y=value,group=hcrref))
     p <- p + geom_polygon(aes(fill=hcrref), colour="black", alpha=0.6, size=polysize)
     p <- p + xlab("") + ylab("") + theme(legend.position="bottom", legend.title=element_blank())
     p <- p + facet_wrap(~period)
@@ -1120,8 +1127,11 @@ myradar <- function(dat, hcr_choices, scaling="scale", polysize=2){
     p <- p + theme(axis.text.y=element_blank(), axis.ticks.y=element_blank()) # Remove y axis 
     p <- p + ylim(0,1)
     #p + coord_polar() # For a weird fat look!
-
-    p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+    p <- p + theme(#axis.text=element_text(size=16),
+                axis.text.x  = element_text(size = ggplot2::rel(1.5)), # Make x axes text smaller
+                   axis.title=element_text(size=16),
+                   strip.text=element_text(size=16),
+                   legend.text=element_text(size=16))
 
     return(p)
 }
