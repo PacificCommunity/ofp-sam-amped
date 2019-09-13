@@ -996,7 +996,6 @@ quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
                           percentile_range = c(20,80),
                           colour_worm="black",
                           size_worm=0.2, add_start_line=TRUE, time_period_lines=TRUE, short_term = 2016:2024, medium_term = 2025:2033, long_term = 2034:2042, last_plot_year=2042, show_spaghetti=FALSE){
-
   # Sort out colours based on chosen HCRs
   hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
   # Select the chosen HCRs only - could do this in the call to plot in app?
@@ -1009,10 +1008,12 @@ quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
   p <- ggplot(dat, aes(x=year))
   # Ribbons and lines
   p <- p + geom_ribbon(aes(ymin=min, ymax=max, fill=hcrref), alpha=alpha20_80)
-  p <- p + geom_line(aes(y=max, group=hcrref), colour="black")
-  p <- p + geom_line(aes(y=min, group=hcrref), colour="black")
+  p <- p + geom_line(aes(y=max, group=hcrref), colour="black", size=ggplot2::rel(0.5))
+  p <- p + geom_line(aes(y=min, group=hcrref), colour="black", size=ggplot2::rel(0.5))
   # Add median line
-  p <- p + geom_line(aes(y=X50., group=hcrref), colour="black", linetype=2, size=1)
+  #p <- p + geom_line(aes(y=X50., group=hcrref), colour="black", linetype=2, size=1)
+  p <- p + geom_line(aes(y=X50., group=hcrref), colour="black", linetype=2, size=ggplot2::rel(0.5))
+
   # Plotting options
   p <- p + xlab("Year")
   # Add worms
@@ -1061,8 +1062,6 @@ myboxplot <- function(dat, hcr_choices, plot_type="median_bar"){
   hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
   # Fucking subset and fucking non standard evaluation - why is this so shit??????
   dat <- subset(dat, hcrref %in% hcr_choices)
-  #dat <- dat[dat$hcrref %in% hcr_choices,]
-
   if (plot_type=="median_bar"){
     p <- ggplot(dat, aes(x=period, y=X50., fill=hcrref))
     p <- p + geom_bar(stat="identity", position="dodge", colour="black", width=0.7)
