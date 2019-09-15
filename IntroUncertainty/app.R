@@ -5,66 +5,61 @@
 
 # User interface ----
 ui <- navbarPage(
-  title="Introducing Uncertainty and Performance Indicators",
+  title="Introducing Performance Indicators",
   tabPanel("Projections",
-  sidebarLayout(
-    sidebarPanel(width=3,
-      br(),
-      img(src = "spc.png", height = 100),
-      br(),
-      br(),
-      mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort"), init_thresh_max_catch=140, init_thresh_belbow=0.5),
-      br(),
-      tags$span(title="Run the projection for one more iteration.",
-        actionButton("project", "Run projection")
+    sidebarLayout(
+      sidebarPanel(width=3,
+        br(),
+        img(src = "spc.png", height = 100),
+        br(),
+        br(),
+        mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort"), init_thresh_max_catch=140, init_thresh_belbow=0.5),
+        br(),
+        tags$span(title="Run the projection for one more iteration.",
+          actionButton("project", "Run projection")
+        ),
+        tags$span(title="Reset the projection.",
+          actionButton("reset", "Reset")
+        ),
+        br(),
+        # Stochasticity options
+        stoch_params_setterUI("stoch", init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=FALSE)
       ),
-      tags$span(title="Reset the projection.",
-        actionButton("reset", "Reset")
-      ),
-      br(),
-      # Stochasticity options
-      stoch_params_setterUI("stoch", init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=FALSE)
-    ),
-    mainPanel(width=9,
-      # Column 1 - 2 rows
-      # I want the height of these two rows to be the same as the height of the 3 rows in the previous column
-      # So use fluidRow
-      column(6,
-        fluidRow(
-          tags$span(title="The HCR. The blue points show the inputs and outputs from all years of the the last iteration. The grey points show the inputs and outputs from all years from all iterations. This enables you to see which parts of the HCR shape are most used.",
-            plotOutput("plothcr")
+      mainPanel(width=9,
+        column(6,
+          fluidRow(
+            tags$span(title="The HCR. The blue points show the inputs and outputs from all years of the the last iteration. The grey points show the inputs and outputs from all years from all iterations. This enables you to see which parts of the HCR shape are most used.", plotOutput("plothcr")
+            )
+          ),
+          fluidRow(
+            tags$span(title="The number of iterations run so far.",
+            textOutput("itercount")),
+            checkboxInput("show_pis", label = "Show performance indicators", value=FALSE),
+            conditionalPanel(condition="input.show_pis == true",
+              tags$span(title="A table of various performance indicators calculated over the short-, medium- and long- term. The value is the median. The values in the brackets are the 10-90 percentiles respectively. See the information tab for more details", tableOutput("hcrpis"), style = "font-size:100%")
+            )
           )
         ),
-        fluidRow(
-          #div(tableOutput("hcrpis"), style = "font-size:100%"),
-          tags$span(title="The number of iterations run so far.",
-          textOutput("itercount")),
-          checkboxInput("show_pis", label = "Show performance indicators", value=FALSE),
-          conditionalPanel(condition="input.show_pis == true",
-            tags$span(title="A table of various performance indicators calculated over the short-, medium- and long- term. The value is the median. The values in the brackets are the 20th and 80th percentiles respectively. See the information tab for more details", tableOutput("hcrpis"), style = "font-size:100%")
-          )
-        )
-      ),
-      # Column 3 - has 3 rows
-      column(6,
-        fluidRow(
-          tags$span(title="Plot of SB/SBF=0. The black line shows the 'true' biomass in the current iteration. The blue line shows the estimated biomass in the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
-            plotOutput("plotbiomasshisto",height="250px")
-          )
-        ),
-        fluidRow(
-          tags$span(title="Plot of the catch. The black line shows the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
-            plotOutput("plotcatchhisto",height="250px")
-          )
-        ),
-        fluidRow(
-          tags$span(title="Plot of the CPUE relative to the CPUE in the year 2000. The black line shows the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
-            plotOutput("plotrelcpuehisto",height="250px")
+        # Column 3 - has 3 rows
+        column(6,
+          fluidRow(
+            tags$span(title="Plot of SB/SBF=0. The black line shows the 'true' biomass in the current iteration. The blue line shows the estimated biomass in the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
+              plotOutput("plotbiomasshisto",height="250px")
+            )
+          ),
+          fluidRow(
+            tags$span(title="Plot of the catch. The black line shows the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
+              plotOutput("plotcatchhisto",height="250px")
+            )
+          ),
+          fluidRow(
+            tags$span(title="Plot of the CPUE relative to the CPUE in the year 2000. The black line shows the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
+              plotOutput("plotrelcpuehisto",height="250px")
+            )
           )
         )
       )
-    )
-  )), 
+    )), 
   # Tab for choosing stock parameters, stock history, no. iterations etc
   tabPanel("Settings",
     sidebarLayout(
@@ -103,27 +98,27 @@ ui <- navbarPage(
     )
   ),
   tabPanel("About",
-           mainPanel(width=12,
-                     HTML("<p style='opacity: 0.5;' class='caption' align='center'>&copy; Pacific Community, 2019</P>
-                           <h1>About us:</h1>
-                           <p align='center'><img src='spc.png'></p>
-                           <p align='justify'>The Pacific Community (SPC) is the principal scientific and technical organisation in the Pacific region, proudly supporting development since 1947. It is an international development organisation owned and governed by its 26 country and territory members. The members are: American Samoa, Australia, Cook Islands, Federated States of Micronesia, Fiji, France, French Polynesia, Guam, Kiribati, Marshall Islands, Nauru, New Caledonia, New Zealand, Niue, Northern Mariana Islands, Palau, Papua New Guinea, Pitcairn Islands, Samoa, Solomon Islands, Tokelau, Tonga, Tuvalu, United States of America, Vanuatu, and Wallis and Futuna.</P> 
-                           <p align='justify'>In pursuit of sustainable development to benefit Pacific people, this unique organisation works across more than 25 sectors. SPC is renowned for its knowledge and innovation in such areas as fisheries science, public health surveillance, geoscience and conservation of plant genetic resources for food and agriculture.</p>
-                           <p align='justify'>Much of SPC's focus is on major cross-cutting issues, such as climate change, disaster risk management, food security, gender equality, human rights, non-communicable diseases and youth employment. Using a multi-sector approach in responding to its members' development priorities, SPC draws on skills and capabilities from around the region and internationally, and supports the empowerment of Pacific communities and sharing of expertise and skills between countries and territories.</p>
-                           <p align='justify'>With over 600 staff, SPC has its headquarters in Noumea, regional offices in Suva and Pohnpei, a country office in Honiara and field staff in other Pacific locations. Its working languages are English and French. See <a href=\"https://www.spc.int\">www.spc.int</a>."
-                     )
-           )
+    sidebarLayout(
+      sidebarPanel(width=3,
+        br(),
+        img(src = "spc.png", height = 100),
+        br(),
+        br(),
+        amped_maintainer_and_licence()
+      ), 
+      mainPanel(width=9,
+        spc_about()
+      )
+    )
   )
 )
 
 server <- function(input, output,session) {
   
   # Here niters is the initial number of iters in a new stock object when reset is triggered
-
   # App parameters
   app_params <- list(initial_year = 2009, last_historical_timestep = 10)
   app_params$historical_timesteps = 1:app_params$last_historical_timestep
-  #quantiles <- c(0.20, 0.80)
   quantiles <- c(0.01, 0.05, 0.10, 0.20, 0.5, 0.80, 0.90, 0.95, 0.99)
   # Object to store the performance indicators - gets updated through time
   pitemp <- reactiveVal(NULL)
@@ -131,6 +126,7 @@ server <- function(input, output,session) {
   get_stoch_params <- callModule(stoch_params_setter, "stoch") 
   get_lh_params <- callModule(stock_params_setter, "stock") 
   # Join these together into a single object to be passed to the funcs
+  pi_percentiles <- c(10,90)
   get_stock_params <- reactive({
     sp <- get_stoch_params()
     lh <- get_lh_params()
@@ -210,15 +206,15 @@ server <- function(input, output,session) {
   })
   
   output$plotbiomasshisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", quantiles=quantiles[c(3,5)])
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", percentile_range = pi_percentiles)
   })
 
   output$plotcatchhisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", quantiles=quantiles[c(3,5)])
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", percentile_range = pi_percentiles)
   })
 
   output$plotrelcpuehisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, quantiles=quantiles[c(3,5)])
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, percentile_range = pi_percentiles)
   })
 
   output$itercount <- renderText({
@@ -232,7 +228,8 @@ server <- function(input, output,session) {
       return()
     }
     # Use pitemp() to fill table
-    current_pi_table(pitemp()$periodqs)
+    piname_choice <- c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch stability", "Proximity to TRP")
+    current_pi_table(pitemp()$periodqs, percentile_range = pi_percentiles, piname_choice=piname_choice)
     },
     rownames = TRUE,
     caption= "Performance indicators",

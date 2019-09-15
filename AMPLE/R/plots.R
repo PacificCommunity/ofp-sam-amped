@@ -995,7 +995,7 @@ quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
                           alpha20_80 = 0.6, linetype_worm=1,
                           percentile_range = c(20,80),
                           colour_worm="black",
-                          size_worm=0.2, add_start_line=TRUE, time_period_lines=TRUE, short_term = 2016:2024, medium_term = 2025:2033, long_term = 2034:2042, last_plot_year=2042, show_spaghetti=FALSE){
+                          size_worm=0.3, add_start_line=TRUE, time_period_lines=TRUE, short_term = 2016:2024, medium_term = 2025:2033, long_term = 2034:2042, last_plot_year=2042, show_spaghetti=FALSE){
   # Sort out colours based on chosen HCRs
   hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
   # Select the chosen HCRs only - could do this in the call to plot in app?
@@ -1020,6 +1020,7 @@ quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
   if (!is.null(wormdat) & show_spaghetti==TRUE){
     wormdat <- subset(wormdat, hcrref %in% hcr_choices)
     wormdat <- wormdat[!is.na(wormdat$data),]
+    p <- p + geom_line(data=wormdat, aes(x=year, y=data, group=wormid), colour="black", linetype=linetype_worm, size=size_worm*1.1)
     p <- p + geom_line(data=wormdat, aes(x=year, y=data, group=wormid, colour=hcrref), linetype=linetype_worm, size=size_worm)
   }
   ## Colours

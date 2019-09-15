@@ -732,9 +732,9 @@ get_summaries <- function(stock, stock_params, app_params, quantiles){
   rel_cpue$iter <- 1:nrow(rel_cpue)
   rel_cpue <- tidyr::gather(rel_cpue, key="year", value="data", -iter, convert=TRUE)
   rel_cpue <- cbind(rel_cpue, pi="pi4", piname="Relative CPUE", upsidedown=FALSE)
-  
-  # Catch var and stab
-  catch_diff <- abs(stock$catch[,2:ncol(stock$catch)] - stock$catch[,1:(ncol(stock$catch)-1)])
+
+  # Catch var and stab - need drop=FALSE if iter == 1
+  catch_diff <- abs(stock$catch[,2:ncol(stock$catch), drop=FALSE] - stock$catch[,1:(ncol(stock$catch)-1), drop=FALSE])
   max_catch_diff <- stock_params$k / 10 # For rescale - Has to be same for all stocks - could base it on Cmax-Cmin from HCR control?
   catch_stab <- (max_catch_diff - catch_diff) / max_catch_diff # rescale
   catch_stab[catch_stab < 0] <- 0
@@ -751,7 +751,7 @@ get_summaries <- function(stock, stock_params, app_params, quantiles){
   # Relative effort
   rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
   # Relative effort var
-  rel_effort_diff <- abs(rel_effort[,2:ncol(rel_effort)] - rel_effort[,1:(ncol(rel_effort)-1)])
+  rel_effort_diff <- abs(rel_effort[,2:ncol(rel_effort), drop=FALSE] - rel_effort[,1:(ncol(rel_effort)-1), drop=FALSE])
   # Relative effort stab
   max_rel_effort_diff <- 1
   rel_effort_stab <- (max_rel_effort_diff - rel_effort_diff) / max_rel_effort_diff # rescale

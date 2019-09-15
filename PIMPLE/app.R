@@ -188,7 +188,9 @@ ui <- navbarPage(id="top",
                 )
               ),
               tabPanel("Time series plots", value="timeseries",
-                plotOutput("plot_timeseries_comparehcr") # height is variable - see below
+                tags$span(title="Note that not all indicators have time series plots. The widths of the ribbons are the 10-90 percentiles. The dashed, black line is the median value.",
+                  plotOutput("plot_timeseries_comparehcr") # height is variable - see below
+                )
               ),
               tabPanel("Table", value="bigtable",
                 tags$span(title="Median indicator values. The values inside the parentheses are the 10-90 percentiles",
@@ -295,7 +297,7 @@ server <- function(input, output, session) {
   trp <- 0.5
   # For the worms - same worms for all plots
   # This can be increased to 20 - maybe make as option?
-  nworms <- 20
+  nworms <- 10
   # worms are a unique combination of OM and iter
   # (same om / iter should be in all hcrs)
   wormiters <- sample(unique(worms$iter), nworms)
