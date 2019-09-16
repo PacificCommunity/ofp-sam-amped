@@ -8,7 +8,7 @@
 #--------------------------------------------------------------
 
 # Load packages
-#library(AMPLE)
+library(AMPLE)
 
 # Load the data
 #load("data/preSC15_results.Rdata")

@@ -237,14 +237,8 @@ server <- function(input, output,session) {
     }
     # Use pitemp() to fill table
     piname_choice <- c("SB/SBF=0", "Catch", "Relative CPUE", "Prob. SB>LRP", "Catch stability", "Proximity to TRP")
-    out <- current_pi_table(pitemp()$periodqs, percentile_range = pi_percentiles, piname_choice=piname_choice)
-    # Mess about with colnames by adding year range
     years <- dimnames(stock$biomass)$year
-    time_periods <- get_time_periods(app_params, nyears=dim(stock$biomass)[2])
-    period_yrs <- lapply(time_periods, function(x){paste("<br>(",paste(years[x][c(1,length(x))], collapse="-"),")",sep="")})
-    colnames(out)[1] <- paste(colnames(out)[1], " term", period_yrs$short_term, sep="")
-    colnames(out)[2] <- paste(colnames(out)[2], " term", period_yrs$medium_term, sep="")
-    colnames(out)[3] <- paste(colnames(out)[3], " term", period_yrs$long_term, sep="")
+    out <- current_pi_table(pitemp()$periodqs, app_params=app_params, years=years, percentile_range = pi_percentiles, piname_choice=piname_choice)
     return(out)
     },
     bordered = TRUE,

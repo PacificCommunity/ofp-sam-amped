@@ -2,7 +2,6 @@
 # Maintainer: Finlay Scott, OFP SPC
 
 # Load packages ----
-library(shinyjs)
 library(AMPLE)
 
 # UI

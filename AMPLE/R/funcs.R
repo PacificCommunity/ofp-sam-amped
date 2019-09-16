@@ -516,7 +516,7 @@ get_time_periods <- function(app_params, nyears){
 #' @param percentile_range A vector of length with minimum and maximum percentile range to plot.
 #' @rdname performance_indicators
 #' @export
-current_pi_table <- function(dat, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP")){
+current_pi_table <- function(dat, app_params, years, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP")){
   out <- subset(dat, period != "Rest" & piname %in% piname_choice)
   signif <- 2
   perc1 <- out[,paste("X",percentile_range[1],".",sep="")]
@@ -532,6 +532,12 @@ current_pi_table <- function(dat, percentile_range = c(20,80), piname_choice=c("
   rownames(out) <- out$piname
   # Drop rownames column
   out <- out[,colnames(out) != "piname"]
+  # Mess about with colnames by adding year range
+  time_periods <- get_time_periods(app_params, nyears=length(years))
+  period_yrs <- lapply(time_periods, function(x){paste("<br>(",paste(years[x][c(1,length(x))], collapse="-"),")",sep="")})
+  colnames(out)[1] <- paste(colnames(out)[1], " term", period_yrs$short_term, sep="")
+  colnames(out)[2] <- paste(colnames(out)[2], " term", period_yrs$medium_term, sep="")
+  colnames(out)[3] <- paste(colnames(out)[3], " term", period_yrs$long_term, sep="")
   return(out)
 }
 
@@ -543,7 +549,7 @@ current_pi_table <- function(dat, percentile_range = c(20,80), piname_choice=c("
 #' @param percentile_range A vector of length with minimum and maximum percentile range to plot.
 #' @rdname performance_indicators
 #' @export
-replicate_table <- function(stock, stock_params, app_params, percentile_range = c(20,80)){
+replicate_table <- function(stock, app_params, stock_params, percentile_range = c(20,80)){
   final_year <- max(as.numeric(dimnames(stock$biomass)$year))
 
   # Replicates some of the the get_summaries() function - inefficient
