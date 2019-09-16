@@ -47,17 +47,17 @@ ui <- navbarPage(title="Introducing Performance Indicators", id="main",
         # Right hand side
         column(6,
           fluidRow(
-            tags$span(title="Plot of SB/SBF=0. The black line shows the 'true' biomass in the current replicate. The blue line shows the estimated biomass in the current replicate. The grey lines show the previous replicates. The histogram shows the range of values in the final year.",
+            tags$span(title="Plot of SB/SBF=0. The black line shows the 'true' biomass in the current replicate. The blue line shows the estimated biomass in the current replicate. The grey lines show the previous replicates. The histogram shows the range of values in the final year. When enough replicates have been performed, the grey envelope contains the 10-90 percentiles.",
               plotOutput("plotbiomasshisto",height="250px")
             )
           ),
           fluidRow(
-            tags$span(title="Plot of the catch. The black line shows the current replciate. The grey lines show the previous replicates. The histogram shows the range of values in the final year.",
+            tags$span(title="Plot of the catch. The black line shows the current replciate. The grey lines show the previous replicates. The histogram shows the range of values in the final year. When enough replicates have been performed, the grey envelope contains the 10-90 percentiles.",
               plotOutput("plotcatchhisto",height="250px")
             )
           ),
           fluidRow(
-            tags$span(title="Plot of the CPUE relative to the CPUE in the year 2000. The black line shows the current replicate. The grey lines show the previous replicates. The histogram shows the range of values in the final year.",
+            tags$span(title="Plot of the CPUE relative to the CPUE in the year 2000. The black line shows the current replicate. The grey lines show the previous replicates. The histogram shows the range of values in the final year. When enough replicates have been performed, the grey envelope contains the 10-90 percentiles.",
               plotOutput("plotrelcpuehisto",height="250px")
             )
           )
@@ -128,7 +128,6 @@ server <- function(input, output,session) {
   # App parameters
   app_params <- list(initial_year = 2009, last_historical_timestep = 10)
   app_params$historical_timesteps = 1:app_params$last_historical_timestep
-  quantiles <- c(0.01, 0.05, 0.10, 0.20, 0.5, 0.80, 0.90, 0.95, 0.99)
   # Object to store the performance indicators - gets updated through time
   pitemp <- reactiveVal(NULL)
   get_mp_params <- callModule(mp_params_setter, "mpparams") 
@@ -205,7 +204,7 @@ server <- function(input, output,session) {
     stock$catch[iter(),] <- out$catch
 
     # Get summary PIs 
-    piout <- get_summaries(stock=stock, stock_params=get_stock_params(), app_params=app_params, quantiles=quantiles)
+    piout <- get_summaries(stock=stock, stock_params=get_stock_params(), app_params=app_params, quantiles=c(pi_percentiles[1], 50, pi_percentiles[2])/100)
     pitemp(piout)
   })
   
