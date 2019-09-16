@@ -35,7 +35,8 @@ ui <- navbarPage(title="Introducing Performance Indicators", id="main",
           fluidRow(
             tags$span(title="The number of replicates run so far.",
             textOutput("itercount")),
-            radioButtons(inputId="table_choice", label="Table selection", inline=TRUE, choiceNames=c("None", "Each replicate", "Performance indicators"), choiceValues=c("none", "reps", "pis"), selected="none"),
+            #radioButtons(inputId="table_choice", label="Table selection", inline=TRUE, choiceNames=c("None", "Each replicate", "Performance indicators"), choiceValues=c("none", "reps", "pis"), selected="none"),
+            radioButtons(inputId="table_choice", label="Table selection", inline=TRUE, choiceNames=c("Each replicate", "Performance indicators"), choiceValues=c("reps", "pis"), selected="reps"),
             conditionalPanel(condition="input.table_choice == 'reps'",
               tags$span(title="The final values of SB/SBF=0, catch and relative CPUE of each replicate. The final row shows the median of the final values and the values in the brackets are the 10-90 percentiles respectively.", tableOutput("reptable"), style = "font-size:100%")
             ),
