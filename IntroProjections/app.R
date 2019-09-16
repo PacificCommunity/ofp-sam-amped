@@ -5,11 +5,6 @@
 library(shinyjs)
 library(AMPLE)
 
-# Source helpers ----
-source("../R/funcs.R")
-source("../R/plots.R")
-source("../R/modules.R")
-
 # UI
 ui <- navbarPage(
   title="Introducing Projections",
@@ -113,6 +108,20 @@ ui <- navbarPage(
       mainPanel(width=9,
         h1("Instructions"),
         p("TBD")
+      )
+    )
+  ),
+  tabPanel("About",
+    sidebarLayout(
+      sidebarPanel(width=3,
+        br(),
+        img(src = "spc.png", height = 100),
+        br(),
+        br(),
+        amped_maintainer_and_licence()
+      ), 
+      mainPanel(width=9,
+        spc_about()
       )
     )
   )
