@@ -1,7 +1,7 @@
 # Copyright 2018 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 
-#library(AMPLE)
+library(AMPLE)
 
 # User interface ----
 ui <- navbarPage(title="Introducing Performance Indicators", id="main",
