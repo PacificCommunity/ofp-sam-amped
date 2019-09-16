@@ -527,11 +527,51 @@ current_pi_table <- function(dat, percentile_range = c(20,80), piname_choice=c("
   out[out$pi=="pi1","value"] <- pi1value[out$pi=="pi1"]
   out <- out[,c("piname","period","value")]
   out <- tidyr::spread(out, key="period", value="value")
+  # Rorder by piname_choice 
+  out <- out[order(match(out$piname, piname_choice)),]
   rownames(out) <- out$piname
   # Drop rownames column
   out <- out[,colnames(out) != "piname"]
   return(out)
 }
+
+#' Routines for calculating and displaying various performance indicators.
+#'
+#' replicate_table() shows the final values for SB/SBF=0, catch and relative CPUE for each replicate.
+#'
+#' @param dat A data.frame with the 20th, 80th and 50th percentile value of each indicator.
+#' @param percentile_range A vector of length with minimum and maximum percentile range to plot.
+#' @rdname performance_indicators
+#' @export
+replicate_table <- function(stock, stock_params, app_params, percentile_range = c(20,80)){
+  final_year <- max(as.numeric(dimnames(stock$biomass)$year))
+
+  # Replicates some of the the get_summaries() function - inefficient
+  sbsbf0 <- stock$biomass[,ncol(stock$biomass) ] / stock_params$k
+  catch <- stock$catch[,ncol(stock$catch)]
+  cpue <- stock$catch / stock$effort
+  rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
+  rel_cpue <- rel_cpue[,ncol(rel_cpue)]
+
+  # Get median and percentiles
+  signif <- 2
+  sbsbf0_qs <- signif(quantile(sbsbf0, probs=c(percentile_range[1], 50, percentile_range[2])/100),signif)
+  sbsbf0_summary <- paste(sbsbf0_qs[2], " (", sbsbf0_qs[1], ",", sbsbf0_qs[3], ")", sep="")
+  catch_qs <- signif(quantile(catch, probs=c(percentile_range[1], 50, percentile_range[2])/100), signif)
+  catch_summary <- paste(catch_qs[2], " (", catch_qs[1], ",", catch_qs[3], ")", sep="")
+  rel_cpue_qs <- signif(quantile(rel_cpue, probs=c(percentile_range[1], 50, percentile_range[2])/100), signif)
+  rel_cpue_summary <- paste(rel_cpue_qs[2], " (", rel_cpue_qs[1], ",", rel_cpue_qs[3], ")", sep="")
+
+  # Put together
+  out <- data.frame(Replicate= c(1:length(sbsbf0),"Median and range"), sbsbf0=c(signif(sbsbf0, signif), sbsbf0_summary), Catch=c(signif(catch, signif), catch_summary), rel_cpue=c(signif(rel_cpue, signif), rel_cpue_summary))
+  colnames(out)[2] <- "Final SB/SBF=0"
+  colnames(out)[3] <- "Final catch"
+  colnames(out)[4] <- "Final relative CPUE"
+  return(out)
+}
+
+
+
 
 # The big PI tables for comparing HCRs
 #' pitable

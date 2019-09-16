@@ -4,9 +4,8 @@
 #library(AMPLE)
 
 # User interface ----
-ui <- navbarPage(
-  title="Introducing Performance Indicators",
-  tabPanel("Projections",
+ui <- navbarPage(title="Introducing Performance Indicators", id="main",
+  tabPanel(title="Projections", value="projections",
     sidebarLayout(
       sidebarPanel(width=3,
         br(),
@@ -15,7 +14,7 @@ ui <- navbarPage(
         br(),
         mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort"), init_thresh_max_catch=140, init_thresh_belbow=0.5),
         br(),
-        tags$span(title="Run the projection for one more iteration.",
+        tags$span(title="Run the projection for one more replicate",
           actionButton("project", "Run projection")
         ),
         tags$span(title="Reset the projection.",
@@ -26,34 +25,39 @@ ui <- navbarPage(
         stoch_params_setterUI("stoch", init_prod_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=FALSE)
       ),
       mainPanel(width=9,
+        # Left hand side
         column(6,
+          # The HCR plot
           fluidRow(
-            tags$span(title="The HCR. The blue points show the inputs and outputs from all years of the the last iteration. The grey points show the inputs and outputs from all years from all iterations. This enables you to see which parts of the HCR shape are most used.", plotOutput("plothcr")
+            tags$span(title="The HCR. The blue points show the inputs and outputs from all years of the the last replicate. The grey points show the inputs and outputs from all years from all replicates This enables you to see which parts of the HCR shape are most used.", plotOutput("plothcr")
             )
           ),
           fluidRow(
-            tags$span(title="The number of iterations run so far.",
+            tags$span(title="The number of replicates run so far.",
             textOutput("itercount")),
-            checkboxInput("show_pis", label = "Show performance indicators", value=FALSE),
-            conditionalPanel(condition="input.show_pis == true",
+            radioButtons(inputId="table_choice", label="Table selection", inline=TRUE, choiceNames=c("None", "Each replicate", "Performance indicators"), choiceValues=c("none", "reps", "pis"), selected="none"),
+            conditionalPanel(condition="input.table_choice == 'reps'",
+              tags$span(title="The final values of SB/SBF=0, catch and relative CPUE of each replicate. The final row shows the median of the final values and the values in the brackets are the 10-90 percentiles respectively.", tableOutput("reptable"), style = "font-size:100%")
+            ),
+            conditionalPanel(condition="input.table_choice == 'pis'",
               tags$span(title="A table of various performance indicators calculated over the short-, medium- and long- term. The value is the median. The values in the brackets are the 10-90 percentiles respectively. See the information tab for more details", tableOutput("hcrpis"), style = "font-size:100%")
             )
           )
         ),
-        # Column 3 - has 3 rows
+        # Right hand side
         column(6,
           fluidRow(
-            tags$span(title="Plot of SB/SBF=0. The black line shows the 'true' biomass in the current iteration. The blue line shows the estimated biomass in the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
+            tags$span(title="Plot of SB/SBF=0. The black line shows the 'true' biomass in the current replicate. The blue line shows the estimated biomass in the current replicate. The grey lines show the previous replicates. The histogram shows the range of values in the final year.",
               plotOutput("plotbiomasshisto",height="250px")
             )
           ),
           fluidRow(
-            tags$span(title="Plot of the catch. The black line shows the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
+            tags$span(title="Plot of the catch. The black line shows the current replciate. The grey lines show the previous replicates. The histogram shows the range of values in the final year.",
               plotOutput("plotcatchhisto",height="250px")
             )
           ),
           fluidRow(
-            tags$span(title="Plot of the CPUE relative to the CPUE in the year 2000. The black line shows the current iteration. The grey lines show the previous iterations. The histogram shows the range of values in the final year.",
+            tags$span(title="Plot of the CPUE relative to the CPUE in the year 2000. The black line shows the current replicate. The grey lines show the previous replicates. The histogram shows the range of values in the final year.",
               plotOutput("plotrelcpuehisto",height="250px")
             )
           )
@@ -78,7 +82,7 @@ ui <- navbarPage(
       )
     )
   ),
-  tabPanel("Information",
+  tabPanel("Notes",
     sidebarLayout(
       sidebarPanel(width=3,
         br(),
@@ -88,7 +92,12 @@ ui <- navbarPage(
         amped_maintainer_and_licence()
       ),
       mainPanel(width=9,
-        h1("Instructions"),
+        h1("Measuring performance"),
+        p("Before a HCR is adopted its performance is tested and evaluated using computer simulations (known as Management Strategy Evaluation - MSE)."), 
+        p("During these evaluations the performance of a proposed HCR is measured by using a collection of indicators, known as performance indicators. These indicators should relate to the management objectives of the fishery, e.g. stock sustainability, good economic performance etc."), 
+        p("As uncertainty can affect the performance of a HCR, the evaluations are performed many hundreds of times. Each evaluation is known as a replicate. The indicators are calculated for reach replicate and summaries, such as average or median values and ranges are presented."),
+        p("In this app, it is possible to see the final value of some of these indicators in the replicate table. It is also possible to see the performance indicators summarised over all the replicates."),
+        h1("Including uncertainty"),
         p("Variability can be included in the projection in two ways: through variability in the stock productivity and through the estimated level of stock biomass being different to the true level of the stock biomass. These options are initially turned off. The options can be seen by clicking on the ", strong("Show variability options"), "box."),
         p("Biological productivity variability represents the variability of the natural procesess of the stock, for example growth and natural mortality. Increasing the variability will increase the 'bumpiness' of the stock trajectory. As biological variability is always encountered in fisheries it is essential that a selected HCR is robust to the variability."),
         p("Estimation error simulates the difference between the true level of the stock biomass and the estimated level. Unfortunately, the true abundance of a fish stock is never known. Instead, estimates of abundance are made, for example using stock assessment models. The HCR uses the estimated biomass, not the true biomass. This means that the catch limit that is set by the HCR is based on estimated biomass. If the biomass is estimated poorly the resulting catch limit set by the HCR may not be appropriate."),
@@ -218,7 +227,7 @@ server <- function(input, output,session) {
   })
 
   output$itercount <- renderText({
-    paste("Number of iterations: ", iter(), sep="")
+    paste("Number of replicates: ", iter(), sep="")
   })
 
 
@@ -228,13 +237,34 @@ server <- function(input, output,session) {
       return()
     }
     # Use pitemp() to fill table
-    piname_choice <- c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch stability", "Proximity to TRP")
-    current_pi_table(pitemp()$periodqs, percentile_range = pi_percentiles, piname_choice=piname_choice)
+    piname_choice <- c("SB/SBF=0", "Catch", "Relative CPUE", "Prob. SB>LRP", "Catch stability", "Proximity to TRP")
+    out <- current_pi_table(pitemp()$periodqs, percentile_range = pi_percentiles, piname_choice=piname_choice)
+    # Mess about with colnames by adding year range
+    years <- dimnames(stock$biomass)$year
+    time_periods <- get_time_periods(app_params, nyears=dim(stock$biomass)[2])
+    period_yrs <- lapply(time_periods, function(x){paste("<br>(",paste(years[x][c(1,length(x))], collapse="-"),")",sep="")})
+    colnames(out)[1] <- paste(colnames(out)[1], " term", period_yrs$short_term, sep="")
+    colnames(out)[2] <- paste(colnames(out)[2], " term", period_yrs$medium_term, sep="")
+    colnames(out)[3] <- paste(colnames(out)[3], " term", period_yrs$long_term, sep="")
+    return(out)
     },
+    bordered = TRUE,
+    sanitize.text.function=identity,
     rownames = TRUE,
     caption= "Performance indicators",
     auto=TRUE
   )
+
+  output$reptable<- renderTable({
+    if (is.null(pitemp())){
+      return()
+    }
+    replicate_table(stock=stock, stock_params=get_stock_params(), app_params=app_params, percentile_range=pi_percentiles)
+  },
+    bordered = TRUE,
+    rownames = FALSE,
+    caption= "Performance of each replicate",
+    auto=TRUE)
 
   # Termination script - needed when running from bat file
   session$onSessionEnded(function() {
