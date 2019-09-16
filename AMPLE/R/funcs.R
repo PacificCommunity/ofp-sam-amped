@@ -511,9 +511,8 @@ get_time_periods <- function(app_params, nyears){
 #'
 #' current_pi_table() takes the processed indicators and formats them into a table.
 #'
-#' @param dat A data.frame with the 20th, 80th and 50th percentile value of each indicator.
-#' @param piname_choice A character vector of the indicator names to be included in the table
-#' @param percentile_range A vector of length with minimum and maximum percentile range to plot.
+#' @param years A character vector of the years in the simulation.
+#' @param piname_choice A character vector of the indicator names to be included in the table.
 #' @rdname performance_indicators
 #' @export
 current_pi_table <- function(dat, app_params, years, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP")){
@@ -742,7 +741,9 @@ next_corrnoise <- function(x, b, sd=0.1){
 #' pisums <- get_summaries(stock=out, stock_params=stock_params, app_params=app_params,
 #'   quantiles=c(0.01,0.05,0.20,0.5,0.80,0.95,0.99))
 #' # Get the current PI table in a neat format from one of the summary tables
-#' current_pi_table(dat=pisums$periodqs, piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch"))
+#' current_pi_table(dat=pisums$periodqs, app_params=app_params,
+#' years=dimnames(stock$biomass)$year,
+#' piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch"))
 #'
 #' # Get the PIs for the Introduction to Projections app
 #' get_projection_pis(stock=out, stock_params=stock_params, app_params=app_params, current_timestep=15)

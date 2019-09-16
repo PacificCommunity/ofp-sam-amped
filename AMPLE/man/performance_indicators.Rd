@@ -2,15 +2,19 @@
 % Please edit documentation in R/funcs.R
 \name{current_pi_table}
 \alias{current_pi_table}
+\alias{replicate_table}
 \alias{get_projection_pis}
 \alias{get_summaries}
 \title{Routines for calculating and displaying various performance indicators.}
 \usage{
-current_pi_table(dat, percentile_range = c(20, 80),
+current_pi_table(dat, app_params, years, percentile_range = c(20, 80),
   piname_choice = c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE",
   "Catch variability", "Catch stability", "Relative effort",
   "Relative effort variability", "Relative effort stability",
   "Proximity to TRP"))
+
+replicate_table(stock, app_params, stock_params, percentile_range = c(20,
+  80))
 
 get_projection_pis(stock, stock_params, app_params, current_timestep)
 
@@ -19,15 +23,17 @@ get_summaries(stock, stock_params, app_params, quantiles)
 \arguments{
 \item{dat}{A data.frame with the 20th, 80th and 50th percentile value of each indicator.}
 
+\item{app_params}{A vector of application parameters.}
+
+\item{years}{A character vector of the years in the simulation.}
+
 \item{percentile_range}{A vector of length with minimum and maximum percentile range to plot.}
 
-\item{piname_choice}{A character vector of the indicator names to be included in the table}
+\item{piname_choice}{A character vector of the indicator names to be included in the table.}
 
 \item{stock}{A list with elements biomass, hcr_ip, hcr_op, effort and catch.}
 
 \item{stock_params}{A vector of life history and stochasticy parameters.}
-
-\item{app_params}{A vector of application parameters.}
 
 \item{current_timestep}{The current timestep.}
 
@@ -38,6 +44,8 @@ Various data.frames with summaries in different formats.
 }
 \description{
 current_pi_table() takes the processed indicators and formats them into a table.
+
+replicate_table() shows the final values for SB/SBF=0, catch and relative CPUE for each replicate.
 
 get_projection_pis() get the performance indicators for the Introduction to Projections AMPED app
 
@@ -85,7 +93,9 @@ out <- project(stock, timesteps = c(11,20), stock_params = stock_params, mp_para
 pisums <- get_summaries(stock=out, stock_params=stock_params, app_params=app_params,
   quantiles=c(0.01,0.05,0.20,0.5,0.80,0.95,0.99))
 # Get the current PI table in a neat format from one of the summary tables
-current_pi_table(dat=pisums$periodqs, piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch"))
+current_pi_table(dat=pisums$periodqs, app_params=app_params,
+years=dimnames(stock$biomass)$year,
+piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch"))
 
 # Get the PIs for the Introduction to Projections app
 get_projection_pis(stock=out, stock_params=stock_params, app_params=app_params, current_timestep=15)

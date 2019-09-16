@@ -3,19 +3,24 @@
 \name{amped_maintainer_and_licence}
 \alias{amped_maintainer_and_licence}
 \alias{pimple_maintainer_and_licence}
-\title{Maintainer and licence information.}
+\alias{spc_about}
+\title{Maintainer, licence and SPC about information.}
 \usage{
 amped_maintainer_and_licence()
 
 pimple_maintainer_and_licence()
+
+spc_about()
 }
 \value{
 A shiny.tag for use in Shiny apps
 }
 \description{
 Show the maintainer and licence for use in the AMPED PIMPLE applications.
+Also show the 'About SPC' information.
 }
 \examples{
 amped_maintainer_and_licence()
 pimple_maintainer_and_licence()
+spc_about()
 }
