@@ -10,7 +10,8 @@ output:
   pdf_document: 
     toc: true
     highlight: zenburn
-mainfont: Calibri Light
+    latex_engine: xelatex
+mainfont: Arial
 fontsize: 12pt
 header-includes:
   \usepackage{float}
@@ -33,7 +34,7 @@ library(dplyr)
 
 ```{r, echo=FALSE}
 # Loading the data
-load("../data/pimple_test_const4.Rdata")
+load("../data/preKiribati_results.Rdata")
 ```
 
 ```{r, usefulparams, echo=FALSE}
@@ -77,20 +78,23 @@ To use PIMPLE you need to install the *AMPLE* package from CRAN.
 
 ## How do I use PIMPLE?
 
-There are three main sections to PIMPLE, accessible by the tabs at the top of the screen.
-The tabs are: **The HCRs** (the tab that is open when you start PIMPLE), **PI Inspector** and **Comparing MPs**.
-**The HCRs** tab shows the shapes of the different candidate HCRs and which parts of the HCR were active during the evaluations; **PI Inspector** allows detailed inspection of each type of PI and metric; **Comparing MPs** allows HCRs to be compared across the full range of PIs.
+Under the **Results** tab at the top of the screen are the three main tabs of PIMPLE.
+The tabs are: **HCRs** (the tab that is open when you start PIMPLE), **Performance indicators** and **Comparing performance**. These are all under the main **Results** tab.
+
+The **HCRs** tab shows the shapes of the different candidate HCRs and which parts of the HCR were active during the evaluations;
+the **Performance indicators** tab allows detailed inspection of each type of PI and metric;
+the **Comparing performance** tab allows HCRs to be compared across the full range of PIs.
 These tabs are explained in more detail in the rest of this user guide.
 
 Depending on which tab is open, you will be able to select different candidate HCRs and different PIs using the selection boxes on the left of the screen.
 
-When you first open PIMPLE you will be on **The HCRs** tab.
+When you first open PIMPLE you will be on the **HCRs** tab.
 You will see a screen with plots of the HCRs in the main panel and selection boxes on the left that allow you to choose the HCRs you wish to inspect.
 
 For a description of each indicator see the Appendix at the end of this document.
 A desciption of the different plot types is found in the **Comparing MPs** section below.
 
-# The HCRs tab
+# The *HCRs* tab
 
 This tab has two plots.
 The first shows the shape of each selected HCR. 
@@ -98,9 +102,8 @@ The first shows the shape of each selected HCR.
 <!--The circles on the shapes indicate when that part of the HCR was 'activated' during the simulations.-->
 
 ```{r, echo=FALSE, fig.cap="Example HCR shapes from the HCRs tab."}
-hcr_shape$hcrref <- hcr_shape$msectrl # hack
-hcr_points$hcrref <- hcr_points$msectrl # hack
-hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+#hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+hcr_choices <- c("HCR 1", "HCR 6", "SQ +10%")
 p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp, blacklinesize=2, linesize=1, pointsize=1.5, stroke=1)
 p <- p + theme(axis.text=element_text(size=10), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
 p
@@ -114,11 +117,12 @@ The second plot shows the distribution of the resulting HCR outputs (e.g. result
 breaks <- seq(from=0,to=2,by=0.05)
 freqs <- cut(hcr_points$scaler, breaks, labels=FALSE)
 hcr_points$bin <- breaks[freqs]
-histodat <- hcr_points %>% group_by(msectrl, period, bin) %>% summarise(sum=n())
-nobs <- hcr_points %>% group_by(msectrl, period) %>% summarise(tnobs=n())
-histodat <- left_join(histodat, nobs)
+histodat <- dplyr::group_by(hcr_points, hcrref, hcrname, period, bin)
+histodat <- dplyr::summarise(histodat, sum=dplyr::n())
+nobs <- dplyr::group_by(hcr_points,hcrref, hcrname, period)
+nobs <- dplyr::summarise(nobs, tnobs=dplyr::n())
+histodat <- dplyr::left_join(histodat, nobs)
 histodat$prop <- histodat$sum / histodat$tnobs
-histodat$hcrref <- histodat$msectrl # hack
 p <- hcr_histo_plot(hcr_choices, histodat)
 p <- p + theme(axis.text=element_text(size=10), axis.title=element_text(size=10), strip.text=element_text(size=10), legend.text=element_text(size=10))
 p
@@ -127,14 +131,14 @@ p
 
 The HCRs under inspection can be chosen using the **HCR selection** boxes on the left.
 
-# PI Inspector tab
+# Performance indicators
 
 This tab offers the ability to explore the performance of the HCRs in detail.
 There are several subtabs, each one offering different plots of the same indicator or theme.
 The HCRs under inspection can be chosen using the **HCR selection** boxes on the left.
 
 The plots are a mixture of time series plots, bar charts and box plots.
-For more information on these plot types see the *Comparing MPs* section later on.
+For more information on these plot types see the *Comparing performance* section later on.
 
 
 ## PI 1 & 8: Biomass
@@ -146,6 +150,8 @@ There is also a bar chart showing PI 1 (the probablity of *SB/SBF=0* being below
 
 Note that for PI 8, a value of 1 indicates being at the TRP and a value of 0 indicates being far from the TRP in any direction.
 A higher value is therefore considered better than a low value.
+
+It is possible to include sample individual trajectories by selecting the *Show trajectories* option on the left.
 
 ## PI 3: Catches
 
@@ -188,7 +194,7 @@ It has been proposed as a possible indicator for changes in stock structure.
 
 The mean weight of an individual is presented as a time series and also a bar chart and a box plot of the average value in each time period.
 
-# Comparing MPs
+# Comparing performance
 
 The plots and tables in this tab enable the comparison of the candidate HCRs across multiple PIs and time periods.
 This allows trade-offs between PIs and time periods to be evaluated.
@@ -221,20 +227,14 @@ The median value is calculated for each of the time periods (short-, medium- and
 The results from the different HCRs have different colours, as shown by the legend.
 
 ```{r, fig.cap="Example bar chart showing median values of two indicators for three HCRs across the three time periods."}
-hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+#hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
 plot_type <- "median_bar"
 pi_choices <- c("biomass", "pi4")
 set_choices <- as.character(NA)
 metric_choices <- c("mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
 area_choices <- c("all", as.character(NA))
 
-# Hack!
-periodqs$hcrref <- periodqs$msectrl
-periodqs$piname <- periodqs$name
-
 dat <- periodqs %>% filter(period != "Rest" & pi %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
-# Need to hack pi1 so that all quantiles = X50., else NA
-dat[dat$pi=="pi1",c("X5.", "X20.", "X80.", "X95.")] <- dat[dat$pi=="pi1","X50."]
 p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
 p <- p + ylim(0,NA)
 p <- p + ylab("Value") + xlab("Time period")
@@ -256,15 +256,13 @@ As with the bar charts the results from the selected HCRs have different colours
 The value in each of the time periods (short-, medium- and long-term) is also shown.
 
 ```{r, fig.cap="Example box plot showing median values of two indicators for three HCRs across the three time periods."}
-hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+#hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
 plot_type <- "box"
 pi_choices <- c("biomass", "pi4")
 set_choices <- as.character(NA)
 metric_choices <- c("mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
 area_choices <- c("all", as.character(NA))
 dat <- periodqs %>% filter(period != "Rest" & pi %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
-# Need to hack pi1 so that all quantiles = X50., else NA
-dat[dat$pi=="pi1",c("X5.", "X20.", "X80.", "X95.")] <- dat[dat$pi=="pi1","X50."]
 p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
 p <- p + ylim(0,NA)
 p <- p + ylab("Value") + xlab("Time period")
@@ -284,6 +282,8 @@ A radar plot is shown for each time period.
 As with the bar charts and box plots the results from the selected HCRs have different colours, as shown by the legend.
 Only the selected PIs are shown which means that you need at least three PIs selected for the plot to make any sense.
 
+Note that only the indicators for which 'bigger is better' are included on the radar plot.
+
 As the indicators have different ranges of values it is necessary to scale the values to allow comparison on the same plot.
 PIMPLE has two ways of scaling the values and it is important to understand the difference between them because they can strongly affect the result.
 
@@ -292,7 +292,7 @@ The relative values of the indicators are preserved.
 This means that if the values of an indicator are similar for all the HCRs, the difference between them will be difficult to see.
 
 ```{r, fig.cap="Example radar plot for three HCRs and 8 indicators with results being scaled by the max. Note that there is not much contrast between the HCRs. Only the long-term period is shown."}
-hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+#hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
 pi_choices <- unique(periodqs$pi)
 set_choices <- c("total", as.character(NA))
 metric_choices <- c("catch","mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
@@ -313,7 +313,7 @@ HCRs that have very similar indicator values can look very different when plotte
 Use it with care.
 
 ```{r, fig.cap="Example radar plot for three HCRs and 8 indicators with results being ranked. Note that these HCRs and PIs are the same as in the previous radar plot above but now there is a lot of contrast due to ranking. This shows that ranking can exagerate the differences in performance between the HCRs. Only the long-term period is shown."}
-hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
+#hcr_choices <- c("HCR 1", "HCR 2", "HCR 6")
 pi_choices <- unique(periodqs$pi)
 set_choices <- c("total", as.character(NA))
 metric_choices <- c("catch","mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
@@ -330,10 +330,10 @@ p
 ## Time series plots
 
 The time series plots show a coloured envelope for each HCR.
-The envelope contains the 20-80th percentile of the values.
+The envelope contains the 10-90th percentile of the values.
 The black dashed line shows the median value.
 The vertical lines mark the short-, medium- and long-term periods.
-Several individual trajectories (known as worms or spaghetti) are shown as illustrations.
+Several individual trajectories (known as worms or spaghetti) can be shown as illustrations.
 The results from the selected HCRs have different colours as shown by the legend.
 
 The **Time series plots** tab shows time series plots for *SB/SBF=0*, *Catch* and *Relative CPUE*.
@@ -341,10 +341,10 @@ The **Time series plots** tab shows time series plots for *SB/SBF=0*, *Catch* an
 ```{r, fig.cap="Example time series plot of the relative CPUE for three HCRs. The envelope contains the 20-80th percentile of the values. The black dashed line shows the median value. The coloured lines are example individual trajectories."}
 
 # Hack!
-yearqs$hcrref <- yearqs$msectrl
-yearqs$piname <- yearqs$name
-worms$hcrref <- worms$msectrl
-worms$piname <- worms$name
+#yearqs$hcrref <- yearqs$msectrl
+#yearqs$piname <- yearqs$name
+#worms$hcrref <- worms$msectrl
+#worms$piname <- worms$name
 
 dat <- yearqs %>% filter(pi=="pi4") 
 wormdat <- worms %>% filter(pi=="pi4" & iter %in% wormiters) 
@@ -361,7 +361,7 @@ p
 
 The **Table** subtab shows the values of the selected indicators and HCRs in each of the three time periods.
 The indicators are presented as the median value, and then two more values inside parentheses e.g. *0.46 (0.42, 0.5)*.
-The values inside the parentheses are the 20-80th percentile respectively.
+The values inside the parentheses are the 10-90th percentile respectively.
 
 PI 1 (the probability of being above the LRP) only has a single value because it is a probability.
 
@@ -379,7 +379,7 @@ Not all of the desired PIs have been calculated. More will be later.
 
 \begin{table}[H]
 \scriptsize
-    \begin{tabularx}{\textwidth}{|p{0.03\linewidth}|p{0.1\textwidth}|X|X|}
+  \begin{tabularx}{\linewidth}{|p{0.03\linewidth}|p{0.1\linewidth}|X|X|}
     \hline
        PI & Objective type & MOW4 Strawman & Performance Indicator (WP14)\\
     \hline
@@ -395,9 +395,10 @@ Not all of the desired PIs have been calculated. More will be later.
     \hline
         8 & Economic   & Stability and continuity of market supply & Deviation from $SB/SB_{F=0} > TRP$ (SKJ) in the short-, medium- and long-term as determined from MSE. \\
     \hline
-\end{tabularx}
-    \caption{\label{tab:execPIs} Summary of proposed performance indicators that can be calculated for the purse seine skipjack tuna fishery presented at SC14, Busan, Korea.}
+  \end{tabularx}
+  \caption{\label{tab:execPIs} Summary of proposed performance indicators that can be calculated for the purse seine skipjack tuna fishery presented at SC14, Busan, Korea.}
 \end{table}
+
 
 ## Indicator 1. Maintain SKJ biomass at or above levels that provide fishery sustainability throughout their range
 
@@ -567,10 +568,6 @@ These kind of indicators are important because they can provide information on c
     $SB$ is the adult biomass, $E$ is the effort, $C$ is catch, $CPUE$ is the catch per unit of effort, $N$ is the number of simulations, $n$ an individual simulation, $y_{1}$ and $y_{2}$ are the start and end years of the time period, $Y$ is in the number of years in the time period, $y$ is an individual year.
         }
     \end{table}
-
-
-
-
 
 
 <!--
