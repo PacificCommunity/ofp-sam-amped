@@ -9,6 +9,7 @@ output:
     includes:
       in_header: mystyle.sty
     latex_engine: xelatex
+mainfont: Arial
 fontsize: 12pt
 ---
 

@@ -2,6 +2,7 @@
 # Maintainer: Finlay Scott, OFP SPC
 
 library(AMPLE)
+library(shinyjs)
 
 ui <- navbarPage(
   title="Comparing performance",

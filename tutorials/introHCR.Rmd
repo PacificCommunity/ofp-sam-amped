@@ -4,12 +4,12 @@ author: "Finlay Scott - OFP, SPC"
 date: "2019-21-02"
 output:
   html_document:
-    keep_md: yes
+    keep_md: no
   pdf_document:
     includes:
       in_header: mystyle.sty
     latex_engine: xelatex
-mainfont: Calibri Light
+mainfont: Arial
 fontsize: 12pt
 ---
 
@@ -159,14 +159,13 @@ Final values
 3: 0.59, 100
 -->
 
-You should have seen that different parameterisations of the HCR lead to different stock dynamics and final settled values.
-The question is, which HCR of these three is the best one?
+You should have seen that different parameterisations of the HCR lead to different fishery dynamics and final settled values.
 
 # Introducing uncertainty
 
 In the real world, fisheries management is affected by different types of uncertainty.
 However, the projections we have run so far have not considered uncertainty.
-This means that if we rerun the same projection, the outcome will always be the same (they are *deterministic* simulations).
+This means that if we rerun the same projection, the outcome will always be the same (they are known as *deterministic* simulations).
 
 Because there is lot of uncertainty in fisheries, it is very important to choose an HCR that is robust to this uncertainty, otherwise the outcome may not be what you expected.
 For example, an HCR that performs well when future stock recruitment is stable may not perform well when stock recruitment varies a lot.
@@ -179,7 +178,8 @@ Click on the **Show variability option** option in the panel on the left to show
 
 ## Biological productivity variability
 
-Biological productivity variability reflects the natural variability in the stock dynamics, for example through variability in the recruitment, growth and natural mortality. Fisheries managers have no control over this source of uncertainty.
+Biological productivity variability reflects the natural variability in the stock dynamics, for example through variability in the recruitment, growth and natural mortality.
+Fisheries managers have no control over this source of uncertainty.
 As such it is very important that an adopted HCR is robust to this uncertainty.
 
 We saw in the previous examples without uncertainty that eventually the stock abundance settles down to a constant value.
@@ -193,7 +193,8 @@ Increase the **Biological productivity variability** to 0.2 and project forward 
 
 You should see that the SB/SBF=0 now bounces around and is not perfectly flat.
 This is because the variability in the stock productivity is affecting the abundance.
-As the HCR uses the estimate of SB/SBF=0 to set the catch limit, it means that the catch limit set by the HCR also bounces around. This then goes onto affect the stock and so on.
+In some years the stock is more productive than it is in other years. This causes fluctuations in the population abundance.
+As the HCR uses the estimate of SB/SBF=0 to set the catch limit, it means that the catch limit set by the HCR also bounces around. This then goes onto affect the stock abundance and so on.
 
 If you press the **Reset** button and run the projection again you should see that you get a different trajectory (uncertainty in action!).
 

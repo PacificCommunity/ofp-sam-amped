@@ -9,15 +9,16 @@ output:
     includes:
       in_header: mystyle.sty
     latex_engine: xelatex
+mainfont: Arial
 fontsize: 12pt
 ---
 
 <!--use render()-->
-<!-- render("tutorials/measuringPerformance.Rmd", output_format = "all")-->
+<!-- render("tutorials/comparingPerformance.Rmd", output_format = "all")-->
 
 # Introduction
 
-In the previous tutorial (*Introduction to Uncertainty and Performance Indicators*) we looked at the performance of HCRs by running a large number of individual projections. 
+In the previous tutorial (*Introduction to Performance Indicators*) we looked at the performance of HCRs by running a large number of individual projections. 
 We included two sources of uncertainty (*biological productivity variability* and *estimation error*) and began to look at how to compare the performance of different HCRs using Performance Indicators (PIs).
 The more iterations (number of projections) we had, the better the estimate of uncertainty in the PIs.
 
