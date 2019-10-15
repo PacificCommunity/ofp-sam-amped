@@ -182,7 +182,7 @@ CPUE 0.83 (0.72, 0.95)
 Now try a different HCR.
 Set these parameters: *Blim* = 0.2, *Belbow* = 0.3, *Cmin* = 10 and *Cmax* = 130 in the panel on the left.
 Keep the same uncertainty settings.
-Run 50 iterations of this HCR by pressing the **Run projection** button 50 times and note down the range and average values of SB/SBF=0, catch and CPUE.
+Run 30 iterations of this HCR by pressing the **Run projection** button 30 times and note down the range and average values of SB/SBF=0, catch and CPUE.
 
 <!--
 SB/SBF=0  0.27 (0.22, 0.29)
@@ -347,6 +347,40 @@ Medium-term&&&\\
 Long-term&&&\\ \hline
 \end{tabular}
 \end{table}
+
+<!--
+HCR1 short-term
+Catch 110 (93, 130)
+Catch stability 0.72 (0.63, 0.80)
+Prob. SB>LRP 1
+
+HCR1 long-term
+Catch 96 (81, 110)
+Catch stability 0.8 (0.72, 0.85)
+Prob. SB>LRP 1
+
+HCR2 short-term
+Catch 130 (120, 130)
+Catch stability 0.92 (0.83, 0.92)
+Prob. SB>LRP 1.0
+
+HCR2 long-term
+Catch 73 (58, 87)
+Catch stability 0.45 (0.35, 0.66)
+Prob. SB>LRP 0.96
+
+HCR3 short-term
+Catch 99 (92, 100)
+Catch stability 0.89 (0.83, 0.92)
+Prob. SB>LRP 1
+
+HCR3 long-term
+Catch 100 (89, 110)
+Catch stability 0.87 (0.83, 0.91)
+Prob. SB>LRP 1
+
+-->
+
 
 ## Questions
 
