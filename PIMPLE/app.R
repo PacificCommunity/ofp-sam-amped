@@ -12,7 +12,8 @@ library(AMPLE)
 
 # Load the data
 #load("data/preSC15_results.Rdata")
-load("data/preKiribati_results.Rdata")
+#load("data/preKiribati_results.Rdata")
+load("data/pimple_wez_results.Rdata")
 
 #------------------------------------------------------------------------------------------------------
 # Can we move all this down to the server side?
