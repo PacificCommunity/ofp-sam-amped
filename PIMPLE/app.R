@@ -34,6 +34,27 @@ periodqs <- subset(periodqs, pi != "mw")
 yearqs <- subset(yearqs, pi != "mw")
 worms <- subset(worms, pi != "mw")
 
+# Rename some indicators
+# Catch to Relative catch
+oldpi3name <- "PI 3: Catch"
+newpi3name <- "PI 3: Catch (rel. to 2013-2015)"
+periodqs[periodqs$piname == oldpi3name, "piname"] <- newpi3name
+yearqs[yearqs$piname == oldpi3name, "piname"] <- newpi3name
+worms[worms$piname == oldpi3name, "piname"] <- newpi3name
+# Relative CPUE
+oldpi4name <- "PI 4: Relative CPUE"
+newpi4name <- "PI 4: CPUE (rel. to 2010)"
+periodqs[periodqs$piname == oldpi4name, "piname"] <- newpi4name
+yearqs[yearqs$piname == oldpi4name, "piname"] <- newpi4name
+worms[worms$piname == oldpi4name, "piname"] <- newpi4name
+# Relative effort to effort
+oldpi7name <- "PI 7: Relative effort stability"
+newpi7name <- "PI 7: Effort stability"
+periodqs[periodqs$piname == oldpi7name, "piname"] <- newpi7name
+yearqs[yearqs$piname == oldpi7name, "piname"] <- newpi7name
+worms[worms$piname == oldpi7name, "piname"] <- newpi7name
+
+
 #------------------------------------------------------------------------------------------------------
 # Can we move all this down to the server side?
 # Data processing
@@ -92,8 +113,8 @@ ui <- fluidPage(id="top",
       ),
       # Catch choice - only in the catch and catch stability PI tabs
       conditionalPanel(condition="(input.nvp== 'compareMPs' || input.pitab == 'pi3' || input.pitab == 'pi6')",
-        selectInput(inputId = "catchsetchoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="total"),
-        selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
+        selectInput(inputId = "catchsetchoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="total")
+        #selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
       )
     ),
     mainPanel(width=main_panel_width,
@@ -216,7 +237,8 @@ ui <- fluidPage(id="top",
               )),
               column(6, fluidRow(
                 plotOutput("plot_box_catch")
-              ))
+              )),
+              p("Note that the catches are relative to the average catch in the years 2013-2015.")
             ),
             # *** PI 4: Relative CPUE***
             tabPanel("PI 4: Relative CPUE",value="pi4",
@@ -228,42 +250,44 @@ ui <- fluidPage(id="top",
               )),
               column(6, fluidRow(
                 plotOutput("plot_box_relcpue")
-              ))
+              )),
+              p("Note that the CPUE only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative CPUE is the CPUE relative to that in 2010.")
             ),
             # *** PI 6: Catch stability ***
             tabPanel("PI 6: Catch stability",value="pi6",
               column(6, fluidRow(
-                plotOutput("plot_bar_catchvar"),
-                plotOutput("plot_bar_catchstab")
+                plotOutput("plot_bar_catchstab"),
+                plotOutput("plot_bar_catchvar")
               )),
               column(6, fluidRow(
-                plotOutput("plot_box_catchvar"),
-                plotOutput("plot_box_catchstab")
+                plotOutput("plot_box_catchstab"),
+                plotOutput("plot_box_catchvar")
               ))
             ),
             # *** PI 7: Relative effort variability***
-            tabPanel("PI 7: Relative effort variability",value="pi7",
+            tabPanel("PI 7: Effort stability",value="pi7",
               column(6, fluidRow(
-                plotOutput("plot_bar_pi7var"),
-                plotOutput("plot_bar_pi7stab")
+                plotOutput("plot_bar_pi7stab"),
+                plotOutput("plot_bar_pi7var")
               )),
               column(6, fluidRow(
-                plotOutput("plot_box_pi7var"),
-                plotOutput("plot_box_pi7stab")
-              ))
-            ),
-            # *** Mean weight individual ***
-            tabPanel("Mean weight of individual",value="mw",
-              column(12, fluidRow(
-                plotOutput("plot_ts_mw")
+                plotOutput("plot_box_pi7stab"),
+                plotOutput("plot_box_pi7var")
               )),
-              column(6, fluidRow(
-                plotOutput("plot_bar_mw")
-              )),
-              column(6, fluidRow(
-                plotOutput("plot_box_mw")
-              ))
+              p("Note that the effort only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative effort is the effort relative to that in 2010.")
             )
+            # *** Mean weight individual ***
+            #tabPanel("Mean weight of individual",value="mw",
+            #  column(12, fluidRow(
+            #    plotOutput("plot_ts_mw")
+            #  )),
+            #  column(6, fluidRow(
+            #    plotOutput("plot_bar_mw")
+            #  )),
+            #  column(6, fluidRow(
+            #    plotOutput("plot_box_mw")
+            #  ))
+            #)
           )
         ),
         ## The HCRs
@@ -284,250 +308,6 @@ ui <- fluidPage(id="top",
 )
 
 
-# UI
-# navbarPage just needs tabPanel
-# Problem is you need to define sidePanel for each tabPanel - so the HCR / PI selector do not tranfer over
-# So do it as a fluidPage and set up a tabesetPanel inside the main panel
-#ui <- fluidPage(id="top",
-#titlePanel("Performance Indicators and Management Procedures Explorer"),
-#ui <- navbarPage(id="top",
-#  collapsible=TRUE,  # Should help if using small screens like tablets
-#  windowTitle="PIMPLE",
-#  position="fixed-top",
-#
-#  tags$style(type="text/css", "body {padding-top: 70px;}"), # padding
-#
-#  #tags$head(includeHTML("google-analytics.html")),
-#  title="Performance Indicators and Management Procedures Explorer",
-#  #---------- Introduction panel -------------------
-#  tabPanel(title="Introduction", value="intro",
-#    sidebarLayout(
-#      sidebarPanel(width=side_panel_width,
-#        br(),
-#        img(src = "spc.png", height = 100),
-#        br()
-#        ),
-#      mainPanel(width=main_panel_width,
-#        h1("PIMPLE"),
-#        p("PIMPLE is a tool for exploring and comparing the performance of alternative candidate harvest control rules (HCRs).
-#        The performance can be explored using a range of different plots and tables.
-#        This allows trade-offs between the different HCRs to be evaluated.
-#        The performance of each HCR is measured using different performance indicators (PIs). More details of the PIs are given in the PIMPLE user guide."), 
-#        br(),
-#        h2("The Indicators"),
-#        br(),
-#        h3("SB/SBF=0"),
-#        p("The depletion of the stock, i.e. the ratio of the current adult biomass to the adult biomass in the absence of fishing. It is comparable to the Limit Reference Point (0.2) and Target Reference Point (0.5, interim)."),
-#        br(),
-#        h3("Indicator 1. Maintain SKJ biomass at or above levels that provide fishery sustainability throughout their range"),
-#        p("This is calculated as the probability of the SB/SBF=0 being above the Limit Reference Point (0.2)"),
-#        br(),
-#        h3("Indicator 3. Maximise economic yield from the fishery (average expected catch)"),
-#        p("This indicator is based on the average expected catch. It is calculated either as the absolute level of expected catch, or relative the average catch level in 2013-15"),
-#        p("The catch is either the total catch in the whole region, or only the purse seine catch from stock assessment regions 2,3 and 5."),
-#        br(),
-#        h3("Indicator 4. Maintain acceptable CPUE"),
-#        p("This indicator is based on the average deviation of predicted skipjack CPUE from reference period levels.  It is calculated as the CPUE relative to the CPUE in a reference period.  Here the reference period is taken to be 2010."),
-#        br(),
-#        h3("Indicator 6. Catch stability"),
-#        p("This indicator is concerned with the average annual variation in catch. It is calculated over the whole region and for the combined purse seine fisheries in regions 2, 3 and 5. The indicator is calculated by taking the absolute annual difference of the catch for each simulation and in each year."),
-#        p("As well as the variability in the catch, the stability (the inverse of the variability) is calculated.  This involves rescaling the variability so that it is between 0 and 1. A stability of 1 implies that the catch does not change at all over time, i.e. it is completely stable. A stability of 0 means that the catch is very variable in time."),
-#        br(),
-#        h3("Indicator 7. Stability and continuity of market supply (effort variation relative to a reference period)"),
-#        p("This indicator is concerned with effort variation relative to the effort in a reference period, i.e. stability of the relative effort. Here the reference period is taken to be 2010. This indicator is calculated for the purse seine fisheries operating in regions 2, 3 and 5 excluding the associated purse seine fishery in region 5 which has a standardised effort index. The indicator is calculated in a similar way to performance indicator 6. The absolute annual difference of the effort relative to the base effort (in 2010) is calculated for each simulation in each year"), 
-#        p("As well as the variability, the stability is calculated. A stability of 1 implies that the relative effort does not change at all over time, i.e. it is completely stable. A stability of 0 means that the relative effort is very variable in time. In PIMPLE only the stability is shown."),
-#        br(),
-#        h3("Indicator 8. Stability and continuity of market supply"),
-#        p("This indicator is concerned with maintaining the stock size around the TRP levels (where the interim TRP for skipjack is SB/SBF=0 = 0.5).  It is assumed that the further away SB/SBF=0 is from 0.5, the worse the HCR can be thought to be performing, i.e. it is better to have SB/SB_F=0 close to 0.5 on average."),
-#        p("An indicator value of 1 implies that SB/SB_F=0 is exactly at the TRP and a value of 0 is as far from the TRP as possible. This means that you want this indicator to be close to 1. In PIMPLE only the stability is shown."),
-#        br(),
-#        h3("Mean weight of an individual in the population"),
-#        p("This indicator measures the mean weight of an individual in the population, not the catch. It is calulated by taking the total weight of individuals across the region and dividing it by the total number of individuals across the region. These kind of indicators are important because they can provide information on changes to the size structure of a population as a result of fishing and changes in environmental conditions."), 
-#        br(),
-#        h2("The Plots"),
-#        br(),
-#        h3("Bar plots"),
-#        p("The bar plots show the median values of each of the indicators, averaged over the three time periods."),
-#        h3("Box plots"),
-#        p("The bar plots show the distribution of values of each of the indicators, averaged over the three time periods.
-#           The box contains the 20-80 percentiles, the tails the 5-95 percentiles. The solid horizontal line is the median value."),
-#        h3("Time series plots"), 
-#        p("The ribbons show the 10-90 percentiles. The dashed line shows the median value.")
-#      )
-#    )
-#  ),
-#  #---------- Results panel -------------------
-#  tabPanel(title="Results", value="results",
-#    sidebarLayout(
-#      sidebarPanel(width=side_panel_width,
-#        br(),
-#        img(src = "spc.png", height = 100),
-#        br(),
-#        # Loads of conditionals about which selector menu shows up in each tab
-#        # HCR choice - shown in HCRs, compareMPs and explorePIs tabs
-#        conditionalPanel(condition="input.results == 'compareMPs' ||input.results == 'explorePIs' || input.results == 'hcrs'",
-#          checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
-#        ),
-#        # PI choice - only shown in the compare PIs tab
-#        conditionalPanel(condition="input.results== 'compareMPs'",
-#          checkboxGroupInput(inputId = "pichoice", label="PI selection",choices = piselector, selected=sort(unique(periodqs$piname)))
-#        ),
-#        # Show spaghetti on the time series plots - do not show on the HCR tab
-#        # Currently shown on all explorePIs tabs - even if no timeseries plot - is this OK?
-#        conditionalPanel(condition="input.results== 'explorePIs' || input.comptab == 'timeseries'",
-#          checkboxInput("showspag", "Show trajectories", value=FALSE) 
-#        ),
-#        # Catch choice - only in the catch and catch stability PI tabs
-#        conditionalPanel(condition="(input.results== 'compareMPs' || input.pitab == 'pi3' || input.pitab == 'pi6')",
-#          selectInput(inputId = "catchsetchoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="total"),
-#          selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
-#        )
-#      ),
-#      mainPanel(width=main_panel_width,
-#        # ------------------ Compare performance -----------------------
-#        tabsetPanel(id="results",
-#          tabPanel(title="Compare Performance", value="compareMPs",
-#            tabsetPanel(id="comptab",
-#              tabPanel("Bar charts", value="bar",
-#                plotOutput("plot_bar_comparehcr", height="600px")
-#              ),
-#              tabPanel("Box plots", value="box",
-#                plotOutput("plot_box_comparehcr", height="600px")
-#              ),
-#              tabPanel("Radar plots", value="radar",
-#                fluidRow(
-#                  selectInput(inputId = "radarscaling", label="Radar plot scaling", choices = list("Scale by max"="scale", "Rank"="rank"), selected="scale"),
-#                  tags$span(title="Note that only the indicators for which 'bigger is better' are shown in the radar plots.",
-#                    plotOutput("plot_radar_comparehcr", height="600px"))
-#                )
-#              ),
-#              tabPanel("Time series plots", value="timeseries",
-#                tags$span(title="Note that not all indicators have time series plots. The widths of the ribbons are the 10-90 percentiles. The dashed, black line is the median value.",
-#                  plotOutput("plot_timeseries_comparehcr") # height is variable
-#                )
-#              ),
-#              tabPanel("Table", value="bigtable",
-#                tags$span(title="Median indicator values. The values inside the parentheses are the 10-90 percentiles",
-#                  tableOutput("table_pis_short"),
-#                  tableOutput("table_pis_medium"),
-#                  tableOutput("table_pis_long")
-#                )
-#              )
-#            )
-#          ),
-#          # ------------------ Explore Indicators -----------------------
-#          tabPanel(title="Explore Indicators", value="explorePIs",
-#            tabsetPanel(id="pitab",
-#            # --- SBSBF0 and PI 1 & 8 ---
-#              tabPanel("PI 1 & 8: Biomass",value="pi1",
-#                column(12, fluidRow(
-#                  # TS of SBSBF0
-#                  plotOutput("plot_ts_sbsbf0")
-#                )),
-#                column(4, fluidRow(
-#                  # Bar plot of median SBSBF0
-#                  plotOutput("plot_bar_sbsbf0"),
-#                  # Bar of PI 8
-#                  plotOutput("plot_bar_pi8")
-#                )),
-#                column(4, fluidRow(
-#                  # Box of SBSBF0
-#                  plotOutput("plot_box_sbsbf0"),
-#                  # Box of PI 8
-#                  plotOutput("plot_box_pi8")
-#                )),
-#                column(4, fluidRow(
-#                  # Bar plot of prob
-#                  plotOutput("plot_bar_problrp")
-#                ))
-#              ),
-#              # *** PI 3: Catch based ones ***
-#              tabPanel("PI 3: Catches",value="pi3",
-#                column(12, fluidRow(
-#                  plotOutput("plot_ts_catch")
-#                )),
-#                column(6, fluidRow(
-#                  plotOutput("plot_bar_catch")
-#                )),
-#                column(6, fluidRow(
-#                  plotOutput("plot_box_catch")
-#                ))
-#              ),
-#              # *** PI 4: Relative CPUE***
-#              tabPanel("PI 4: Relative CPUE",value="pi4",
-#                column(12, fluidRow(
-#                  plotOutput("plot_ts_relcpue")
-#                )),
-#                column(6, fluidRow(
-#                  plotOutput("plot_bar_relcpue")
-#                )),
-#                column(6, fluidRow(
-#                  plotOutput("plot_box_relcpue")
-#                ))
-#              ),
-#              # *** PI 6: Catch stability ***
-#              tabPanel("PI 6: Catch stability",value="pi6",
-#                column(6, fluidRow(
-#                  plotOutput("plot_bar_catchvar"),
-#                  plotOutput("plot_bar_catchstab")
-#                )),
-#                column(6, fluidRow(
-#                  plotOutput("plot_box_catchvar"),
-#                  plotOutput("plot_box_catchstab")
-#                ))
-#              ),
-#              # *** PI 7: Relative effort variability***
-#              tabPanel("PI 7: Relative effort variability",value="pi7",
-#                column(6, fluidRow(
-#                  plotOutput("plot_bar_pi7var"),
-#                  plotOutput("plot_bar_pi7stab")
-#                )),
-#                column(6, fluidRow(
-#                  plotOutput("plot_box_pi7var"),
-#                  plotOutput("plot_box_pi7stab")
-#                ))
-#              ),
-#              # *** Mean weight individual ***
-#              tabPanel("Mean weight of individual",value="mw",
-#                column(12, fluidRow(
-#                  plotOutput("plot_ts_mw")
-#                )),
-#                column(6, fluidRow(
-#                  plotOutput("plot_bar_mw")
-#                )),
-#                column(6, fluidRow(
-#                  plotOutput("plot_box_mw")
-#                ))
-#              )
-#            )
-#          ),
-#        # ------------------ HCRs -----------------------
-#          tabPanel(title="HCRs", value="hcrs",
-#            column(12, fluidRow(
-#              tags$span(title="Shape of the HCRs under consideration",
-#                plotOutput("plot_hcrshape", height="600px")),
-#              tags$span(title="Histograms of which parts of the HCRs were active during the evaluations",
-#                plotOutput("plot_hcrhistograms")))
-#            )
-#          )
-#        )
-#      )
-#    )
-#  ),
-#      # ------------------ About -----------------------
-#  tabPanel(title="About", value="about",
-#    sidebarLayout(
-#      sidebarPanel(width=side_panel_width,
-#        br(),
-#        img(src = "spc.png", height = 100),
-#        br()
-#        ),
-#      mainPanel(width=main_panel_width,
-#        spc_about()
-#      )
-#    )
-#  )
-#)
 
 # Server function
 server <- function(input, output, session) {
@@ -661,7 +441,8 @@ server <- function(input, output, session) {
     # Choose the aggregation (set: total area or PS235 - maybe by area too?)
     catch_set_choice <- input$catchsetchoice
     # Choose if relative to year X
-    catch_rel_choice <- input$catchrelchoice # or relative catch
+    #catch_rel_choice <- input$catchrelchoice # or relative catch
+    catch_rel_choice <- "relative catch"
     dat <- subset(yearqs, pi=="pi3" & set==catch_set_choice & metric == catch_rel_choice) 
     # Add Option for worms
     wormdat <- subset(worms, pi=="pi3" & set==catch_set_choice & metric == catch_rel_choice & iter %in% wormiters) 
@@ -685,7 +466,8 @@ server <- function(input, output, session) {
       # Choose the aggregation (set: total area or PS235 - maybe by area too?)
       catch_set_choice <- input$catchsetchoice
       # Choose if relative to year X
-      catch_rel_choice <- input$catchrelchoice # or relative catch
+      #catch_rel_choice <- input$catchrelchoice # or relative catch
+      catch_rel_choice <- "relative catch"
       dat <- subset(periodqs, period != "Rest" & pi=="pi3" & set==catch_set_choice & metric == catch_rel_choice) 
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylab("PI 3: Catch") + ggplot2::ylim(c(0,NA))
@@ -782,10 +564,10 @@ server <- function(input, output, session) {
     return(rPlot)
   }
 
-  output$plot_bar_pi7var <- plot_barbox_pi7varstab(plot_type="median_bar", metric_choice="relative effort variability", ylab="PI 7: Relative effort variability", ylim=c(0,NA))
-  output$plot_box_pi7var <- plot_barbox_pi7varstab(plot_type="box", metric_choice="relative effort variability", ylab="PI 7: Relative variability", ylim=c(0,NA))
-  output$plot_bar_pi7stab <- plot_barbox_pi7varstab(plot_type="median_bar", metric_choice="relative effort stability", ylab="PI 7: Relative stability", ylim=c(0,1))
-  output$plot_box_pi7stab <- plot_barbox_pi7varstab(plot_type="box", metric_choice="relative effort stability", ylab="PI 7: Relative effort stability", ylim=c(0,1))
+  output$plot_bar_pi7var <- plot_barbox_pi7varstab(plot_type="median_bar", metric_choice="relative effort variability", ylab="PI 7: Variability of relative effort", ylim=c(0,NA))
+  output$plot_box_pi7var <- plot_barbox_pi7varstab(plot_type="box", metric_choice="relative effort variability", ylab="PI 7: Variability of relative effort", ylim=c(0,NA))
+  output$plot_bar_pi7stab <- plot_barbox_pi7varstab(plot_type="median_bar", metric_choice="relative effort stability", ylab="PI 7: Stability", ylim=c(0,1))
+  output$plot_box_pi7stab <- plot_barbox_pi7varstab(plot_type="box", metric_choice="relative effort stability", ylab="PI 7: Stability", ylim=c(0,1))
 
 
 
@@ -858,7 +640,8 @@ server <- function(input, output, session) {
         return()
       }
       set_choices <- c(input$catchsetchoice, as.character(NA))
-      metric_choices <- c(input$catchrelchoice,"mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+      #metric_choices <- c(input$catchrelchoice,"mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+      metric_choices <- c("relative catch", "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
       area_choices <- c("all", as.character(NA))
       dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
       # Need to hack pi1 so that all quantiles = X50., else NA
@@ -882,7 +665,8 @@ server <- function(input, output, session) {
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
     set_choices <- c(input$catchsetchoice, as.character(NA))
-    metric_choices <- c(input$catchrelchoice,"mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #metric_choices <- c(input$catchrelchoice,"mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    metric_choices <- c("relative catch", "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
     area_choices <- c("all", as.character(NA))
     # We have 8 PIs - but not all are appropriate for a radar plot as bigger is not better.
     # Drop SB/SBF=0 and Size based one 
@@ -909,7 +693,8 @@ server <- function(input, output, session) {
     pi_choices <- pi_choices[pi_choices %in% pinames_ts]
 
     set_choices <- c(input$catchsetchoice, as.character(NA))
-    metric_choices <- c(input$catchrelchoice,"mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #metric_choices <- c(input$catchrelchoice,"mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    metric_choices <- c("relative catch","mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
     area_choices <- c("all", as.character(NA))
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
@@ -952,7 +737,8 @@ server <- function(input, output, session) {
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
     set_choices <- c(input$catchsetchoice, as.character(NA))
-    metric_choices <- c(input$catchrelchoice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #metric_choices <- c(input$catchrelchoice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    metric_choices <- c("relative catch", "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
     area_choices <- c("all", as.character(NA))
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
