@@ -28,6 +28,12 @@ periodqs <- subset(periodqs, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30
 worms <- subset(worms, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%")))
 yearqs <- subset(yearqs, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%")))
 
+# Drop MWI indicator
+# Add back in if we get mean weight in the catch
+periodqs <- subset(periodqs, pi != "mw")
+yearqs <- subset(yearqs, pi != "mw")
+worms <- subset(worms, pi != "mw")
+
 #------------------------------------------------------------------------------------------------------
 # Can we move all this down to the server side?
 # Data processing
@@ -260,6 +266,15 @@ ui <- fluidPage(id="top",
             )
           )
         ),
+        ## The HCRs
+        #tabPanel(title="HCRs", value="hcrs",
+        #  column(12, fluidRow(
+        #    tags$span(title="Shape of the HCRs under consideration",
+        #      plotOutput("plot_hcrshape", height="600px")),
+        #    tags$span(title="Histograms of which parts of the HCRs were active during the evaluations",
+        #      plotOutput("plot_hcrhistograms")))
+        #  )
+        #),
         tabPanel("About", value="about",
           spc_about()
         )
