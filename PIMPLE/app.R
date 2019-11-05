@@ -88,6 +88,17 @@ worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
 main_panel_width <- 10
 side_panel_width <- 12 - main_panel_width 
 
+# When is short, medium and long-term?
+
+short <- range(subset(yearqs, period=="Short")$year)
+shorttext <- paste(short, collapse="-")
+medium <- range(subset(yearqs, period=="Medium")$year)
+mediumtext <- paste(medium, collapse="-")
+long <- range(subset(yearqs, period=="Long")$year)
+longtext <- paste(long, collapse="-")
+yearrangetext <- paste("Note that short-term is: ", shorttext, ", medium-term is: ", mediumtext, " and long-term is: ", longtext,".",sep="")
+
+
 #------------------------------------------------------------------------------------------------------
 
 # Navbarpage insidea fluidpage?
@@ -176,16 +187,19 @@ ui <- fluidPage(id="top",
         tabPanel("Compare performance", value="compareMPs",
           tabsetPanel(id="comptab",
             tabPanel("Bar charts", value="bar",
-              plotOutput("plot_bar_comparehcr", height="600px")
+              plotOutput("plot_bar_comparehcr", height="600px"),
+              p(yearrangetext)
             ),
             tabPanel("Box plots", value="box",
-              plotOutput("plot_box_comparehcr", height="600px")
+              plotOutput("plot_box_comparehcr", height="600px"),
+              p(yearrangetext)
             ),
             tabPanel("Radar plots", value="radar",
               fluidRow(
-                selectInput(inputId = "radarscaling", label="Radar plot scaling", choices = list("Scale by max"="scale", "Rank"="rank"), selected="scale"),
+                #selectInput(inputId = "radarscaling", label="Radar plot scaling", choices = list("Scale by max"="scale", "Rank"="rank"), selected="scale"),
                 tags$span(title="Note that only the indicators for which 'bigger is better' are shown in the radar plots.",
-                  plotOutput("plot_radar_comparehcr", height="600px"))
+                  plotOutput("plot_radar_comparehcr", height="600px")),
+                p(yearrangetext)
               )
             ),
             tabPanel("Time series plots", value="timeseries",
@@ -197,7 +211,8 @@ ui <- fluidPage(id="top",
               tags$span(title="Median indicator values. The values inside the parentheses are the 10-90 percentiles",
                 tableOutput("table_pis_short"),
                 tableOutput("table_pis_medium"),
-                tableOutput("table_pis_long")
+                tableOutput("table_pis_long"),
+                p(yearrangetext)
               )
             )
           )
@@ -225,6 +240,9 @@ ui <- fluidPage(id="top",
               column(4, fluidRow(
                 # Bar plot of prob
                 plotOutput("plot_bar_problrp")
+              )),
+              column(12, fluidRow(
+                p(yearrangetext)
               ))
             ),
             # *** PI 3: Catch based ones ***
@@ -238,7 +256,8 @@ ui <- fluidPage(id="top",
               column(6, fluidRow(
                 plotOutput("plot_box_catch")
               )),
-              p("Note that the catches are relative to the average catch in the years 2013-2015.")
+              p("Note that the catches are relative to the average catch in the years 2013-2015."),
+              p(yearrangetext)
             ),
             # *** PI 4: Relative CPUE***
             tabPanel("PI 4: Relative CPUE",value="pi4",
@@ -251,7 +270,8 @@ ui <- fluidPage(id="top",
               column(6, fluidRow(
                 plotOutput("plot_box_relcpue")
               )),
-              p("Note that the CPUE only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative CPUE is the CPUE relative to that in 2010.")
+              p("Note that the CPUE only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative CPUE is the CPUE relative to that in 2010."),
+              p(yearrangetext)
             ),
             # *** PI 6: Catch stability ***
             tabPanel("PI 6: Catch stability",value="pi6",
@@ -262,7 +282,8 @@ ui <- fluidPage(id="top",
               column(6, fluidRow(
                 plotOutput("plot_box_catchstab"),
                 plotOutput("plot_box_catchvar")
-              ))
+              )),
+              p(yearrangetext)
             ),
             # *** PI 7: Relative effort variability***
             tabPanel("PI 7: Effort stability",value="pi7",
@@ -274,7 +295,8 @@ ui <- fluidPage(id="top",
                 plotOutput("plot_box_pi7stab"),
                 plotOutput("plot_box_pi7var")
               )),
-              p("Note that the effort only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative effort is the effort relative to that in 2010.")
+              p("Note that the effort only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative effort is the effort relative to that in 2010."),
+              p(yearrangetext)
             )
             # *** Mean weight individual ***
             #tabPanel("Mean weight of individual",value="mw",
@@ -618,6 +640,7 @@ server <- function(input, output, session) {
   #-------------------------------------------------------------------
   # Comparison plots
 
+  # Bar or box plot - facetting on PI
   plot_barbox_comparehcr <- function(plot_type="median_bar"){
     rPlot <- renderPlot({
       # It gets complicated because each PI has suboption in area, set, metric columns
@@ -676,14 +699,16 @@ server <- function(input, output, session) {
       return()
     }
     dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
-    scaling_choice <- input$radarscaling
+    #scaling_choice <- input$radarscaling
+    scaling_choice <- "scale"
     p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
     return(p)
   })
 
   # Time series comparisons
   height_per_pi <- 300
-  pinames_ts <- c("PI 1: Prob. above LRP", "SB/SBF=0", "PI 3: Catch","PI 4: Relative CPUE", "PI 8: Proximity to TRP", "Mean weight of individual")
+  #pinames_ts <- c("PI 1: Prob. above LRP", "SB/SBF=0", "PI 3: Catch","PI 4: Relative CPUE", "PI 8: Proximity to TRP", "Mean weight of individual")
+  pinames_ts <- c("SB/SBF=0", newpi3name, newpi4name, "PI 8: Proximity to TRP")
   output$plot_timeseries_comparehcr <- renderPlot({
     show_spaghetti <- input$showspag
     hcr_choices <- input$hcrchoice
