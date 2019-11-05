@@ -672,6 +672,12 @@ server <- function(input, output, session) {
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylim(0,NA)
       p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
+      # Add LRP and TRP lines
+      # Only if SB/SBF=0 is in dat
+      if ("SB/SBF=0" %in% pi_choices){
+        p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+        p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+      }
       return(p)
     })
     return(rPlot)
@@ -733,6 +739,11 @@ server <- function(input, output, session) {
     # Axes limits set here or have tight?
     p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
     p <- p + ggplot2::ylab("Value")
+    # Add LRP and TRP if SB/SBF=0 is plotted
+    if ("SB/SBF=0" %in% pi_choices){
+      p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+      p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+    }
     return(p)
   }, height=function(){max(height_per_pi*1.5, (height_per_pi * length(input$pichoice[input$pichoice %in% pinames_ts])))})
 
