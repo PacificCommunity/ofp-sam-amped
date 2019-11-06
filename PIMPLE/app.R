@@ -34,6 +34,10 @@ periodqs <- subset(periodqs, pi != "mw")
 yearqs <- subset(yearqs, pi != "mw")
 worms <- subset(worms, pi != "mw")
 
+# Set area NA to area 0 (for subsetting)
+#periodqs[is.na(periodqs$area),"area"] <- as.factor("0")
+
+
 # Rename some indicators
 # Catch to Relative catch
 oldpi3name <- "PI 3: Catch"
@@ -124,7 +128,8 @@ ui <- fluidPage(id="top",
       ),
       # Catch choice - only in the catch and catch stability PI tabs
       conditionalPanel(condition="(input.nvp== 'compareMPs' || input.pitab == 'pi3' || input.pitab == 'pi6')",
-        selectInput(inputId = "catchsetchoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="total")
+        #selectInput(inputId = "catchsetchoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="total")
+        selectInput(inputId = "catchareachoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235", "Area 1"="1", "Area 2"="2", "Area 3"="3", "Area 4"="4", "Area 5"="5"), selected="total")
         #selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
       )
     ),
@@ -460,14 +465,16 @@ server <- function(input, output, session) {
     if(length(hcr_choices) < 1){
       return()
     }
-    # Choose the aggregation (set: total area or PS235 - maybe by area too?)
-    catch_set_choice <- input$catchsetchoice
+
+
+    #browser()
+
+    catch_area_choice <- input$catchareachoice
     # Choose if relative to year X
     #catch_rel_choice <- input$catchrelchoice # or relative catch
     catch_rel_choice <- "relative catch"
-    dat <- subset(yearqs, pi=="pi3" & set==catch_set_choice & metric == catch_rel_choice) 
-    # Add Option for worms
-    wormdat <- subset(worms, pi=="pi3" & set==catch_set_choice & metric == catch_rel_choice & iter %in% wormiters) 
+    dat <- subset(yearqs, pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice) 
+    wormdat <- subset(worms, pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice & iter %in% wormiters) 
     # Else wormdat <- NULL
     p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
     p <- p + ggplot2::ylab("Catch")
@@ -486,11 +493,11 @@ server <- function(input, output, session) {
         return()
       }
       # Choose the aggregation (set: total area or PS235 - maybe by area too?)
-      catch_set_choice <- input$catchsetchoice
+      catch_area_choice <- input$catchareachoice
       # Choose if relative to year X
       #catch_rel_choice <- input$catchrelchoice # or relative catch
       catch_rel_choice <- "relative catch"
-      dat <- subset(periodqs, period != "Rest" & pi=="pi3" & set==catch_set_choice & metric == catch_rel_choice) 
+      dat <- subset(periodqs, period != "Rest" & pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice) 
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylab("PI 3: Catch") + ggplot2::ylim(c(0,NA))
       return(p)
@@ -509,10 +516,6 @@ server <- function(input, output, session) {
     if(length(hcr_choices) < 1){
       return()
     }
-    # Choose the aggregation (set: total area or PS235 - maybe by area too?)
-    #catch_set_choice <- input$catchsetchoice
-    # Choose if relative to year X
-    #catch_rel_choice <- input$catchrelchoice # or relative catch
     dat <- subset(yearqs, pi=="pi4") 
     # Add Option for worms
     wormdat <- subset(worms, pi=="pi4" & iter %in% wormiters) 
@@ -553,9 +556,9 @@ server <- function(input, output, session) {
         return()
       }
       # Choose the aggregation (set: total area or PS235 - maybe by area too?)
-      catch_set_choice <- input$catchsetchoice
+      catch_area_choice <- input$catchareachoice
       # Choose if relative to year X
-      dat <- subset(periodqs, period != "Rest" & pi=="pi6" & set==catch_set_choice & metric==metric_choice) 
+      dat <- subset(periodqs, period != "Rest" & pi=="pi6" & area==catch_area_choice & metric==metric_choice) 
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylab(ylab) + ggplot2::ylim(ylim)
       return(p)
@@ -643,30 +646,31 @@ server <- function(input, output, session) {
   # Bar or box plot - facetting on PI
   plot_barbox_comparehcr <- function(plot_type="median_bar"){
     rPlot <- renderPlot({
-      # It gets complicated because each PI has suboption in area, set, metric columns
+      # It gets complicated because each PI has suboption in area, metric columns
       # biomass: area == all and metric == SBSBF0
       # pi1: area == all
-      # pi3: area == NA and set == catchsetchoice and metric == catchrelchoice (if set != area)
+      # pi3: area == catchareachoice and metric == catchrelchoice
       # pi4: metric == relative_cpue
-      # pi6: area == NA and set == catchsetchoice and metric == stability or variability - just stab (if set != area)
+      # pi6: area == catchareachoice and metric == stability or variability - just stab
       # pi7: metric == stability or variability - just stab
       # pi8: area == all
       # mw: mean_weight
 
       # Put these together
-      # area is all or NA
-      # set is catchsetchoice or NA
+      # area is catchareachoice
       # metric is catchrelchoice, stability, or NA
       hcr_choices <- input$hcrchoice
       pi_choices <- input$pichoice
       if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
         return()
       }
-      set_choices <- c(input$catchsetchoice, as.character(NA))
-      #metric_choices <- c(input$catchrelchoice,"mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-      metric_choices <- c("relative catch", "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-      area_choices <- c("all", as.character(NA))
-      dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+      catch_area_choice <- input$catchareachoice
+      other_area_choice <- c(as.character(NA), "all")
+      catch_rel_choice <- "relative catch"
+      metric_choices <- c(catch_rel_choice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+      # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+      dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
+      #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
       # Need to hack pi1 so that all quantiles = X50., else NA
       dat[dat$pi=="pi1",c("X5.", "X20.", "X80.", "X95.")] <- dat[dat$pi=="pi1","X50."]
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
@@ -693,10 +697,13 @@ server <- function(input, output, session) {
     # Subsetting out as above
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
-    set_choices <- c(input$catchsetchoice, as.character(NA))
+    #set_choices <- c(input$catchsetchoice, as.character(NA))
     #metric_choices <- c(input$catchrelchoice,"mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    metric_choices <- c("relative catch", "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    area_choices <- c("all", as.character(NA))
+    #area_choices <- c("all", as.character(NA))
+    catch_area_choice <- input$catchareachoice
+    other_area_choice <- c(as.character(NA), "all")
+    catch_rel_choice <- "relative catch"
+    metric_choices <- c(catch_rel_choice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
     # We have 8 PIs - but not all are appropriate for a radar plot as bigger is not better.
     # Drop SB/SBF=0 and Size based one 
     not_radar_pinames <- c("SB/SBF=0", "Mean weight of individual")
@@ -704,7 +711,11 @@ server <- function(input, output, session) {
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
     }
-    dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+    #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+
+    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+    dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
+
     #scaling_choice <- input$radarscaling
     scaling_choice <- "scale"
     p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
@@ -723,15 +734,24 @@ server <- function(input, output, session) {
     pi_choices <- input$pichoice
     pi_choices <- pi_choices[pi_choices %in% pinames_ts]
 
-    set_choices <- c(input$catchsetchoice, as.character(NA))
+    #set_choices <- c(input$catchsetchoice, as.character(NA))
     #metric_choices <- c(input$catchrelchoice,"mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    metric_choices <- c("relative catch","mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    area_choices <- c("all", as.character(NA))
+    #metric_choices <- c("relative catch","mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #area_choices <- c("all", as.character(NA))
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
     }
-    dat <- subset(yearqs, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
-    wormdat <- subset(worms, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices & iter %in% wormiters)
+
+    catch_area_choice <- input$catchareachoice
+    other_area_choice <- c(as.character(NA), "all")
+    catch_rel_choice <- "relative catch"
+    metric_choices <- c(catch_rel_choice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+    dat <- subset(yearqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
+    wormdat <- subset(worms, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices & iter %in% wormiters)
+
+    #dat <- subset(yearqs, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+    #wormdat <- subset(worms, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices & iter %in% wormiters)
 
     p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
     #p <- p + ylab("Catch")
@@ -772,14 +792,21 @@ server <- function(input, output, session) {
   get_pi_table <- function(period_choice="Short"){
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
-    set_choices <- c(input$catchsetchoice, as.character(NA))
+    #set_choices <- c(input$catchsetchoice, as.character(NA))
     #metric_choices <- c(input$catchrelchoice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    metric_choices <- c("relative catch", "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    area_choices <- c("all", as.character(NA))
+    #metric_choices <- c("relative catch", "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #area_choices <- c("all", as.character(NA))
+    catch_area_choice <- input$catchareachoice
+    other_area_choice <- c(as.character(NA), "all")
+    catch_rel_choice <- "relative catch"
+    metric_choices <- c(catch_rel_choice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
     }
-    dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+    #dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+    dat <- subset(periodqs, hcrref %in% hcr_choices & ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == period_choice & piname %in% pi_choices & metric %in% metric_choices)
     tabdat <- pitable(dat, percentile_range = pi_percentiles)
     return(tabdat)
   }
