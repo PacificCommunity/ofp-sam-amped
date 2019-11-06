@@ -19,6 +19,31 @@ load("data/preWCPFC2019_results.Rdata")
 
 # Overwrite colour palette from AMPLE - fuck - how to overwrite?
 #source("~/Work/NZ_project/ofp-sam-amped/AMPLE/R/plots.R")
+  # Can I do this?
+new_get_hcr_colours <- function(hcr_names, chosen_hcr_names){
+  # Looks OK
+  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdYlBu"))(length(hcr_names))
+  #  Wes Anderson palette - use Steve Zissou
+  #allcols <- wesanderson::wes_palette("Zissou1", length(hcr_names), type = "continuous")
+  #allcols <- wesanderson::wes_palette("Royal1", length(hcr_names), type = "continuous")
+  #allcols <- wesanderson::wes_palette("Darjeeling2", length(hcr_names), type = "continuous")
+  allcols <- wesanderson::wes_palette("BottleRocket2", length(hcr_names), type = "continuous")
+  # See these notes:
+  #type: Either "continuous" or "discrete". Use continuous if you want
+  #      to automatically interpolate between colours. @importFrom
+  #      graphics rgb rect par image text
+  names(allcols) <- hcr_names
+  hcrcols <- allcols[chosen_hcr_names]
+  return(hcrcols)
+}
+
+# Then need to add this to every plot
+#  hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+#  p <- p + scale_fill_manual(values=hcrcols)
+#  p <- p + scale_colour_manual(values=hcrcols)
+
+
+
 
 
 # HACK drop SQ HCRs
@@ -105,11 +130,12 @@ medium <- range(subset(yearqs, period=="Medium")$year)
 mediumtext <- paste(medium, collapse="-")
 long <- range(subset(yearqs, period=="Long")$year)
 longtext <- paste(long, collapse="-")
+
 yearrangetext <- paste("Short-term is: ", shorttext, ", medium-term is: ", mediumtext, " and long-term is: ", longtext,".",sep="")
 pi47text <- "Note that PIs 4 and 7 are for the purse seines in model areas 2, 3 and 5 only (excluding the associated purse seines in area 5.)"
 pi36text <- "The grouping for PIs 3 and 6 is given by the drop down menu on the left."
 biotext <- "PIs 1, 8 and SB/SBF=0 are calculated over all model areas."
-
+relcatchtext <- "Note that the catches are relative to the average catch in the years 2013-2015."
 
 #------------------------------------------------------------------------------------------------------
 
@@ -163,8 +189,6 @@ ui <- fluidPage(id="top",
       conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi62'))",
         radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
       )
-
-
 
     ),
     mainPanel(width=main_panel_width,
@@ -351,7 +375,7 @@ ui <- fluidPage(id="top",
                 #p("Note that the catches are relative to the average catch in the years 2013-2015."),
                 #p(yearrangetext),
                 plotOutput("plot_pi3", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-                p("Note that the catches are relative to the average catch in the years 2013-2015."),
+                p(relcatchtext),
                 p(yearrangetext)
               ))
             ),
@@ -382,9 +406,10 @@ ui <- fluidPage(id="top",
             #  )),
             #  p(yearrangetext)
             #),
-            tabPanel("PI 6: Catch stability",value="pi62",
+            tabPanel("PI 6: Catch stability by area",value="pi62",
               column(12, fluidRow(
                 plotOutput("plot_pi6", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
+                p(relcatchtext),
                 p(yearrangetext)
               ))
             ),
@@ -457,7 +482,7 @@ server <- function(input, output, session) {
   trp <- 0.5
   # For the worms - same worms for all plots
   # This can be increased to 20 - maybe make as option?
-  nworms <- 10
+  nworms <- 5
   # worms are a unique combination of OM and iter
   # (same om / iter should be in all hcrs)
   wormiters <- sample(unique(worms$iter), nworms)
@@ -551,12 +576,6 @@ server <- function(input, output, session) {
     return(p)
   })
 
-
-
-
-
-
-    
   # Bar plot 
   # PI 1: Prob of SBSBF0 > LRP
   output$plot_bar_problrp <- renderPlot({
@@ -654,8 +673,8 @@ server <- function(input, output, session) {
     #   bar or box - handled in the plot_choice
     #   stab or variability
     stabvar_choice <- input$stabvarchoice
-    metric_choice <-  paste("catch", stabvar_choice, sep=" ") # or stability
-    ylabel <- paste("PI 6: Catch ", stabvar_choice, sep="")
+    metric_choice <-  paste("relative catch", stabvar_choice, sep=" ") # or stability
+    ylabel <- paste("PI 6: ",   paste0(toupper(substr(stabvar_choice, 1, 1)), substr(stabvar_choice, 2, nchar(stabvar_choice))), " of relative catch", sep="")
 
     dat <- subset(periodqs, period != "Rest" & pi=="pi6" & area %in% area_choice & metric == metric_choice) 
 
@@ -779,8 +798,8 @@ server <- function(input, output, session) {
 
   output$plot_bar_catchvar <- plot_barbox_catchvarstab(plot_type="median_bar", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA))
   output$plot_box_catchvar <- plot_barbox_catchvarstab(plot_type="box", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA))
-  output$plot_bar_catchstab <- plot_barbox_catchvarstab(plot_type="median_bar", metric_choice="catch stability", ylab="PI 6: Catch stability", ylim=c(0,1))
-  output$plot_box_catchstab <- plot_barbox_catchvarstab(plot_type="box", metric_choice="catch stability", ylab="PI 6: Catch stability", ylim=c(0,1))
+  output$plot_bar_catchstab <- plot_barbox_catchvarstab(plot_type="median_bar", metric_choice="relative catch stability", ylab="PI 6: Catch stability", ylim=c(0,1))
+  output$plot_box_catchstab <- plot_barbox_catchvarstab(plot_type="box", metric_choice="relative catch stability", ylab="PI 6: Catch stability", ylim=c(0,1))
 
 
   # Bar and box plot 
@@ -878,7 +897,7 @@ server <- function(input, output, session) {
       catch_area_choice <- input$catchareachoice
       other_area_choice <- c(as.character(NA), "all")
       catch_rel_choice <- "relative catch"
-      metric_choices <- c(catch_rel_choice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+      metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
       # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
       dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
       #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
@@ -914,7 +933,7 @@ server <- function(input, output, session) {
     catch_area_choice <- input$catchareachoice
     other_area_choice <- c(as.character(NA), "all")
     catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
     # We have 8 PIs - but not all are appropriate for a radar plot as bigger is not better.
     # Drop SB/SBF=0 and Size based one 
     not_radar_pinames <- c("SB/SBF=0", "Mean weight of individual")
@@ -956,7 +975,7 @@ server <- function(input, output, session) {
     catch_area_choice <- input$catchareachoice
     other_area_choice <- c(as.character(NA), "all")
     catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
     # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
     dat <- subset(yearqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
     wormdat <- subset(worms, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices & iter %in% wormiters)
@@ -1010,7 +1029,7 @@ server <- function(input, output, session) {
     catch_area_choice <- input$catchareachoice
     other_area_choice <- c(as.character(NA), "all")
     catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
 
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
@@ -1045,9 +1064,6 @@ server <- function(input, output, session) {
     caption= "Performance indicators in the long-term",
     auto=TRUE
   )
-
-
-
 
 }
 
