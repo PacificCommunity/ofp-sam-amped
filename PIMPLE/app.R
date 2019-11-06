@@ -47,13 +47,13 @@ yearqs[yearqs$piname == oldpi3name, "piname"] <- newpi3name
 worms[worms$piname == oldpi3name, "piname"] <- newpi3name
 # Relative CPUE
 oldpi4name <- "PI 4: Relative CPUE"
-newpi4name <- "PI 4: CPUE (rel. to 2010)"
+newpi4name <- "PI 4: CPUE (rel. to 2010)\n(PS in areas 2,3,5 only)"
 periodqs[periodqs$piname == oldpi4name, "piname"] <- newpi4name
 yearqs[yearqs$piname == oldpi4name, "piname"] <- newpi4name
 worms[worms$piname == oldpi4name, "piname"] <- newpi4name
 # Relative effort to effort
 oldpi7name <- "PI 7: Relative effort stability"
-newpi7name <- "PI 7: Effort stability"
+newpi7name <- "PI 7: Effort stability\n(PS in areas 2,3,5 only)"
 periodqs[periodqs$piname == oldpi7name, "piname"] <- newpi7name
 yearqs[yearqs$piname == oldpi7name, "piname"] <- newpi7name
 worms[worms$piname == oldpi7name, "piname"] <- newpi7name
@@ -85,7 +85,11 @@ worms <- worms[order(worms$hcrref),]
 hcr_points <- hcr_points[order(hcr_points$hcrref),]
 hcr_shape <- hcr_shape[order(hcr_shape$hcrref),]
 
-piselector <- unique(periodqs[!periodqs$upsidedown,"piname"])
+# Fix names of PI selector - remove PS note
+pis_list <- unique(periodqs[!periodqs$upsidedown,"piname"])
+piselector <- as.list(pis_list)
+pis_text <- unlist(lapply(strsplit(pis_list,"\n"),'[',1))
+names(piselector) <- pis_text
 
 worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
 
@@ -100,7 +104,10 @@ medium <- range(subset(yearqs, period=="Medium")$year)
 mediumtext <- paste(medium, collapse="-")
 long <- range(subset(yearqs, period=="Long")$year)
 longtext <- paste(long, collapse="-")
-yearrangetext <- paste("Note that short-term is: ", shorttext, ", medium-term is: ", mediumtext, " and long-term is: ", longtext,".",sep="")
+yearrangetext <- paste("Short-term is: ", shorttext, ", medium-term is: ", mediumtext, " and long-term is: ", longtext,".",sep="")
+pi47text <- "Note that PIs 4 and 7 are for the purse seines in model areas 2, 3 and 5 only (excluding the associated purse seines in area 5.)"
+pi36text <- "The grouping for PIs 3 and 6 is given by the drop down menu on the left."
+biotext <- "PIs 1, 8 and SB/SBF=0 are calculated over all model areas."
 
 
 #------------------------------------------------------------------------------------------------------
@@ -128,8 +135,8 @@ ui <- fluidPage(id="top",
       ),
       # Catch choice - only in the catch and catch stability PI tabs
       conditionalPanel(condition="(input.nvp== 'compareMPs' || input.pitab == 'pi3' || input.pitab == 'pi6')",
-        #selectInput(inputId = "catchsetchoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="total")
-        selectInput(inputId = "catchareachoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235", "Area 1"="1", "Area 2"="2", "Area 3"="3", "Area 4"="4", "Area 5"="5"), selected="total")
+        #selectInput(inputId = "catchareachoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235", "Area 1"="1", "Area 2"="2", "Area 3"="3", "Area 4"="4", "Area 5"="5"), selected="total")
+        selectInput(inputId = "catchareachoice", label="Catch grouping (for PIs 3 and 6 only)", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="total")
         #selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
       )
     ),
@@ -193,18 +200,28 @@ ui <- fluidPage(id="top",
           tabsetPanel(id="comptab",
             tabPanel("Bar charts", value="bar",
               plotOutput("plot_bar_comparehcr", height="600px"),
-              p(yearrangetext)
+              p(yearrangetext),
+              p(pi47text),
+              p(biotext),
+              p(pi36text)
             ),
             tabPanel("Box plots", value="box",
               plotOutput("plot_box_comparehcr", height="600px"),
-              p(yearrangetext)
+              p(yearrangetext),
+              p(pi47text),
+              p(biotext),
+              p(pi36text)
             ),
             tabPanel("Radar plots", value="radar",
               fluidRow(
                 #selectInput(inputId = "radarscaling", label="Radar plot scaling", choices = list("Scale by max"="scale", "Rank"="rank"), selected="scale"),
                 tags$span(title="Note that only the indicators for which 'bigger is better' are shown in the radar plots.",
                   plotOutput("plot_radar_comparehcr", height="600px")),
-                p(yearrangetext)
+                p("Note that only the indicators for which 'bigger is better' are shown in the radar plots."),
+                p(yearrangetext),
+                p(pi47text),
+                p(biotext),
+                p(pi36text)
               )
             ),
             tabPanel("Time series plots", value="timeseries",
@@ -217,7 +234,10 @@ ui <- fluidPage(id="top",
                 tableOutput("table_pis_short"),
                 tableOutput("table_pis_medium"),
                 tableOutput("table_pis_long"),
-                p(yearrangetext)
+                p(yearrangetext),
+                p(pi47text),
+                p(biotext),
+                p(pi36text)
               )
             )
           )
@@ -247,7 +267,8 @@ ui <- fluidPage(id="top",
                 plotOutput("plot_bar_problrp")
               )),
               column(12, fluidRow(
-                p(yearrangetext)
+                p(yearrangetext),
+                p(biotext)
               ))
             ),
             # *** PI 3: Catch based ones ***
@@ -276,7 +297,8 @@ ui <- fluidPage(id="top",
                 plotOutput("plot_box_relcpue")
               )),
               p("Note that the CPUE only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative CPUE is the CPUE relative to that in 2010."),
-              p(yearrangetext)
+              p(yearrangetext),
+              p(pi47text)
             ),
             # *** PI 6: Catch stability ***
             tabPanel("PI 6: Catch stability",value="pi6",
@@ -301,7 +323,8 @@ ui <- fluidPage(id="top",
                 plotOutput("plot_box_pi7var")
               )),
               p("Note that the effort only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative effort is the effort relative to that in 2010."),
-              p(yearrangetext)
+              p(yearrangetext),
+              p(pi47text)
             )
             # *** Mean weight individual ***
             #tabPanel("Mean weight of individual",value="mw",
