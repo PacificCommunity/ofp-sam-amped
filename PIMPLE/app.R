@@ -122,29 +122,50 @@ ui <- fluidPage(id="top",
       br(),
       img(src = "spc.png", height = 100),
       br(),
-      conditionalPanel(condition="input.nvp == 'compareMPs' ||input.nvp == 'explorePIs'",
+      conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs'",
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
       ),
       # PI choice - only shown in the compare PIs tab
-      conditionalPanel(condition="input.nvp== 'compareMPs'",
+      conditionalPanel(condition="input.nvp == 'compareMPs'",
         checkboxGroupInput(inputId = "pichoice", label="PI selection",choices = piselector, selected=sort(unique(periodqs$piname)))
       ),
+
       # Show spaghetti on the time series plots - do not show on the HCR tab
       # Currently shown on all explorePIs tabs - even if no timeseries plot - is this OK?
-      conditionalPanel(condition="input.nvp== 'explorePIs' || input.comptab == 'timeseries'",
+      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab=='pibiomass' || input.pitab=='pi32' || input.pitab=='pi4')) || input.comptab == 'timeseries'",
         checkboxInput("showspag", "Show trajectories", value=FALSE) 
       ),
       # Catch choice - only in the catch and catch stability PI tabs
-      conditionalPanel(condition="(input.nvp== 'compareMPs' || input.pitab == 'pi3' || input.pitab == 'pi6')",
+      # Careful with conditional
+      conditionalPanel(condition="(input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')))",
         #selectInput(inputId = "catchareachoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235", "Area 1"="1", "Area 2"="2", "Area 3"="3", "Area 4"="4", "Area 5"="5"), selected="total")
         selectInput(inputId = "catchareachoice", label="Catch grouping (for PIs 3 and 6 only)", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="total")
         #selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
       ),
-      # For selecting catch plots by area and type
-      conditionalPanel(condition="(input.pitab== 'pi32')",
-        radioButtons(inputId = "pi3plotchoice", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar"),
-        checkboxGroupInput(inputId = "pi3areachoice", label="Area selection",choices = list(Total = "total", "PS in 2,3 & 5" = "ps235", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5" ), selected="total")
+
+      # For selecting catch plots by area 
+      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi32' || input.pitab== 'pi62'))",
+        checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list(Total = "total", "PS in 2,3 & 5" = "ps235", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5" ), selected="total")
+      ),
+
+      # Select plot type by bar, box, time
+      conditionalPanel(condition="(input.nvp == 'explorePIs' && input.pitab== 'pi32')",
+        radioButtons(inputId = "plotchoicebarboxtime", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar")
+      ),
+
+      # Select plot type by bar, box
+      # Need to include the NVP input too, because the the pitab input still has a value even if not seen
+      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pibiomass' || input.pitab== 'pi62'))",
+        radioButtons(inputId = "plotchoicebarbox", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box"), selected="median_bar")
+      ),
+
+      # Stability or variability
+      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi62'))",
+        radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
       )
+
+
+
     ),
     mainPanel(width=main_panel_width,
       tags$style(type="text/css", "body {padding-top: 70px;}"), # padding - as we use fixed-top for position, applies to all tabs
@@ -251,32 +272,65 @@ ui <- fluidPage(id="top",
         tabPanel("Explore indicators", value="explorePIs",
           tabsetPanel(id="pitab",
           # --- SBSBF0 and PI 1 & 8 ---
-            tabPanel("PI 1 & 8: Biomass",value="pi1",
-              column(12, fluidRow(
-                # TS of SBSBF0
-                plotOutput("plot_ts_sbsbf0")
+            #tabPanel("PI 1 & 8: Biomass",value="pi1",
+            #  column(12, fluidRow(
+            #    # TS of SBSBF0
+            #    plotOutput("plot_ts_sbsbf0")
+            #  )),
+            #  column(4, fluidRow(
+            #    # Bar plot of median SBSBF0
+            #    plotOutput("plot_bar_sbsbf0"),
+            #    # Bar of PI 8
+            #    plotOutput("plot_bar_pi8")
+            #  )),
+            #  column(4, fluidRow(
+            #    # Box of SBSBF0
+            #    plotOutput("plot_box_sbsbf0"),
+            #    # Box of PI 8
+            #    plotOutput("plot_box_pi8")
+            #  )),
+            #  column(4, fluidRow(
+            #    # Bar plot of prob
+            #    plotOutput("plot_bar_problrp")
+            #  )),
+            #  column(12, fluidRow(
+            #    p(yearrangetext),
+            #    p(biotext)
+            #  ))
+            #),
+
+            # *** PI 3: Catch based ones ***
+            tabPanel("PI 1 & 8: Biomass",value="pibiomass",
+              fluidRow(
+                column(12,
+                  # TS of SBSBF0
+                  plotOutput("plot_ts_sbsbf0")
               )),
-              column(4, fluidRow(
-                # Bar plot of median SBSBF0
-                plotOutput("plot_bar_sbsbf0"),
-                # Bar of PI 8
-                plotOutput("plot_bar_pi8")
+              fluidRow(
+                column(6,
+                  # Bar or box of SB/SBF0
+                  plotOutput("plot_barbox_sbsbf0")
+                ),
+                column(6,
+                  #  PI 1
+                  plotOutput("plot_bar_problrp")
+                )
+              ),
+              fluidRow(
+                column(6,
+                  # PI 8 - bar or box
+                  plotOutput("plot_barbox_pi8")
               )),
-              column(4, fluidRow(
-                # Box of SBSBF0
-                plotOutput("plot_box_sbsbf0"),
-                # Box of PI 8
-                plotOutput("plot_box_pi8")
-              )),
-              column(4, fluidRow(
-                # Bar plot of prob
-                plotOutput("plot_bar_problrp")
-              )),
-              column(12, fluidRow(
-                p(yearrangetext),
-                p(biotext)
-              ))
+              fluidRow(
+                column(12,
+                  p(yearrangetext),
+                  p(biotext)
+                )
+              )
             ),
+
+
+
             # *** PI 3: Catch based ones ***
             #tabPanel("PI 3: Catches",value="pi3",
             #  column(12, fluidRow(
@@ -299,7 +353,7 @@ ui <- fluidPage(id="top",
                 plotOutput("plot_pi3", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
                 p("Note that the catches are relative to the average catch in the years 2013-2015."),
                 p(yearrangetext)
-              )),
+              ))
             ),
             # *** PI 4: Relative CPUE***
             tabPanel("PI 4: Relative CPUE",value="pi4",
@@ -317,17 +371,24 @@ ui <- fluidPage(id="top",
               p(pi47text)
             ),
             # *** PI 6: Catch stability ***
-            tabPanel("PI 6: Catch stability",value="pi6",
-              column(6, fluidRow(
-                plotOutput("plot_bar_catchstab"),
-                plotOutput("plot_bar_catchvar")
-              )),
-              column(6, fluidRow(
-                plotOutput("plot_box_catchstab"),
-                plotOutput("plot_box_catchvar")
-              )),
-              p(yearrangetext)
+            #tabPanel("PI 6: Catch stability",value="pi6",
+            #  column(6, fluidRow(
+            #    plotOutput("plot_bar_catchstab"),
+            #    plotOutput("plot_bar_catchvar")
+            #  )),
+            #  column(6, fluidRow(
+            #    plotOutput("plot_box_catchstab"),
+            #    plotOutput("plot_box_catchvar")
+            #  )),
+            #  p(yearrangetext)
+            #),
+            tabPanel("PI 6: Catch stability",value="pi62",
+              column(12, fluidRow(
+                plotOutput("plot_pi6", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
+                p(yearrangetext)
+              ))
             ),
+
             # *** PI 7: Relative effort variability***
             tabPanel("PI 7: Effort stability",value="pi7",
               column(6, fluidRow(
@@ -348,21 +409,21 @@ ui <- fluidPage(id="top",
             #    plotOutput("plot_ts_mw")
             #  )),
             #  column(6, fluidRow(
-            #    plotOutput("plot_bar_mw")
-            #  )),
-            #  column(6, fluidRow(
-            #    plotOutput("plot_box_mw")
-            #  ))
-            #)
-          )
-        ),
-        ## The HCRs
-        #tabPanel(title="HCRs", value="hcrs",
-        #  column(12, fluidRow(
-        #    tags$span(title="Shape of the HCRs under consideration",
-        #      plotOutput("plot_hcrshape", height="600px")),
-        #    tags$span(title="Histograms of which parts of the HCRs were active during the evaluations",
-        #      plotOutput("plot_hcrhistograms")))
+            #    plotOutput("plot_bar_mw") 
+            #  )),                         
+            #  column(6, fluidRow(         
+            #    plotOutput("plot_box_mw") 
+            #  ))                         
+            #)                             
+          )                                
+        ),                                 
+        ## The HCRs                        
+        #tabPanel(title="HCRs", value="hcr s",
+        #  column(12, fluidRow(            
+        #    tags$span(title="Shape of the  HCRs under consideration",
+        #      plotOutput("plot_hcrshape",  height="600px")),
+        #    tags$span(title="Histograms o f which parts of the HCRs were active during the evaluations",
+        #      plotOutput("plot_hcrhistogr ams")))
         #  )
         #),
         tabPanel("About", value="about",
@@ -446,23 +507,55 @@ server <- function(input, output, session) {
 
   # Bar and box plot 
   # SBSBF0
-  plot_barbox_sbsbf0 <- function(plot_type="median_bar"){
-    rPlot <- renderPlot({
-      hcr_choices <- input$hcrchoice
-      if(length(hcr_choices) < 1){
-        return()
-      }
-      dat <- subset(periodqs, period != "Rest" & pi=="biomass" & metric=="SBSBF0" & area=="all") 
-      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-      p <- p + ggplot2::ylab("SB/SBF=0") + ggplot2::ylim(c(0,1))
-      p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2) + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
-      return(p)
-    })
-    return(rPlot)
-  }
+  #plot_barbox_sbsbf0 <- function(plot_type="median_bar"){
+  #  rPlot <- renderPlot({
+  #    hcr_choices <- input$hcrchoice
+  #    if(length(hcr_choices) < 1){
+  #      return()
+  #    }
+  #    dat <- subset(periodqs, period != "Rest" & pi=="biomass" & metric=="SBSBF0" & area=="all") 
+  #    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+  #    p <- p + ggplot2::ylab("SB/SBF=0") + ggplot2::ylim(c(0,1))
+  #    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2) + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
+  #    return(p)
+  #  })
+  #  return(rPlot)
+  #}
 
-  output$plot_bar_sbsbf0 <- plot_barbox_sbsbf0(plot_type="median_bar")
-  output$plot_box_sbsbf0 <- plot_barbox_sbsbf0(plot_type="box")
+  #output$plot_bar_sbsbf0 <- plot_barbox_sbsbf0(plot_type="median_bar")
+  #output$plot_box_sbsbf0 <- plot_barbox_sbsbf0(plot_type="box")
+
+  output$plot_barbox_sbsbf0 <- renderPlot({
+    plot_type <- input$plotchoicebarbox
+    hcr_choices <- input$hcrchoice
+    if(length(hcr_choices) < 1){
+      return()
+    }
+    dat <- subset(periodqs, period != "Rest" & pi=="biomass" & metric=="SBSBF0" & area=="all") 
+    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+    p <- p + ggplot2::ylab("SB/SBF=0") + ggplot2::ylim(c(0,1))
+    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2) + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
+    return(p)
+  })
+
+  output$plot_barbox_pi8 <- renderPlot({
+    plot_type <- input$plotchoicebarbox
+    hcr_choices <- input$hcrchoice
+    if(length(hcr_choices) < 1){
+      return()
+    }
+    dat <- subset(periodqs, period != "Rest" & pi=="pi8" & metric=="SBSBF0" & area=="all") 
+    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+    # Average closeness to TRP
+    p <- p + ggplot2::ylab("PI 8: Proximity to TRP") + ggplot2::ylim(c(0,1))
+    return(p)
+  })
+
+
+
+
+
+
     
   # Bar plot 
   # PI 1: Prob of SBSBF0 > LRP
@@ -499,6 +592,7 @@ server <- function(input, output, session) {
 
   # For exploring the catches in different regions
   height_per_area <- 300
+  no_facets_row <- 2
   output$plot_pi3 <- renderPlot({
     # If no HCRs chosen just leave
     hcr_choices <- input$hcrchoice
@@ -507,8 +601,8 @@ server <- function(input, output, session) {
     }
 
     ylabel <- "PI 3: Catch (rel. to 2013-2015)"
-    plot_choice <- input$pi3plotchoice
-    area_choice <- input$pi3areachoice
+    plot_choice <- input$plotchoicebarboxtime
+    area_choice <- input$areachoice
     if(length(area_choice) < 1){
       return()
     }
@@ -521,7 +615,7 @@ server <- function(input, output, session) {
       dat <- subset(periodqs, period != "Rest" & pi=="pi3" & area %in% area_choice & metric == catch_rel_choice) 
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
       p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
-      p <- p + ggplot2::facet_wrap(~area, ncol=3)
+      p <- p + ggplot2::facet_wrap(~area, ncol=no_facets_row)
       return(p)
     }
 
@@ -538,11 +632,45 @@ server <- function(input, output, session) {
       return(p)
     }
 
-  #}, height=function(){max(height_per_area*1.5, (height_per_area * length(input$pi3areachoice)))})
   }, height=function(){
-    if(input$pi3plotchoice=="time"){return(max(height_per_area*1.5, (height_per_area * length(input$pi3areachoice))))}
-    if(input$pi3plotchoice %in% c("median_bar","box")){return(max(height_per_area*1.5, (height_per_area * ceiling(length(input$pi3areachoice) / 3))))}
+    if(input$plotchoicebarboxtime=="time"){return(max(height_per_area*1.5, (height_per_area * length(input$areachoice))))}
+    if(input$plotchoicebarboxtime %in% c("median_bar","box")){return(max(height_per_area*1.5, (height_per_area * ceiling(length(input$areachoice) / no_facets_row))))}
   })
+
+  output$plot_pi6 <- renderPlot({
+    # If no HCRs chosen just leave
+    hcr_choices <- input$hcrchoice
+    if(length(hcr_choices) < 1){
+      return()
+    }
+    plot_choice <- input$plotchoicebarbox
+    area_choice <- input$areachoice
+    # Need additional option of stability or variability
+    if(length(area_choice) < 1){
+      return()
+    }
+
+    # Options:
+    #   bar or box - handled in the plot_choice
+    #   stab or variability
+    stabvar_choice <- input$stabvarchoice
+    metric_choice <-  paste("catch", stabvar_choice, sep=" ") # or stability
+    ylabel <- paste("PI 6: Catch ", stabvar_choice, sep="")
+
+    dat <- subset(periodqs, period != "Rest" & pi=="pi6" & area %in% area_choice & metric == metric_choice) 
+
+    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
+    p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
+    p <- p + ggplot2::facet_wrap(~area, ncol=no_facets_row)
+    return(p)
+
+
+
+  }, height=function(){
+    return(max(height_per_area*1.5, (height_per_area * ceiling(length(input$areachoice) / no_facets_row))))
+  })
+
+
 
   # Timeseries
   # PI 3: Catch
