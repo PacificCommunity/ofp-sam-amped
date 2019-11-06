@@ -91,6 +91,7 @@ piselector <- as.list(pis_list)
 pis_text <- unlist(lapply(strsplit(pis_list,"\n"),'[',1))
 names(piselector) <- pis_text
 
+
 worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
 
 main_panel_width <- 10
@@ -138,6 +139,11 @@ ui <- fluidPage(id="top",
         #selectInput(inputId = "catchareachoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235", "Area 1"="1", "Area 2"="2", "Area 3"="3", "Area 4"="4", "Area 5"="5"), selected="total")
         selectInput(inputId = "catchareachoice", label="Catch grouping (for PIs 3 and 6 only)", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="total")
         #selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
+      ),
+      # For selecting catch plots by area and type
+      conditionalPanel(condition="(input.pitab== 'pi32')",
+        radioButtons(inputId = "pi3plotchoice", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar"),
+        checkboxGroupInput(inputId = "pi3areachoice", label="Area selection",choices = list(Total = "total", "PS in 2,3 & 5" = "ps235", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5" ), selected="total")
       )
     ),
     mainPanel(width=main_panel_width,
@@ -272,18 +278,28 @@ ui <- fluidPage(id="top",
               ))
             ),
             # *** PI 3: Catch based ones ***
-            tabPanel("PI 3: Catches",value="pi3",
+            #tabPanel("PI 3: Catches",value="pi3",
+            #  column(12, fluidRow(
+            #    plotOutput("plot_ts_catch")
+            #  )),
+            #  column(6, fluidRow(
+            #    plotOutput("plot_bar_catch")
+            #  )),
+            #  column(6, fluidRow(
+            #    plotOutput("plot_box_catch")
+            #  )),
+            #  p("Note that the catches are relative to the average catch in the years 2013-2015."),
+            #  p(yearrangetext)
+            #),
+            tabPanel("PI 3: Catches by area",value="pi32",
               column(12, fluidRow(
-                plotOutput("plot_ts_catch")
+                # Can't put text at end as not very fluid
+                #p("Note that the catches are relative to the average catch in the years 2013-2015."),
+                #p(yearrangetext),
+                plotOutput("plot_pi3", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
+                p("Note that the catches are relative to the average catch in the years 2013-2015."),
+                p(yearrangetext)
               )),
-              column(6, fluidRow(
-                plotOutput("plot_bar_catch")
-              )),
-              column(6, fluidRow(
-                plotOutput("plot_box_catch")
-              )),
-              p("Note that the catches are relative to the average catch in the years 2013-2015."),
-              p(yearrangetext)
             ),
             # *** PI 4: Relative CPUE***
             tabPanel("PI 4: Relative CPUE",value="pi4",
@@ -480,56 +496,100 @@ server <- function(input, output, session) {
   output$plot_bar_pi8 <- plot_barbox_pi8(plot_type="median_bar")
   output$plot_box_pi8 <- plot_barbox_pi8(plot_type="box")
 
-  # Timeseries
-  # PI 3: Catch
-  output$plot_ts_catch <- renderPlot({
-    show_spaghetti <- input$showspag
+
+  # For exploring the catches in different regions
+  height_per_area <- 300
+  output$plot_pi3 <- renderPlot({
+    # If no HCRs chosen just leave
     hcr_choices <- input$hcrchoice
     if(length(hcr_choices) < 1){
       return()
     }
 
-
-    #browser()
-
-    catch_area_choice <- input$catchareachoice
+    ylabel <- "PI 3: Catch (rel. to 2013-2015)"
+    plot_choice <- input$pi3plotchoice
+    area_choice <- input$pi3areachoice
+    if(length(area_choice) < 1){
+      return()
+    }
     # Choose if relative to year X
     #catch_rel_choice <- input$catchrelchoice # or relative catch
     catch_rel_choice <- "relative catch"
-    dat <- subset(yearqs, pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice) 
-    wormdat <- subset(worms, pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice & iter %in% wormiters) 
-    # Else wormdat <- NULL
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
-    p <- p + ggplot2::ylab("Catch")
-    p <- p +ggplot2:: ylim(c(0,NA))
-    # Axes limits set here or have tight?
-    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-    return(p)
+    #catch_rel_choice <- "catch"
+
+    if (plot_choice %in% c("median_bar","box")){
+      dat <- subset(periodqs, period != "Rest" & pi=="pi3" & area %in% area_choice & metric == catch_rel_choice) 
+      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
+      p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
+      p <- p + ggplot2::facet_wrap(~area, ncol=3)
+      return(p)
+    }
+
+    if(plot_choice == "time"){
+      show_spaghetti <- input$showspag
+      dat <- subset(yearqs, pi=="pi3" & area %in% area_choice & metric == catch_rel_choice) 
+      wormdat <- subset(worms, pi=="pi3" & area %in% area_choice & metric == catch_rel_choice & iter %in% wormiters) 
+      p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
+      p <- p + ggplot2::ylab(ylabel)
+      p <- p + ggplot2:: ylim(c(0,NA))
+      # Axes limits set here or have tight?
+      p <- p + ggplot2::facet_wrap(~area, scales="free", ncol=1)
+      p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+      return(p)
+    }
+
+  #}, height=function(){max(height_per_area*1.5, (height_per_area * length(input$pi3areachoice)))})
+  }, height=function(){
+    if(input$pi3plotchoice=="time"){return(max(height_per_area*1.5, (height_per_area * length(input$pi3areachoice))))}
+    if(input$pi3plotchoice %in% c("median_bar","box")){return(max(height_per_area*1.5, (height_per_area * ceiling(length(input$pi3areachoice) / 3))))}
   })
+
+  # Timeseries
+  # PI 3: Catch
+#  output$plot_ts_catch <- renderPlot({
+#    show_spaghetti <- input$showspag
+#    hcr_choices <- input$hcrchoice
+#    if(length(hcr_choices) < 1){
+#      return()
+#    }
+#    catch_area_choice <- input$catchareachoice
+#    # Choose if relative to year X
+#    #catch_rel_choice <- input$catchrelchoice # or relative catch
+#    catch_rel_choice <- "relative catch"
+#    dat <- subset(yearqs, pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice) 
+#    wormdat <- subset(worms, pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice & iter %in% wormiters) 
+#    # Else wormdat <- NULL
+#    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
+#    p <- p + ggplot2::ylab("Catch")
+#    p <- p +ggplot2:: ylim(c(0,NA))
+#    # Axes limits set here or have tight?
+#    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+#    return(p)
+#  })
 
   # Bar and box plot 
   # PI 3: Catch
-  plot_barbox_catch <- function(plot_type="median_bar"){
-    rPlot <- renderPlot({
-      hcr_choices <- input$hcrchoice
-      if(length(hcr_choices) < 1){
-        return()
-      }
-      # Choose the aggregation (set: total area or PS235 - maybe by area too?)
-      catch_area_choice <- input$catchareachoice
-      # Choose if relative to year X
-      #catch_rel_choice <- input$catchrelchoice # or relative catch
-      catch_rel_choice <- "relative catch"
-      dat <- subset(periodqs, period != "Rest" & pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice) 
-      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-      p <- p + ggplot2::ylab("PI 3: Catch") + ggplot2::ylim(c(0,NA))
-      return(p)
-    })
-    return(rPlot)
-  }
+  #plot_barbox_catch <- function(plot_type="median_bar"){
+  #  rPlot <- renderPlot({
+  #    hcr_choices <- input$hcrchoice
+  #    if(length(hcr_choices) < 1){
+  #      return()
+  #    }
+  #    # Choose the aggregation (set: total area or PS235 - maybe by area too?)
+  #    catch_area_choice <- input$catchareachoice
+  #    # Choose if relative to year X
+  #    #catch_rel_choice <- input$catchrelchoice # or relative catch
+  #    catch_rel_choice <- "relative catch"
+  #    dat <- subset(periodqs, period != "Rest" & pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice) 
+  #    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+  #    p <- p + ggplot2::ylab("PI 3: Catch") + ggplot2::ylim(c(0,NA))
+  #    return(p)
+  #  })
+  #  return(rPlot)
+  #}
 
-  output$plot_bar_catch <- plot_barbox_catch(plot_type="median_bar")
-  output$plot_box_catch <- plot_barbox_catch(plot_type="box")
+#  output$plot_bar_catch <- plot_barbox_catch(plot_type="median_bar")
+#  output$plot_box_catch <- plot_barbox_catch(plot_type="box")
 
   # Timeseries
   # PI: 4
