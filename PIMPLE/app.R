@@ -17,17 +17,14 @@ load("data/preWCPFC2019_results.Rdata")
 
 #------------------------------------------------------------------------------------------------------
 # HACKS 
-
-# Overwrite colour palette from AMPLE - fuck - how to overwrite?
-#source("~/Work/NZ_project/ofp-sam-amped/AMPLE/R/plots.R")
-  # Can I do this?
-new_get_hcr_colours <- function(hcr_names, chosen_hcr_names){
+# This is a brutal hack to overwrite my own unexported palette function in the AMPLE NAMESPACE
+get_hcr_colours <- function(hcr_names, chosen_hcr_names){
   # Looks OK
   #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdYlBu"))(length(hcr_names))
-  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"PiYG"))(length(hcr_names))
+  allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"PiYG"))(length(hcr_names))
   #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Dark2"))(length(hcr_names))
   #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Set2"))(length(hcr_names))
-  allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
+  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
   #  Wes Anderson palette - use Steve Zissou - but too similar at the ends
   #allcols <- wesanderson::wes_palette("Zissou1", length(hcr_names), type = "continuous")
   # See these notes:
@@ -38,14 +35,8 @@ new_get_hcr_colours <- function(hcr_names, chosen_hcr_names){
   hcrcols <- allcols[chosen_hcr_names]
   return(hcrcols)
 }
-
-# Then need to add this to every plot
-#  hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-#  p <- p + scale_fill_manual(values=hcrcols)
-#  p <- p + scale_colour_manual(values=hcrcols)
-
-
-
+# WTF?!?!?
+assignInNamespace("get_hcr_colours", get_hcr_colours, ns="AMPLE", pos="package:AMPLE")
 
 
 # HACK drop SQ HCRs
@@ -529,11 +520,6 @@ server <- function(input, output, session) {
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
     p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
     return(p)
   })
 
@@ -567,11 +553,6 @@ server <- function(input, output, session) {
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
     p <- p + ggplot2::ylab("SB/SBF=0") + ggplot2::ylim(c(0,1))
     p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2) + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
     return(p)
   })
 
@@ -585,11 +566,6 @@ server <- function(input, output, session) {
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
     # Average closeness to TRP
     p <- p + ggplot2::ylab("PI 8: Proximity to TRP") + ggplot2::ylim(c(0,1))
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
     return(p)
   })
 
@@ -603,11 +579,6 @@ server <- function(input, output, session) {
     dat <- subset(periodqs, period != "Rest" & pi=="pi1" & area=="all") 
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="median_bar")
     p <- p + ggplot2::ylab("PI 1: Prob. SB/SBF=0 > LRP") + ggplot2::ylim(c(0,1))
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
     return(p)
   })
 
@@ -670,11 +641,6 @@ server <- function(input, output, session) {
       p <- p + ggplot2::facet_wrap(~area, scales="free", ncol=1)
       p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
     }
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
     return(p)
 
 
@@ -709,11 +675,6 @@ server <- function(input, output, session) {
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
     p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
     p <- p + ggplot2::facet_wrap(~area, ncol=no_facets_row)
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
     return(p)
 
 
@@ -788,11 +749,6 @@ server <- function(input, output, session) {
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
     p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
     return(p)
   })
 
@@ -807,11 +763,6 @@ server <- function(input, output, session) {
       dat <- subset(periodqs, period != "Rest" & pi=="pi4") 
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylab("PI 4: Relative CPUE") + ggplot2::ylim(c(0,NA))
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
       return(p)
     })
     return(rPlot)
@@ -834,11 +785,6 @@ server <- function(input, output, session) {
   #    dat <- subset(periodqs, period != "Rest" & pi=="pi6" & area==catch_area_choice & metric==metric_choice) 
   #    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
   #    p <- p + ggplot2::ylab(ylab) + ggplot2::ylim(ylim)
-
-  #  hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-  #  p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-  #  p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
   #    return(p)
   #  })
   #  return(rPlot)
@@ -862,11 +808,6 @@ server <- function(input, output, session) {
       dat <- subset(periodqs, period != "Rest" & pi=="pi7" & metric==metric_choice) 
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylab(ylab) + ggplot2::ylim(ylim)
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
       return(p)
     })
     return(rPlot)
@@ -965,11 +906,6 @@ server <- function(input, output, session) {
         p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
         p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
       }
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
       return(p)
     })
     return(rPlot)
@@ -1007,11 +943,6 @@ server <- function(input, output, session) {
     #scaling_choice <- input$radarscaling
     scaling_choice <- "scale"
     p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
     return(p)
   })
 
@@ -1057,11 +988,6 @@ server <- function(input, output, session) {
       p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
       p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
     }
-
-    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
-    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
-    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
-
     return(p)
   }, height=function(){max(height_per_pi*1.5, (height_per_pi * length(input$pichoice[input$pichoice %in% pinames_ts])))})
 
