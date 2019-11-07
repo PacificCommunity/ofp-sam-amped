@@ -9,6 +9,7 @@
 
 # Load packages
 library(AMPLE)
+library(RColorBrewer)
 
 # Load the data
 load("data/preWCPFC2019_results.Rdata")
@@ -23,11 +24,12 @@ load("data/preWCPFC2019_results.Rdata")
 new_get_hcr_colours <- function(hcr_names, chosen_hcr_names){
   # Looks OK
   #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdYlBu"))(length(hcr_names))
-  #  Wes Anderson palette - use Steve Zissou
+  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"PiYG"))(length(hcr_names))
+  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Dark2"))(length(hcr_names))
+  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Set2"))(length(hcr_names))
+  allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
+  #  Wes Anderson palette - use Steve Zissou - but too similar at the ends
   #allcols <- wesanderson::wes_palette("Zissou1", length(hcr_names), type = "continuous")
-  #allcols <- wesanderson::wes_palette("Royal1", length(hcr_names), type = "continuous")
-  #allcols <- wesanderson::wes_palette("Darjeeling2", length(hcr_names), type = "continuous")
-  allcols <- wesanderson::wes_palette("BottleRocket2", length(hcr_names), type = "continuous")
   # See these notes:
   #type: Either "continuous" or "discrete". Use continuous if you want
   #      to automatically interpolate between colours. @importFrom
@@ -527,6 +529,11 @@ server <- function(input, output, session) {
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
     p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
     return(p)
   })
 
@@ -560,6 +567,11 @@ server <- function(input, output, session) {
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
     p <- p + ggplot2::ylab("SB/SBF=0") + ggplot2::ylim(c(0,1))
     p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2) + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
     return(p)
   })
 
@@ -573,6 +585,11 @@ server <- function(input, output, session) {
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
     # Average closeness to TRP
     p <- p + ggplot2::ylab("PI 8: Proximity to TRP") + ggplot2::ylim(c(0,1))
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
     return(p)
   })
 
@@ -586,27 +603,32 @@ server <- function(input, output, session) {
     dat <- subset(periodqs, period != "Rest" & pi=="pi1" & area=="all") 
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="median_bar")
     p <- p + ggplot2::ylab("PI 1: Prob. SB/SBF=0 > LRP") + ggplot2::ylim(c(0,1))
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
     return(p)
   })
 
-  # Bar and box plot 
-  # PI 8: SB/SBF=0 proximity to TRP
-  plot_barbox_pi8 <- function(plot_type="median_bar"){
-    rPlot <- renderPlot({
-      hcr_choices <- input$hcrchoice
-      if(length(hcr_choices) < 1){
-        return()
-      }
-      dat <- subset(periodqs, period != "Rest" & pi=="pi8" & area=="all") 
-      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-      p <- p + ggplot2::ylab("PI 8: Average proximity to TRP") + ggplot2::ylim(c(0,1))
-      return(p)
-    })
-    return(rPlot)
-  }
+  ## Bar and box plot 
+  ## PI 8: SB/SBF=0 proximity to TRP
+  #plot_barbox_pi8 <- function(plot_type="median_bar"){
+  #  rPlot <- renderPlot({
+  #    hcr_choices <- input$hcrchoice
+  #    if(length(hcr_choices) < 1){
+  #      return()
+  #    }
+  #    dat <- subset(periodqs, period != "Rest" & pi=="pi8" & area=="all") 
+  #    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+  #    p <- p + ggplot2::ylab("PI 8: Average proximity to TRP") + ggplot2::ylim(c(0,1))
+  #    return(p)
+  #  })
+  #  return(rPlot)
+  #}
 
-  output$plot_bar_pi8 <- plot_barbox_pi8(plot_type="median_bar")
-  output$plot_box_pi8 <- plot_barbox_pi8(plot_type="box")
+  #output$plot_bar_pi8 <- plot_barbox_pi8(plot_type="median_bar")
+  #output$plot_box_pi8 <- plot_barbox_pi8(plot_type="box")
 
 
   # For exploring the catches in different regions
@@ -635,7 +657,6 @@ server <- function(input, output, session) {
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
       p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
       p <- p + ggplot2::facet_wrap(~area, ncol=no_facets_row)
-      return(p)
     }
 
     if(plot_choice == "time"){
@@ -648,8 +669,15 @@ server <- function(input, output, session) {
       # Axes limits set here or have tight?
       p <- p + ggplot2::facet_wrap(~area, scales="free", ncol=1)
       p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-      return(p)
     }
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
+    return(p)
+
+
 
   }, height=function(){
     if(input$plotchoicebarboxtime=="time"){return(max(height_per_area*1.5, (height_per_area * length(input$areachoice))))}
@@ -681,6 +709,11 @@ server <- function(input, output, session) {
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
     p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
     p <- p + ggplot2::facet_wrap(~area, ncol=no_facets_row)
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
     return(p)
 
 
@@ -755,6 +788,11 @@ server <- function(input, output, session) {
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
     p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
     return(p)
   })
 
@@ -769,6 +807,11 @@ server <- function(input, output, session) {
       dat <- subset(periodqs, period != "Rest" & pi=="pi4") 
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylab("PI 4: Relative CPUE") + ggplot2::ylim(c(0,NA))
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
       return(p)
     })
     return(rPlot)
@@ -779,31 +822,36 @@ server <- function(input, output, session) {
 
   # Bar and box plot 
   # PI 6: Catch variability and stability
-  plot_barbox_catchvarstab <- function(plot_type="median_bar", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA)){
-    rPlot <- renderPlot({
-      hcr_choices <- input$hcrchoice
-      if(length(hcr_choices) < 1){
-        return()
-      }
-      # Choose the aggregation (set: total area or PS235 - maybe by area too?)
-      catch_area_choice <- input$catchareachoice
-      # Choose if relative to year X
-      dat <- subset(periodqs, period != "Rest" & pi=="pi6" & area==catch_area_choice & metric==metric_choice) 
-      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-      p <- p + ggplot2::ylab(ylab) + ggplot2::ylim(ylim)
-      return(p)
-    })
-    return(rPlot)
-  }
+  #plot_barbox_catchvarstab <- function(plot_type="median_bar", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA)){
+  #  rPlot <- renderPlot({
+  #    hcr_choices <- input$hcrchoice
+  #    if(length(hcr_choices) < 1){
+  #      return()
+  #    }
+  #    # Choose the aggregation (set: total area or PS235 - maybe by area too?)
+  #    catch_area_choice <- input$catchareachoice
+  #    # Choose if relative to year X
+  #    dat <- subset(periodqs, period != "Rest" & pi=="pi6" & area==catch_area_choice & metric==metric_choice) 
+  #    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+  #    p <- p + ggplot2::ylab(ylab) + ggplot2::ylim(ylim)
 
-  output$plot_bar_catchvar <- plot_barbox_catchvarstab(plot_type="median_bar", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA))
-  output$plot_box_catchvar <- plot_barbox_catchvarstab(plot_type="box", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA))
-  output$plot_bar_catchstab <- plot_barbox_catchvarstab(plot_type="median_bar", metric_choice="relative catch stability", ylab="PI 6: Catch stability", ylim=c(0,1))
-  output$plot_box_catchstab <- plot_barbox_catchvarstab(plot_type="box", metric_choice="relative catch stability", ylab="PI 6: Catch stability", ylim=c(0,1))
+  #  hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+  #  p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+  #  p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
+  #    return(p)
+  #  })
+  #  return(rPlot)
+  #}
+
+  #output$plot_bar_catchvar <- plot_barbox_catchvarstab(plot_type="median_bar", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA))
+  #output$plot_box_catchvar <- plot_barbox_catchvarstab(plot_type="box", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA))
+  #output$plot_bar_catchstab <- plot_barbox_catchvarstab(plot_type="median_bar", metric_choice="relative catch stability", ylab="PI 6: Catch stability", ylim=c(0,1))
+  #output$plot_box_catchstab <- plot_barbox_catchvarstab(plot_type="box", metric_choice="relative catch stability", ylab="PI 6: Catch stability", ylim=c(0,1))
 
 
   # Bar and box plot 
-  # PI 7: Catch variability and stability
+  # PI 7: Effort variability and stability
   plot_barbox_pi7varstab <- function(plot_type="median_bar", metric_choice="relative effort variability", ylab="PI 7: Relative effort variability", ylim=c(0,NA)){
     rPlot <- renderPlot({
       hcr_choices <- input$hcrchoice
@@ -814,6 +862,11 @@ server <- function(input, output, session) {
       dat <- subset(periodqs, period != "Rest" & pi=="pi7" & metric==metric_choice) 
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylab(ylab) + ggplot2::ylim(ylim)
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
       return(p)
     })
     return(rPlot)
@@ -828,44 +881,44 @@ server <- function(input, output, session) {
 
 
 
-  # Mean weight of individual
-  # PI: 4
-  output$plot_ts_mw<- renderPlot({
-    show_spaghetti <- input$showspag
-    hcr_choices <- input$hcrchoice
-    if(length(hcr_choices) < 1){
-      return()
-    }
-    dat <- subset(yearqs, pi=="mw") 
-    # Add Option for worms
-    wormdat <- subset(worms, pi=="mw" & iter %in% wormiters) 
-    # Else wormdat <- NULL
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
-    p <- p + ggplot2::ylab("Mean weight of an individual")
-    p <- p + ggplot2::ylim(c(0,NA))
-    # Axes limits set here or have tight?
-    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-    return(p)
-  })
-
-  # Bar and box plot 
-  # Mean weight of individual
-  plot_barbox_mw <- function(plot_type="median_bar"){
-    rPlot <- renderPlot({
-      hcr_choices <- input$hcrchoice
-      if(length(hcr_choices) < 1){
-        return()
-      }
-      dat <- subset(periodqs, period != "Rest" & pi=="mw") 
-      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-      p <- p + ggplot2::ylab("Mean weight of an individual") + ggplot2::ylim(c(0,NA))
-      return(p)
-    })
-    return(rPlot)
-  }
-
-  output$plot_bar_mw <- plot_barbox_mw(plot_type="median_bar")
-  output$plot_box_mw <- plot_barbox_mw(plot_type="box")
+#  # Mean weight of individual
+#  # PI: 4
+#  output$plot_ts_mw<- renderPlot({
+#    show_spaghetti <- input$showspag
+#    hcr_choices <- input$hcrchoice
+#    if(length(hcr_choices) < 1){
+#      return()
+#    }
+#    dat <- subset(yearqs, pi=="mw") 
+#    # Add Option for worms
+#    wormdat <- subset(worms, pi=="mw" & iter %in% wormiters) 
+#    # Else wormdat <- NULL
+#    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
+#    p <- p + ggplot2::ylab("Mean weight of an individual")
+#    p <- p + ggplot2::ylim(c(0,NA))
+#    # Axes limits set here or have tight?
+#    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+#    return(p)
+#  })
+#
+#  # Bar and box plot 
+#  # Mean weight of individual
+#  plot_barbox_mw <- function(plot_type="median_bar"){
+#    rPlot <- renderPlot({
+#      hcr_choices <- input$hcrchoice
+#      if(length(hcr_choices) < 1){
+#        return()
+#      }
+#      dat <- subset(periodqs, period != "Rest" & pi=="mw") 
+#      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+#      p <- p + ggplot2::ylab("Mean weight of an individual") + ggplot2::ylim(c(0,NA))
+#      return(p)
+#    })
+#    return(rPlot)
+#  }
+#
+#  output$plot_bar_mw <- plot_barbox_mw(plot_type="median_bar")
+#  output$plot_box_mw <- plot_barbox_mw(plot_type="box")
 
 
 
@@ -912,6 +965,11 @@ server <- function(input, output, session) {
         p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
         p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
       }
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
       return(p)
     })
     return(rPlot)
@@ -949,6 +1007,11 @@ server <- function(input, output, session) {
     #scaling_choice <- input$radarscaling
     scaling_choice <- "scale"
     p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
     return(p)
   })
 
@@ -994,29 +1057,34 @@ server <- function(input, output, session) {
       p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
       p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
     }
+
+    hcrcols <- new_get_hcr_colours(hcr_names=unique(periodqs$hcrref), chosen_hcr_names=hcr_choices)
+    p <- p + ggplot2::scale_fill_manual(values=hcrcols)
+    p <- p + ggplot2::scale_colour_manual(values=hcrcols)
+
     return(p)
   }, height=function(){max(height_per_pi*1.5, (height_per_pi * length(input$pichoice[input$pichoice %in% pinames_ts])))})
 
-  # Plot the HCR shapes and the bits that were active
-  output$plot_hcrshape <- renderPlot({
-    # Able to choose which HCRs
-    hcr_choices <- input$hcrchoice
-    if(length(hcr_choices) < 1){
-      return()
-    }
-    p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
-    return(p)
-  })
-
-  # Plot histogram of effort multipliers
-  output$plot_hcrhistograms <- renderPlot({
-    hcr_choices <- input$hcrchoice
-    if(length(hcr_choices) < 1){
-      return()
-    }
-    p <- hcr_histo_plot(hcr_choices, histodat)
-    return(p)
-  })
+#  # Plot the HCR shapes and the bits that were active
+#  output$plot_hcrshape <- renderPlot({
+#    # Able to choose which HCRs
+#    hcr_choices <- input$hcrchoice
+#    if(length(hcr_choices) < 1){
+#      return()
+#    }
+#    p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
+#    return(p)
+#  })
+#
+#  # Plot histogram of effort multipliers
+#  output$plot_hcrhistograms <- renderPlot({
+#    hcr_choices <- input$hcrchoice
+#    if(length(hcr_choices) < 1){
+#      return()
+#    }
+#    p <- hcr_histo_plot(hcr_choices, histodat)
+#    return(p)
+#  })
 
 
   get_pi_table <- function(period_choice="Short"){
