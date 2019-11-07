@@ -6,7 +6,7 @@
 # Copyright 2019 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 #--------------------------------------------------------------
-
+# rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
 # Load packages
 library(AMPLE)
 library(RColorBrewer)
@@ -196,52 +196,62 @@ ui <- fluidPage(id="top",
         #title="PIMPLE", # Needed or "" else first tab vanishes
         #title="", # Needed or "" else first tab vanishes
         title="Performance Indicators and Management Procedures Explorer",
+        #----------- Introduction page ----------------------------------
         tabPanel("Introduction", value="intro",
-          h1("PIMPLE"),
-          p("PIMPLE is a tool for exploring and comparing the performance of alternative candidate harvest control rules (HCRs).
-          The performance can be explored using a range of different plots and tables.
-          This allows trade-offs between the different HCRs to be evaluated.
-          The performance of each HCR is measured using different performance indicators (PIs). More details of the PIs are given in the PIMPLE user guide."), 
-          br(),
-          h2("The Indicators"),
-          br(),
-          h3("SB/SBF=0"),
-          p("The depletion of the stock, i.e. the ratio of the current adult biomass to the adult biomass in the absence of fishing. It is comparable to the Limit Reference Point (0.2) and Target Reference Point (0.5, interim)."),
-          br(),
-          h3("Indicator 1. Maintain SKJ biomass at or above levels that provide fishery sustainability throughout their range"),
-          p("This is calculated as the probability of the SB/SBF=0 being above the Limit Reference Point (0.2)"),
-          br(),
-          h3("Indicator 3. Maximise economic yield from the fishery (average expected catch)"),
-          p("This indicator is based on the average expected catch. It is calculated either as the absolute level of expected catch, or relative the average catch level in 2013-15"),
-          p("The catch is either the total catch in the whole region, or only the purse seine catch from stock assessment regions 2,3 and 5."),
-          br(),
-          h3("Indicator 4. Maintain acceptable CPUE"),
-          p("This indicator is based on the average deviation of predicted skipjack CPUE from reference period levels.  It is calculated as the CPUE relative to the CPUE in a reference period.  Here the reference period is taken to be 2010."),
-          br(),
-          h3("Indicator 6. Catch stability"),
-          p("This indicator is concerned with the average annual variation in catch. It is calculated over the whole region and for the combined purse seine fisheries in regions 2, 3 and 5. The indicator is calculated by taking the absolute annual difference of the catch for each simulation and in each year."),
-          p("As well as the variability in the catch, the stability (the inverse of the variability) is calculated.  This involves rescaling the variability so that it is between 0 and 1. A stability of 1 implies that the catch does not change at all over time, i.e. it is completely stable. A stability of 0 means that the catch is very variable in time."),
-          br(),
-          h3("Indicator 7. Stability and continuity of market supply (effort variation relative to a reference period)"),
-          p("This indicator is concerned with effort variation relative to the effort in a reference period, i.e. stability of the relative effort. Here the reference period is taken to be 2010. This indicator is calculated for the purse seine fisheries operating in regions 2, 3 and 5 excluding the associated purse seine fishery in region 5 which has a standardised effort index. The indicator is calculated in a similar way to performance indicator 6. The absolute annual difference of the effort relative to the base effort (in 2010) is calculated for each simulation in each year"), 
-          p("As well as the variability, the stability is calculated. A stability of 1 implies that the relative effort does not change at all over time, i.e. it is completely stable. A stability of 0 means that the relative effort is very variable in time. In PIMPLE only the stability is shown."),
-          br(),
-          h3("Indicator 8. Stability and continuity of market supply"),
-          p("This indicator is concerned with maintaining the stock size around the TRP levels (where the interim TRP for skipjack is SB/SBF=0 = 0.5).  It is assumed that the further away SB/SBF=0 is from 0.5, the worse the HCR can be thought to be performing, i.e. it is better to have SB/SB_F=0 close to 0.5 on average."),
-          p("An indicator value of 1 implies that SB/SB_F=0 is exactly at the TRP and a value of 0 is as far from the TRP as possible. This means that you want this indicator to be close to 1. In PIMPLE only the stability is shown."),
-          br(),
-          h3("Mean weight of an individual in the population"),
-          p("This indicator measures the mean weight of an individual in the population, not the catch. It is calulated by taking the total weight of individuals across the region and dividing it by the total number of individuals across the region. These kind of indicators are important because they can provide information on changes to the size structure of a population as a result of fishing and changes in environmental conditions."), 
-          br(),
-          h2("The Plots"),
-          br(),
-          h3("Bar plots"),
-          p("The bar plots show the median values of each of the indicators, averaged over the three time periods."),
-          h3("Box plots"),
-          p("The bar plots show the distribution of values of each of the indicators, averaged over the three time periods.
-             The box contains the 20-80 percentiles, the tails the 5-95 percentiles. The solid horizontal line is the median value."),
-          h3("Time series plots"), 
-          p("The ribbons show the 10-90 percentiles. The dashed line shows the median value.")
+          column(12,
+            includeMarkdown("introduction.md")
+          )
+                 
+                 
+                 
+                 
+                 
+                 
+          #h1("PIMPLE"),
+          #p("PIMPLE is a tool for exploring and comparing the performance of alternative candidate harvest control rules (HCRs).
+          #The performance can be explored using a range of different plots and tables.
+          #This allows trade-offs between the different HCRs to be evaluated.
+          #The performance of each HCR is measured using different performance indicators (PIs). More details of the PIs are given in the PIMPLE user guide."), 
+          #br(),
+          #h2("The Indicators"),
+          #br(),
+          #h3("SB/SBF=0"),
+          #p("The depletion of the stock, i.e. the ratio of the current adult biomass to the adult biomass in the absence of fishing. It is comparable to the Limit Reference Point (0.2) and Target Reference Point (0.5, interim)."),
+          #br(),
+          #h3("Indicator 1. Maintain SKJ biomass at or above levels that provide fishery sustainability throughout their range"),
+          #p("This is calculated as the probability of the SB/SBF=0 being above the Limit Reference Point (0.2)"),
+          #br(),
+          #h3("Indicator 3. Maximise economic yield from the fishery (average expected catch)"),
+          #p("This indicator is based on the average expected catch. It is calculated either as the absolute level of expected catch, or relative the average catch level in 2013-15"),
+          #p("The catch is either the total catch in the whole region, or only the purse seine catch from stock assessment regions 2,3 and 5."),
+          #br(),
+          #h3("Indicator 4. Maintain acceptable CPUE"),
+          #p("This indicator is based on the average deviation of predicted skipjack CPUE from reference period levels.  It is calculated as the CPUE relative to the CPUE in a reference period.  Here the reference period is taken to be 2010."),
+          #br(),
+          #h3("Indicator 6. Catch stability"),
+          #p("This indicator is concerned with the average annual variation in catch. It is calculated over the whole region and for the combined purse seine fisheries in regions 2, 3 and 5. The indicator is calculated by taking the absolute annual difference of the catch for each simulation and in each year."),
+          #p("As well as the variability in the catch, the stability (the inverse of the variability) is calculated.  This involves rescaling the variability so that it is between 0 and 1. A stability of 1 implies that the catch does not change at all over time, i.e. it is completely stable. A stability of 0 means that the catch is very variable in time."),
+          #br(),
+          #h3("Indicator 7. Stability and continuity of market supply (effort variation relative to a reference period)"),
+          #p("This indicator is concerned with effort variation relative to the effort in a reference period, i.e. stability of the relative effort. Here the reference period is taken to be 2010. This indicator is calculated for the purse seine fisheries operating in regions 2, 3 and 5 excluding the associated purse seine fishery in region 5 which has a standardised effort index. The indicator is calculated in a similar way to performance indicator 6. The absolute annual difference of the effort relative to the base effort (in 2010) is calculated for each simulation in each year"), 
+          #p("As well as the variability, the stability is calculated. A stability of 1 implies that the relative effort does not change at all over time, i.e. it is completely stable. A stability of 0 means that the relative effort is very variable in time. In PIMPLE only the stability is shown."),
+          #br(),
+          #h3("Indicator 8. Stability and continuity of market supply"),
+          #p("This indicator is concerned with maintaining the stock size around the TRP levels (where the interim TRP for skipjack is SB/SBF=0 = 0.5).  It is assumed that the further away SB/SBF=0 is from 0.5, the worse the HCR can be thought to be performing, i.e. it is better to have SB/SB_F=0 close to 0.5 on average."),
+          #p("An indicator value of 1 implies that SB/SB_F=0 is exactly at the TRP and a value of 0 is as far from the TRP as possible. This means that you want this indicator to be close to 1. In PIMPLE only the stability is shown."),
+          #br(),
+          #h3("Mean weight of an individual in the population"),
+          #p("This indicator measures the mean weight of an individual in the population, not the catch. It is calulated by taking the total weight of individuals across the region and dividing it by the total number of individuals across the region. These kind of indicators are important because they can provide information on changes to the size structure of a population as a result of fishing and changes in environmental conditions."), 
+          #br(),
+          #h2("The Plots"),
+          #br(),
+          #h3("Bar plots"),
+          #p("The bar plots show the median values of each of the indicators, averaged over the three time periods."),
+          #h3("Box plots"),
+          #p("The bar plots show the distribution of values of each of the indicators, averaged over the three time periods.
+          #   The box contains the 20-80 percentiles, the tails the 5-95 percentiles. The solid horizontal line is the median value."),
+          #h3("Time series plots"), 
+          #p("The ribbons show the 10-90 percentiles. The dashed line shows the median value.")
         ),
 
         #----------------------------------------------------------------------------
