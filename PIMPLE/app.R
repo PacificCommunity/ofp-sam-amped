@@ -21,10 +21,10 @@ load("data/preWCPFC2019_results.Rdata")
 get_hcr_colours <- function(hcr_names, chosen_hcr_names){
   # Looks OK
   #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdYlBu"))(length(hcr_names))
-  allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"PiYG"))(length(hcr_names))
+  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"PiYG"))(length(hcr_names))
   #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Dark2"))(length(hcr_names))
   #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Set2"))(length(hcr_names))
-  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
+  allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
   #  Wes Anderson palette - use Steve Zissou - but too similar at the ends
   #allcols <- wesanderson::wes_palette("Zissou1", length(hcr_names), type = "continuous")
   # See these notes:
@@ -118,17 +118,20 @@ side_panel_width <- 12 - main_panel_width
 # When is short, medium and long-term?
 
 short <- range(subset(yearqs, period=="Short")$year)
-shorttext <- paste(short, collapse="-")
 medium <- range(subset(yearqs, period=="Medium")$year)
-mediumtext <- paste(medium, collapse="-")
 long <- range(subset(yearqs, period=="Long")$year)
-longtext <- paste(long, collapse="-")
 
+shorttext <- paste(short, collapse="-")
+mediumtext <- paste(medium, collapse="-")
+longtext <- paste(long, collapse="-")
 yearrangetext <- paste("Short-term is: ", shorttext, ", medium-term is: ", mediumtext, " and long-term is: ", longtext,".",sep="")
 pi47text <- "Note that PIs 4 and 7 are for the purse seines in model areas 2, 3 and 5 only (excluding the associated purse seines in area 5.)"
 pi36text <- "The grouping for PIs 3 and 6 is given by the drop down menu on the left."
 biotext <- "PIs 1, 8 and SB/SBF=0 are calculated over all model areas."
-relcatchtext <- "Note that the catches are relative to the average catch in the years 2013-2015."
+relcatchtext <- "Note that the catches are relative to the average catch in that area grouping in the years 2013-2015."
+boxplottext <- "For box plots the box contains the 20-80 percentiles, the whiskers the 5-95 percentiles and the horizontal line is the median."
+tabletext <- "The tables show the median indicator values in each time period. The values inside the parentheses are the 10-90 percentiles."
+stabtext <- "Note that the stability can only be compared between time periods, not between areas or area groups, i.e. it is the relative stability in that area."
 
 #------------------------------------------------------------------------------------------------------
 
@@ -158,13 +161,13 @@ ui <- fluidPage(id="top",
       # Careful with conditional
       conditionalPanel(condition="(input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')))",
         #selectInput(inputId = "catchareachoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235", "Area 1"="1", "Area 2"="2", "Area 3"="3", "Area 4"="4", "Area 5"="5"), selected="total")
-        selectInput(inputId = "catchareachoice", label="Catch grouping (for PIs 3 and 6 only)", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235"), selected="total")
+        selectInput(inputId = "catchareachoice", label="Catch grouping (PIs 3 & 6 only)", choices = list("All areas"="total", "Purse seines in areas 2,3 & 5"="ps235"), selected="total")
         #selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
       ),
 
       # For selecting catch plots by area 
       conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi32' || input.pitab== 'pi62'))",
-        checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list(Total = "total", "PS in 2,3 & 5" = "ps235", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5" ), selected="total")
+        checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list("All areas" = "total", "Purse seines in areas 2,3 & 5" = "ps235", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5" ), selected="total")
       ),
 
       # Select plot type by bar, box, time
@@ -240,21 +243,32 @@ ui <- fluidPage(id="top",
           h3("Time series plots"), 
           p("The ribbons show the 10-90 percentiles. The dashed line shows the median value.")
         ),
+
+        #----------------------------------------------------------------------------
         tabPanel("Compare performance", value="compareMPs",
           tabsetPanel(id="comptab",
             tabPanel("Bar charts", value="bar",
-              plotOutput("plot_bar_comparehcr", height="600px"),
-              p(yearrangetext),
-              p(pi47text),
-              p(biotext),
-              p(pi36text)
+              fluidRow(column(12,
+                plotOutput("plot_bar_comparehcr", height="auto") # Needs function in the plotOutput() function
+              )),
+              fluidRow(column(12,
+                p(yearrangetext),
+                p(pi47text),
+                p(biotext),
+                p(pi36text)
+              ))
             ),
             tabPanel("Box plots", value="box",
-              plotOutput("plot_box_comparehcr", height="600px"),
-              p(yearrangetext),
-              p(pi47text),
-              p(biotext),
-              p(pi36text)
+              fluidRow(column(12,
+                plotOutput("plot_box_comparehcr", height="auto") # Needs function in the plotOutput() function
+              )),
+              fluidRow(column(12,
+                p(boxplottext),
+                p(yearrangetext),
+                p(pi47text),
+                p(biotext),
+                p(pi36text)
+              ))
             ),
             tabPanel("Radar plots", value="radar",
               fluidRow(
@@ -269,15 +283,17 @@ ui <- fluidPage(id="top",
               )
             ),
             tabPanel("Time series plots", value="timeseries",
-              tags$span(title="Note that not all indicators have time series plots. The widths of the ribbons are the 10-90 percentiles. The dashed, black line is the median value.",
-                plotOutput("plot_timeseries_comparehcr") # height is variable
-              )
+              fluidRow(column(12,
+                p("Note that not all indicators have time series plots. The widths of the ribbons are the 10-90 percentiles. The dashed, black line is the median value."),
+                plotOutput("plot_timeseries_comparehcr", height="auto") # height is variable
+              ))
             ),
             tabPanel("Table", value="bigtable",
               tags$span(title="Median indicator values. The values inside the parentheses are the 10-90 percentiles",
                 tableOutput("table_pis_short"),
                 tableOutput("table_pis_medium"),
                 tableOutput("table_pis_long"),
+                p(tabletext),
                 p(yearrangetext),
                 p(pi47text),
                 p(biotext),
@@ -362,7 +378,7 @@ ui <- fluidPage(id="top",
             #  p("Note that the catches are relative to the average catch in the years 2013-2015."),
             #  p(yearrangetext)
             #),
-            tabPanel("PI 3: Catches by area",value="pi32",
+            tabPanel("PI 3: Relative catches by area",value="pi32",
               column(12, fluidRow(
                 # Can't put text at end as not very fluid
                 #p("Note that the catches are relative to the average catch in the years 2013-2015."),
@@ -403,7 +419,8 @@ ui <- fluidPage(id="top",
               column(12, fluidRow(
                 plotOutput("plot_pi6", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
                 p(relcatchtext),
-                p(yearrangetext)
+                p(yearrangetext),
+                p(stabtext)
               ))
             ),
 
@@ -496,6 +513,208 @@ server <- function(input, output, session) {
       selected = newsel)
   })
 
+
+  #-------------------------------------------------------------------
+  # Comparison plots
+  no_facets_row <- 2#2
+  height_per_pi <- 300
+  height_per_area <- 300
+
+  # Bar or box plot - facetting on PI
+  plot_barbox_comparehcr <- function(plot_type="median_bar"){
+    rPlot <- renderPlot({
+      # It gets complicated because each PI has suboption in area, metric columns
+      # biomass: area == all and metric == SBSBF0
+      # pi1: area == all
+      # pi3: area == catchareachoice and metric == catchrelchoice
+      # pi4: metric == relative_cpue
+      # pi6: area == catchareachoice and metric == stability or variability - just stab
+      # pi7: metric == stability or variability - just stab
+      # pi8: area == all
+      # mw: mean_weight
+
+      # Put these together
+      # area is catchareachoice
+      # metric is catchrelchoice, stability, or NA
+      hcr_choices <- input$hcrchoice
+      pi_choices <- input$pichoice
+      if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
+        return()
+      }
+      catch_area_choice <- input$catchareachoice
+      other_area_choice <- c(as.character(NA), "all")
+      catch_rel_choice <- "relative catch"
+      metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+      # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+      dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
+      #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
+      # Need to hack pi1 so that all quantiles = X50., else NA
+      dat[dat$pi=="pi1",c("X5.", "X20.", "X80.", "X95.")] <- dat[dat$pi=="pi1","X50."]
+      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+      p <- p + ggplot2::ylim(0,NA)
+      p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
+      # Add LRP and TRP lines
+      # Only if SB/SBF=0 is in dat
+      if ("SB/SBF=0" %in% pi_choices){
+        p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+        p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+      }
+      p <- p + ggplot2::facet_wrap(~piname, scales="free", ncol=no_facets_row)
+      return(p)
+    },
+      height=function(){
+        return(max(height_per_pi*1.5, (height_per_pi * ceiling(length(input$pichoice) / no_facets_row))))
+      }
+    )
+    return(rPlot)
+  }
+
+  output$plot_bar_comparehcr <- plot_barbox_comparehcr(plot_type="median_bar")
+  output$plot_box_comparehcr <- plot_barbox_comparehcr(plot_type="box")
+
+  # Radar plot
+  # Some repetition of metric, set, area combos
+  # Add border to radar
+  output$plot_radar_comparehcr <- renderPlot({
+    # Subsetting out as above
+    hcr_choices <- input$hcrchoice
+    pi_choices <- input$pichoice
+    #set_choices <- c(input$catchsetchoice, as.character(NA))
+    #metric_choices <- c(input$catchrelchoice,"mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #area_choices <- c("all", as.character(NA))
+    catch_area_choice <- input$catchareachoice
+    other_area_choice <- c(as.character(NA), "all")
+    catch_rel_choice <- "relative catch"
+    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    # We have 8 PIs - but not all are appropriate for a radar plot as bigger is not better.
+    # Drop SB/SBF=0 and Size based one 
+    not_radar_pinames <- c("SB/SBF=0", "Mean weight of individual")
+    pi_choices <- pi_choices[!(pi_choices %in% not_radar_pinames)]
+    if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
+      return()
+    }
+    #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+
+    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+    dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
+
+    #scaling_choice <- input$radarscaling
+    scaling_choice <- "scale"
+    p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
+    return(p)
+  })
+
+  # Time series comparisons
+  #pinames_ts <- c("PI 1: Prob. above LRP", "SB/SBF=0", "PI 3: Catch","PI 4: Relative CPUE", "PI 8: Proximity to TRP", "Mean weight of individual")
+  pinames_ts <- c("SB/SBF=0", newpi3name, newpi4name, "PI 8: Proximity to TRP")
+  output$plot_timeseries_comparehcr <- renderPlot({
+    show_spaghetti <- input$showspag
+    hcr_choices <- input$hcrchoice
+
+    # Only these ones allowed
+    pi_choices <- input$pichoice
+    pi_choices <- pi_choices[pi_choices %in% pinames_ts]
+
+    #set_choices <- c(input$catchsetchoice, as.character(NA))
+    #metric_choices <- c(input$catchrelchoice,"mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #metric_choices <- c("relative catch","mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #area_choices <- c("all", as.character(NA))
+    if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
+      return()
+    }
+
+    catch_area_choice <- input$catchareachoice
+    other_area_choice <- c(as.character(NA), "all")
+    catch_rel_choice <- "relative catch"
+    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+    dat <- subset(yearqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & piname %in% pi_choices & metric %in% metric_choices)
+    wormdat <- subset(worms, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & piname %in% pi_choices & metric %in% metric_choices & iter %in% wormiters)
+
+    #dat <- subset(yearqs, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+    #wormdat <- subset(worms, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices & iter %in% wormiters)
+
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
+    #p <- p + ylab("Catch")
+    p <- p + ggplot2::ylim(c(0,NA))
+    # Axes limits set here or have tight?
+    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+    p <- p + ggplot2::ylab("Value")
+    # Add LRP and TRP if SB/SBF=0 is plotted
+    if ("SB/SBF=0" %in% pi_choices){
+      p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+      p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+    }
+    return(p)
+  }, height=function(){max(height_per_pi*1.5, (height_per_pi * length(input$pichoice[input$pichoice %in% pinames_ts])))})
+
+#  # Plot the HCR shapes and the bits that were active
+#  output$plot_hcrshape <- renderPlot({
+#    # Able to choose which HCRs
+#    hcr_choices <- input$hcrchoice
+#    if(length(hcr_choices) < 1){
+#      return()
+#    }
+#    p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
+#    return(p)
+#  })
+#
+#  # Plot histogram of effort multipliers
+#  output$plot_hcrhistograms <- renderPlot({
+#    hcr_choices <- input$hcrchoice
+#    if(length(hcr_choices) < 1){
+#      return()
+#    }
+#    p <- hcr_histo_plot(hcr_choices, histodat)
+#    return(p)
+#  })
+
+
+  get_pi_table <- function(period_choice="Short"){
+    hcr_choices <- input$hcrchoice
+    pi_choices <- input$pichoice
+    #set_choices <- c(input$catchsetchoice, as.character(NA))
+    #metric_choices <- c(input$catchrelchoice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #metric_choices <- c("relative catch", "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #area_choices <- c("all", as.character(NA))
+    catch_area_choice <- input$catchareachoice
+    other_area_choice <- c(as.character(NA), "all")
+    catch_rel_choice <- "relative catch"
+    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+
+    if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
+      return()
+    }
+    #dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
+    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+    dat <- subset(periodqs, hcrref %in% hcr_choices & ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == period_choice & piname %in% pi_choices & metric %in% metric_choices)
+    tabdat <- pitable(dat, percentile_range = pi_percentiles)
+    return(tabdat)
+  }
+
+  output$table_pis_short <- renderTable({
+      tabdat <- get_pi_table(period_choice="Short")
+    },
+    rownames = FALSE,
+    caption= "Performance indicators in the short-term",
+    auto=TRUE
+  )
+
+  output$table_pis_medium <- renderTable({
+      tabdat <- get_pi_table(period_choice="Medium")
+    },
+    rownames = FALSE,
+    caption= "Performance indicators in the medium-term",
+    auto=TRUE
+  )
+
+  output$table_pis_long <- renderTable({
+      tabdat <- get_pi_table(period_choice="Long")
+    },
+    rownames = FALSE,
+    caption= "Performance indicators in the long-term",
+    auto=TRUE
+  )
 
   #-------------------------------------------------------------------
   # Individual PI plots
@@ -603,8 +822,6 @@ server <- function(input, output, session) {
 
 
   # For exploring the catches in different regions
-  height_per_area <- 300
-  no_facets_row <- 2
   output$plot_pi3 <- renderPlot({
     # If no HCRs chosen just leave
     hcr_choices <- input$hcrchoice
@@ -627,7 +844,7 @@ server <- function(input, output, session) {
       dat <- subset(periodqs, period != "Rest" & pi=="pi3" & area %in% area_choice & metric == catch_rel_choice) 
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
       p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
-      p <- p + ggplot2::facet_wrap(~area, ncol=no_facets_row)
+      p <- p + ggplot2::facet_wrap(~area_name, ncol=no_facets_row)
     }
 
     if(plot_choice == "time"){
@@ -638,7 +855,7 @@ server <- function(input, output, session) {
       p <- p + ggplot2::ylab(ylabel)
       p <- p + ggplot2:: ylim(c(0,NA))
       # Axes limits set here or have tight?
-      p <- p + ggplot2::facet_wrap(~area, scales="free", ncol=1)
+      p <- p + ggplot2::facet_wrap(~area_name, scales="free", ncol=1)
       p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
     }
     return(p)
@@ -674,7 +891,7 @@ server <- function(input, output, session) {
 
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
     p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
-    p <- p + ggplot2::facet_wrap(~area, ncol=no_facets_row)
+    p <- p + ggplot2::facet_wrap(~area_name, ncol=no_facets_row)
     return(p)
 
 
@@ -864,200 +1081,6 @@ server <- function(input, output, session) {
 
 
 
-  #-------------------------------------------------------------------
-  # Comparison plots
-
-  # Bar or box plot - facetting on PI
-  plot_barbox_comparehcr <- function(plot_type="median_bar"){
-    rPlot <- renderPlot({
-      # It gets complicated because each PI has suboption in area, metric columns
-      # biomass: area == all and metric == SBSBF0
-      # pi1: area == all
-      # pi3: area == catchareachoice and metric == catchrelchoice
-      # pi4: metric == relative_cpue
-      # pi6: area == catchareachoice and metric == stability or variability - just stab
-      # pi7: metric == stability or variability - just stab
-      # pi8: area == all
-      # mw: mean_weight
-
-      # Put these together
-      # area is catchareachoice
-      # metric is catchrelchoice, stability, or NA
-      hcr_choices <- input$hcrchoice
-      pi_choices <- input$pichoice
-      if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
-        return()
-      }
-      catch_area_choice <- input$catchareachoice
-      other_area_choice <- c(as.character(NA), "all")
-      catch_rel_choice <- "relative catch"
-      metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-      # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
-      dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
-      #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
-      # Need to hack pi1 so that all quantiles = X50., else NA
-      dat[dat$pi=="pi1",c("X5.", "X20.", "X80.", "X95.")] <- dat[dat$pi=="pi1","X50."]
-      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-      p <- p + ggplot2::ylim(0,NA)
-      p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
-      # Add LRP and TRP lines
-      # Only if SB/SBF=0 is in dat
-      if ("SB/SBF=0" %in% pi_choices){
-        p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
-        p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
-      }
-      return(p)
-    })
-    return(rPlot)
-  }
-
-  output$plot_bar_comparehcr <- plot_barbox_comparehcr(plot_type="median_bar")
-  output$plot_box_comparehcr <- plot_barbox_comparehcr(plot_type="box")
-
-  # Radar plot
-  # Some repetition of metric, set, area combos
-  # Add border to radar
-  output$plot_radar_comparehcr <- renderPlot({
-    # Subsetting out as above
-    hcr_choices <- input$hcrchoice
-    pi_choices <- input$pichoice
-    #set_choices <- c(input$catchsetchoice, as.character(NA))
-    #metric_choices <- c(input$catchrelchoice,"mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #area_choices <- c("all", as.character(NA))
-    catch_area_choice <- input$catchareachoice
-    other_area_choice <- c(as.character(NA), "all")
-    catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    # We have 8 PIs - but not all are appropriate for a radar plot as bigger is not better.
-    # Drop SB/SBF=0 and Size based one 
-    not_radar_pinames <- c("SB/SBF=0", "Mean weight of individual")
-    pi_choices <- pi_choices[!(pi_choices %in% not_radar_pinames)]
-    if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
-      return()
-    }
-    #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
-
-    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
-    dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
-
-    #scaling_choice <- input$radarscaling
-    scaling_choice <- "scale"
-    p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
-    return(p)
-  })
-
-  # Time series comparisons
-  height_per_pi <- 300
-  #pinames_ts <- c("PI 1: Prob. above LRP", "SB/SBF=0", "PI 3: Catch","PI 4: Relative CPUE", "PI 8: Proximity to TRP", "Mean weight of individual")
-  pinames_ts <- c("SB/SBF=0", newpi3name, newpi4name, "PI 8: Proximity to TRP")
-  output$plot_timeseries_comparehcr <- renderPlot({
-    show_spaghetti <- input$showspag
-    hcr_choices <- input$hcrchoice
-
-    # Only these ones allowed
-    pi_choices <- input$pichoice
-    pi_choices <- pi_choices[pi_choices %in% pinames_ts]
-
-    #set_choices <- c(input$catchsetchoice, as.character(NA))
-    #metric_choices <- c(input$catchrelchoice,"mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #metric_choices <- c("relative catch","mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #area_choices <- c("all", as.character(NA))
-    if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
-      return()
-    }
-
-    catch_area_choice <- input$catchareachoice
-    other_area_choice <- c(as.character(NA), "all")
-    catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
-    dat <- subset(yearqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
-    wormdat <- subset(worms, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices & iter %in% wormiters)
-
-    #dat <- subset(yearqs, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
-    #wormdat <- subset(worms, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices & iter %in% wormiters)
-
-    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
-    #p <- p + ylab("Catch")
-    p <- p + ggplot2::ylim(c(0,NA))
-    # Axes limits set here or have tight?
-    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-    p <- p + ggplot2::ylab("Value")
-    # Add LRP and TRP if SB/SBF=0 is plotted
-    if ("SB/SBF=0" %in% pi_choices){
-      p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
-      p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
-    }
-    return(p)
-  }, height=function(){max(height_per_pi*1.5, (height_per_pi * length(input$pichoice[input$pichoice %in% pinames_ts])))})
-
-#  # Plot the HCR shapes and the bits that were active
-#  output$plot_hcrshape <- renderPlot({
-#    # Able to choose which HCRs
-#    hcr_choices <- input$hcrchoice
-#    if(length(hcr_choices) < 1){
-#      return()
-#    }
-#    p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
-#    return(p)
-#  })
-#
-#  # Plot histogram of effort multipliers
-#  output$plot_hcrhistograms <- renderPlot({
-#    hcr_choices <- input$hcrchoice
-#    if(length(hcr_choices) < 1){
-#      return()
-#    }
-#    p <- hcr_histo_plot(hcr_choices, histodat)
-#    return(p)
-#  })
-
-
-  get_pi_table <- function(period_choice="Short"){
-    hcr_choices <- input$hcrchoice
-    pi_choices <- input$pichoice
-    #set_choices <- c(input$catchsetchoice, as.character(NA))
-    #metric_choices <- c(input$catchrelchoice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #metric_choices <- c("relative catch", "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #area_choices <- c("all", as.character(NA))
-    catch_area_choice <- input$catchareachoice
-    other_area_choice <- c(as.character(NA), "all")
-    catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-
-    if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
-      return()
-    }
-    #dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
-    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
-    dat <- subset(periodqs, hcrref %in% hcr_choices & ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == period_choice & piname %in% pi_choices & metric %in% metric_choices)
-    tabdat <- pitable(dat, percentile_range = pi_percentiles)
-    return(tabdat)
-  }
-
-  output$table_pis_short <- renderTable({
-      tabdat <- get_pi_table(period_choice="Short")
-    },
-    rownames = FALSE,
-    caption= "Performance indicators in the short-term",
-    auto=TRUE
-  )
-
-  output$table_pis_medium <- renderTable({
-      tabdat <- get_pi_table(period_choice="Medium")
-    },
-    rownames = FALSE,
-    caption= "Performance indicators in the medium-term",
-    auto=TRUE
-  )
-
-  output$table_pis_long <- renderTable({
-      tabdat <- get_pi_table(period_choice="Long")
-    },
-    rownames = FALSE,
-    caption= "Performance indicators in the long-term",
-    auto=TRUE
-  )
 
 }
 
