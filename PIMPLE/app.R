@@ -6,10 +6,11 @@
 # Copyright 2019 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 #--------------------------------------------------------------
-# rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
+#rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
 # Load packages
 library(AMPLE)
 library(RColorBrewer)
+library(markdown)
 
 # Load the data
 load("data/preWCPFC2019_results.Rdata")
@@ -112,6 +113,36 @@ names(piselector) <- pis_text
 
 worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
 
+
+# -------------------------------------------
+# Stuff that could be in server()
+  # General plotting parameters
+  # Get these from the data rather than fixing them here
+  short_term <- sort(unique(subset(worms, period=="Short")$year))
+  medium_term <- sort(unique(subset(worms, period=="Medium")$year))
+  long_term <- sort(unique(subset(worms, period=="Long")$year))
+  last_plot_year <- max(long_term)
+  first_plot_year <- 1985
+  # Maybe make this an option in the future?
+  pi_percentiles <- c(10,90)
+
+  # Trim out years for tight time series plots
+  yearqs <- subset(yearqs, year %in% first_plot_year:last_plot_year)
+  worms <- subset(worms, year %in% first_plot_year:last_plot_year)
+
+  # Careful with these - they are only used for plotting lines, NOT for calculating the indicators
+  lrp <- 0.2
+  trp <- 0.5
+  # For the worms - same worms for all plots
+  # This can be increased to 20 - maybe make as option?
+  nworms <- 5
+  # worms are a unique combination of OM and iter
+  # (same om / iter should be in all hcrs)
+  wormiters <- sample(unique(worms$iter), nworms)
+
+# -------------------------------------------
+  # General settings for app
+
 main_panel_width <- 10
 side_panel_width <- 12 - main_panel_width 
 
@@ -198,60 +229,46 @@ ui <- fluidPage(id="top",
         title="Performance Indicators and Management Procedures Explorer",
         #----------- Introduction page ----------------------------------
         tabPanel("Introduction", value="intro",
-          column(12,
-            includeMarkdown("introduction.md")
+                 # How to use PIMPLE - Add to top
+          fluidRow(column(12, 
+            includeMarkdown("introtext/introduction.md")
+          )),
+          fluidRow(
+            column(6, 
+              includeMarkdown("introtext/barcharttext.md")
+            ),
+            column(6,
+              plotOutput("demobarchart")
+            )
+          ),
+          fluidRow(
+            column(6, 
+              includeMarkdown("introtext/boxplottext.md")
+            ),
+            column(6,
+              plotOutput("demoboxplot")
+            )
+          ),
+          fluidRow(
+            column(6, 
+              includeMarkdown("introtext/timeseriestext.md")
+            ),
+            column(6,
+              plotOutput("demotimeseriesplot")
+            )
+          ),
+          fluidRow(
+            column(6, 
+              includeMarkdown("introtext/radarplottext.md")
+            ),
+            column(6,
+              plotOutput("demoradarplot")
+            )
           )
                  
                  
                  
                  
-                 
-                 
-          #h1("PIMPLE"),
-          #p("PIMPLE is a tool for exploring and comparing the performance of alternative candidate harvest control rules (HCRs).
-          #The performance can be explored using a range of different plots and tables.
-          #This allows trade-offs between the different HCRs to be evaluated.
-          #The performance of each HCR is measured using different performance indicators (PIs). More details of the PIs are given in the PIMPLE user guide."), 
-          #br(),
-          #h2("The Indicators"),
-          #br(),
-          #h3("SB/SBF=0"),
-          #p("The depletion of the stock, i.e. the ratio of the current adult biomass to the adult biomass in the absence of fishing. It is comparable to the Limit Reference Point (0.2) and Target Reference Point (0.5, interim)."),
-          #br(),
-          #h3("Indicator 1. Maintain SKJ biomass at or above levels that provide fishery sustainability throughout their range"),
-          #p("This is calculated as the probability of the SB/SBF=0 being above the Limit Reference Point (0.2)"),
-          #br(),
-          #h3("Indicator 3. Maximise economic yield from the fishery (average expected catch)"),
-          #p("This indicator is based on the average expected catch. It is calculated either as the absolute level of expected catch, or relative the average catch level in 2013-15"),
-          #p("The catch is either the total catch in the whole region, or only the purse seine catch from stock assessment regions 2,3 and 5."),
-          #br(),
-          #h3("Indicator 4. Maintain acceptable CPUE"),
-          #p("This indicator is based on the average deviation of predicted skipjack CPUE from reference period levels.  It is calculated as the CPUE relative to the CPUE in a reference period.  Here the reference period is taken to be 2010."),
-          #br(),
-          #h3("Indicator 6. Catch stability"),
-          #p("This indicator is concerned with the average annual variation in catch. It is calculated over the whole region and for the combined purse seine fisheries in regions 2, 3 and 5. The indicator is calculated by taking the absolute annual difference of the catch for each simulation and in each year."),
-          #p("As well as the variability in the catch, the stability (the inverse of the variability) is calculated.  This involves rescaling the variability so that it is between 0 and 1. A stability of 1 implies that the catch does not change at all over time, i.e. it is completely stable. A stability of 0 means that the catch is very variable in time."),
-          #br(),
-          #h3("Indicator 7. Stability and continuity of market supply (effort variation relative to a reference period)"),
-          #p("This indicator is concerned with effort variation relative to the effort in a reference period, i.e. stability of the relative effort. Here the reference period is taken to be 2010. This indicator is calculated for the purse seine fisheries operating in regions 2, 3 and 5 excluding the associated purse seine fishery in region 5 which has a standardised effort index. The indicator is calculated in a similar way to performance indicator 6. The absolute annual difference of the effort relative to the base effort (in 2010) is calculated for each simulation in each year"), 
-          #p("As well as the variability, the stability is calculated. A stability of 1 implies that the relative effort does not change at all over time, i.e. it is completely stable. A stability of 0 means that the relative effort is very variable in time. In PIMPLE only the stability is shown."),
-          #br(),
-          #h3("Indicator 8. Stability and continuity of market supply"),
-          #p("This indicator is concerned with maintaining the stock size around the TRP levels (where the interim TRP for skipjack is SB/SBF=0 = 0.5).  It is assumed that the further away SB/SBF=0 is from 0.5, the worse the HCR can be thought to be performing, i.e. it is better to have SB/SB_F=0 close to 0.5 on average."),
-          #p("An indicator value of 1 implies that SB/SB_F=0 is exactly at the TRP and a value of 0 is as far from the TRP as possible. This means that you want this indicator to be close to 1. In PIMPLE only the stability is shown."),
-          #br(),
-          #h3("Mean weight of an individual in the population"),
-          #p("This indicator measures the mean weight of an individual in the population, not the catch. It is calulated by taking the total weight of individuals across the region and dividing it by the total number of individuals across the region. These kind of indicators are important because they can provide information on changes to the size structure of a population as a result of fishing and changes in environmental conditions."), 
-          #br(),
-          #h2("The Plots"),
-          #br(),
-          #h3("Bar plots"),
-          #p("The bar plots show the median values of each of the indicators, averaged over the three time periods."),
-          #h3("Box plots"),
-          #p("The bar plots show the distribution of values of each of the indicators, averaged over the three time periods.
-          #   The box contains the 20-80 percentiles, the tails the 5-95 percentiles. The solid horizontal line is the median value."),
-          #h3("Time series plots"), 
-          #p("The ribbons show the 10-90 percentiles. The dashed line shows the median value.")
         ),
 
         #----------------------------------------------------------------------------
@@ -483,29 +500,6 @@ ui <- fluidPage(id="top",
 
 # Server function
 server <- function(input, output, session) {
-  # General plotting parameters
-  # Get these from the data rather than fixing them here
-  short_term <- sort(unique(subset(worms, period=="Short")$year))
-  medium_term <- sort(unique(subset(worms, period=="Medium")$year))
-  long_term <- sort(unique(subset(worms, period=="Long")$year))
-  last_plot_year <- max(long_term)
-  first_plot_year <- 1985
-  # Maybe make this an option in the future?
-  pi_percentiles <- c(10,90)
-
-  # Trim out years for tight time series plots
-  yearqs <- subset(yearqs, year %in% first_plot_year:last_plot_year)
-  worms <- subset(worms, year %in% first_plot_year:last_plot_year)
-
-  # Careful with these - they are only used for plotting lines, NOT for calculating the indicators
-  lrp <- 0.2
-  trp <- 0.5
-  # For the worms - same worms for all plots
-  # This can be increased to 20 - maybe make as option?
-  nworms <- 5
-  # worms are a unique combination of OM and iter
-  # (same om / iter should be in all hcrs)
-  wormiters <- sample(unique(worms$iter), nworms)
 
   #-------------------------------------------------------------------
   # Make the checkbox inputs match each other
@@ -522,6 +516,73 @@ server <- function(input, output, session) {
       choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref),
       selected = newsel)
   })
+  #-------------------------------------------------------------------
+  # Intro plots
+  
+output$demobarchart <- renderPlot({
+  # Demo bar plot
+  pi_choices <- c("pi3")
+  metric_choices <- c("relative catch")
+  area_choices <- "total"
+  dat <- dplyr::filter(periodqs, period != "Rest" & pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
+  dat$hcrname <- as.character(dat$hcrname)
+  dat$hcrref <- as.character(dat$hcrref)
+  hcr_choices <- c("HCR 1", "HCR 6")
+  p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="median_bar")
+  p <- p + ggplot2::ylim(0,NA)
+  p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
+  return(p)
+})
+
+output$demoboxplot <- renderPlot({
+  # Demo bar plot
+  pi_choices <- c("pi3")
+  metric_choices <- c("relative catch")
+  area_choices <- "total"
+  dat <- dplyr::filter(periodqs, period != "Rest" & pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
+  dat$hcrname <- as.character(dat$hcrname)
+  dat$hcrref <- as.character(dat$hcrref)
+  hcr_choices <- c("HCR 1", "HCR 6")
+  p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="box")
+  p <- p + ggplot2::ylim(0,NA)
+  p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
+  return(p)
+})
+
+output$demotimeseriesplot <- renderPlot({
+  # Demo time series plot
+  hcr_choices <- c("HCR 1", "HCR 6")
+  pi_choices <- c("pi3")
+  metric_choices <- c("relative catch")
+  area_choices <- "total"
+  dat <- dplyr::filter(yearqs, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
+  wormdat <- dplyr::filter(worms, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
+  p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=FALSE, percentile_range = pi_percentiles)
+    p <- p + ggplot2::ylim(c(0,NA))
+    # Axes limits set here or have tight?
+    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+    p <- p + ggplot2::ylab("PI 3: Catch (rel. to 2013-2015)")
+  return(p)
+})
+
+output$demoradarplot <- renderPlot({
+  hcr_choices <- c("HCR 1", "HCR 6")
+  catch_area_choice <- "total"
+  other_area_choice <- c(as.character(NA), "all")
+  catch_rel_choice <- "relative catch"
+  metric_choices <- c(catch_rel_choice, "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+  # Drop SB/SBF=0 and Size based one 
+  pi_choices <- unique(periodqs[!periodqs$upsidedown,"piname"])
+  not_radar_pinames <- c("SB/SBF=0")
+  pi_choices <- pi_choices[!(pi_choices %in% not_radar_pinames)]
+  # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+  dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == "Short" & piname %in% pi_choices & metric %in% metric_choices)
+  scaling_choice <- "scale"
+  p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
+  #p <- p + ggplot2::theme(axis.text=ggplot2::element_text(size=8), axis.title=ggplot2::element_text(size=8), strip.text=ggplot2::element_text(size=8), legend.text=ggplot2::element_text(size=8))
+  p <- p + ggplot2::theme(axis.text=ggplot2::element_text(size=8), axis.title=ggplot2::element_text(size=8))
+  return(p)
+})
 
 
   #-------------------------------------------------------------------

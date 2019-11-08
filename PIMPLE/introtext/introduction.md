@@ -10,7 +10,7 @@ A Management Procedure has three components:
 2. Analytical method (stock assessment model)
 3. Harvest Control Rule (HCR)
 
-For these results, the data collection and stock assessment model are the same for each MP, only the HCRs are different.
+For the current set of results, the data collection and stock assessment model are the same for each MP, only the HCRs are different.
 The goal is to find the HCR that is most likely to meet your management objectives.
 
 The performance of each HCR is measured using different performance indicators (PIs).
@@ -19,16 +19,27 @@ This allows trade-offs between the different HCRs to be evaluated.
 
 The focus should be on the *relative* performance of the different MPs, e.g. MP X results in higher catches than MP Y.
 
+## How to use PIMPLE
+
+The main purpose of PIMPLE is to compare the relative performance of HCRs. This is most easily done using the **Compare performance** tab at the top of the screen.
+This tab allows you to view the indicators using different plot types (see below).
+
+To aid investigation it is possible to select the indicators that are of most interest, and deselect those that are of less interest.
+Similarly, it is possible to select and deselect HCRs to focus attention on a smaller subset.
+
+A more detailed investigation of the indicators can be found under the **Explore indicators** tab at the top.
+This allows you to see the indicators in more detail, for example viewing the catch based indicators by model area.
+
 ## Model Areas
 
 The model used for the evaluations has five areas as seen here:
 
-![](figures/plot_assessment_boundaries.png)
+![](plot_assessment_boundaries.png)
 
 ## Performance Indicators
 
 Currently there are seven PIs included in PIMPLE.
-The numbers relate to their position in the original table of indicators. These numbers have been kept for convenience.
+Their numbers relate to their position in the original table of indicators. These numbers have been kept for convenience.
 
 The average values of the PIs are calculated over three time periods:
 
@@ -42,10 +53,10 @@ Some of the indicators are calculated over different model areas, or only calcul
 
 ### SB/SBF=0
 
-Ranges between 0 and 1.
 
-SB/SBF=0 is the the ratio of the adult biomass to the adult biomass in the absence of fishing (sometimes known as depletion).
-It is a measure of stock status and can be compared to the Limit Reference Point (0.2) and the Target Reference Point (0.5, interim).
+SB/SBF=0 is the ratio of the adult biomass to the adult biomass in the absence of fishing (sometimes known as depletion).
+The value ranges between 0 and 1.
+SB/SBF=0 is a measure of stock status and can be compared to the Limit Reference Point (0.2) and the Target Reference Point (0.5, interim).
 
 ### 1. Probability of SB/SBF=0 being above the Limit Reference Point (LRP)
 
@@ -99,10 +110,13 @@ The higher the value of the indicator, the closer SB/SBF=0 was to the TRP in eac
 A value of 1 means that the SB/SBF=0 was exactly at the TRP in each year.
 A value of 0 means that the SB/SBF=0 was as far from the TRP as possible in each year.
 
-Note that if the average value of SB/SBF=0 over a range of years is close to the TRP it does not necessarily mean that SB/SBF=0 was close to the TRP during those years.
+Note that this indicator is slightly different to comparing the average value of SB/SBF=0 to the TRP.
+If the average value of SB/SBF=0 over a range of years is close to the TRP it does not necessarily mean that SB/SBF=0 was close to the TRP during those years.
 For example, if SB/SBF=0 oscillated between 0.3 and 0.7 each year, the average value would be 0.5 but it would never have been very close to 0.5 in any year.
 
 ## Plot Types
+
+There are four plot types available in PIMPLE: bar charts, box plots, time series plots and radar plots. Each of them displays the information in a different way.
 
 
 
