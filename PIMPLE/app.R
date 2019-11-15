@@ -173,7 +173,8 @@ ui <- fluidPage(id="top",
   sidebarLayout(
     sidebarPanel(width=side_panel_width,
       br(),
-      img(src = "spc.png", height = 100),
+      img(src = "spc.png", height = 60),
+      br(),
       br(),
       conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs'",
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
