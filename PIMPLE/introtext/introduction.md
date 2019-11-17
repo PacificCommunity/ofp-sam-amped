@@ -10,8 +10,8 @@ A Management Procedure has three components:
 2. Analytical method (stock assessment model)
 3. Harvest Control Rule (HCR)
 
-For the current set of results, the data collection and stock assessment model are the same for each MP, only the HCRs are different.
-The goal is to find the HCR that is most likely to meet your management objectives.
+For the current set of results, the data collection and stock assessment model are the same for each MP, and only the HCRs are different.
+This means that we are comparing the performance of HCRs with the aim of selecting one that is most likely to meet your management objectives.
 
 The performance of each HCR is measured using different performance indicators (PIs).
 PIMPLE can be used to explore and compare the PIs in a number of ways, using different plots and tables.
@@ -69,7 +69,7 @@ Higher values are preferred, depending on the level of risk that managers and st
 ### 3. Catches
 
 The catches are presented as relative to the average catches in the period 2013 to 2015.
-They are calculated over several groupings, based on area and fishery.
+They are calculated over several groupings, based on area and fishery:
 
 * Total catch over all areas and fisheries
 * Purse seine catches in areas 2, 3 and 5
@@ -84,11 +84,10 @@ The CPUE is presented as relative to the CPUE in 2010.
 
 Catch stability measures how variable catches are in time. 
 The indicator ranges between 0 and 1. A value of 1 means that the catches do not change over time, i.e. they are constant.
-A value of 0 means that the catches vary relatively strongly over time.
+A value of 0 means that the catches vary relatively strongly over time, compared to the other HCRs.
 
 The indicator has been calculated over the same groupings as described for PI 3 (catches).
-
-Note that although the stability of catches can be compared across time different periods and HCRs, it cannot be compared between area groupings. 
+However, note that although the stability of catches can be compared across time different periods and HCRs, it cannot be compared between area groupings. 
 For example, you cannot compare the stabilities in area 1 to the stabilities in area 2.
 
 This indicator has also been calculated as the variability of relative catches (catches relative to the average catches in the period 2013 to 2015) over time.
@@ -112,7 +111,7 @@ A value of 0 means that the SB/SBF=0 was as far from the TRP as possible in each
 
 Note that this indicator is slightly different to comparing the average value of SB/SBF=0 to the TRP.
 If the average value of SB/SBF=0 over a range of years is close to the TRP it does not necessarily mean that SB/SBF=0 was close to the TRP during those years.
-For example, if SB/SBF=0 oscillated between 0.3 and 0.7 each year, the average value would be 0.5 but it would never have been very close to 0.5 in any year.
+For example, if SB/SBF=0 moved between 0.3 and 0.7 each year, the average value would be 0.5 but it would never have been very close to 0.5 in any year.
 
 ## Plot Types
 

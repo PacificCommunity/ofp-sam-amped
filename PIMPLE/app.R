@@ -17,7 +17,7 @@ library(markdown)
 load("data/preWCPFC2019_results.Rdata")
 
 
-#------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
 # HACKS 
 # This is a brutal hack to overwrite my own unexported palette function in the AMPLE NAMESPACE
 # This should be added to AMPLE for the new version and then removed from here
@@ -30,9 +30,8 @@ get_hcr_colours <- function(hcr_names, chosen_hcr_names){
 # WTF?!?!?
 assignInNamespace("get_hcr_colours", get_hcr_colours, ns="AMPLE", pos="package:AMPLE")
 
-#------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
 # Updated radar plot - also add to AMPLE when fixed
-
 myradar2 <- function(dat, hcr_choices, scaling="scale", polysize=2, textsize=5){
     hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
     dat <- subset(dat, hcrref %in% hcr_choices)
@@ -67,7 +66,7 @@ myradar2 <- function(dat, hcr_choices, scaling="scale", polysize=2, textsize=5){
     return(p)
 }
 
-#------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
 
 # HACK drop SQ HCRs
 hcr_points <- subset(hcr_points, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%")))
@@ -81,10 +80,6 @@ yearqs <- subset(yearqs, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%"))
 periodqs <- subset(periodqs, pi != "mw")
 yearqs <- subset(yearqs, pi != "mw")
 worms <- subset(worms, pi != "mw")
-
-# Set area NA to area 0 (for subsetting)
-#periodqs[is.na(periodqs$area),"area"] <- as.factor("0")
-
 
 # Rename some indicators
 # Catch to Relative catch
@@ -116,7 +111,6 @@ worms[worms$piname == oldpi72name, "piname"] <- newpi72name
 #------------------------------------------------------------------------------------------------------
 # Can we move all this down to the server side?
 # Data processing
-
 
 # Data for the histogram plots
 # Move all this to the data preparation stage
@@ -151,32 +145,33 @@ worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
 
 # -------------------------------------------
 # Stuff that could be in server()
-  # General plotting parameters
-  # Get these from the data rather than fixing them here
-  short_term <- sort(unique(subset(worms, period=="Short")$year))
-  medium_term <- sort(unique(subset(worms, period=="Medium")$year))
-  long_term <- sort(unique(subset(worms, period=="Long")$year))
-  last_plot_year <- max(long_term)
-  first_plot_year <- 1985
-  # Maybe make this an option in the future?
-  pi_percentiles <- c(10,90)
 
-  # Trim out years for tight time series plots
-  yearqs <- subset(yearqs, year %in% first_plot_year:last_plot_year)
-  worms <- subset(worms, year %in% first_plot_year:last_plot_year)
+# General plotting parameters
+# Get these from the data rather than fixing them here
+short_term <- sort(unique(subset(worms, period=="Short")$year))
+medium_term <- sort(unique(subset(worms, period=="Medium")$year))
+long_term <- sort(unique(subset(worms, period=="Long")$year))
+last_plot_year <- max(long_term)
+first_plot_year <- 1985
+# Maybe make this an option in the future?
+pi_percentiles <- c(10,90)
 
-  # Careful with these - they are only used for plotting lines, NOT for calculating the indicators
-  lrp <- 0.2
-  trp <- 0.5
-  # For the worms - same worms for all plots
-  # This can be increased to 20 - maybe make as option?
-  nworms <- 5
-  # worms are a unique combination of OM and iter
-  # (same om / iter should be in all hcrs)
-  wormiters <- sample(unique(worms$iter), nworms)
+# Trim out years for tight time series plots
+yearqs <- subset(yearqs, year %in% first_plot_year:last_plot_year)
+worms <- subset(worms, year %in% first_plot_year:last_plot_year)
+
+# Careful with these - they are only used for plotting lines, NOT for calculating the indicators
+lrp <- 0.2
+trp <- 0.5
+# For the worms - same worms for all plots
+# This can be increased to 20 - maybe make as option?
+nworms <- 5
+# worms are a unique combination of OM and iter
+# (same om / iter should be in all hcrs)
+wormiters <- sample(unique(worms$iter), nworms)
 
 # -------------------------------------------
-  # General settings for app
+# General settings for app
 
 main_panel_width <- 10
 side_panel_width <- 12 - main_panel_width 
@@ -199,7 +194,7 @@ boxplottext <- "For box plots the box contains the 20-80 percentiles, the whiske
 tabletext <- "The tables show the median indicator values in each time period. The values inside the parentheses are the 10-90 percentiles."
 stabtext <- "Note that the stability can only be compared between time periods, not between areas or area groups, i.e. it is the relative stability in that area."
 
-#------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
 
 # Navbarpage insidea fluidpage?
 # Pretty nasty but it means we get the power of the navparPage and can have common side panel
@@ -266,7 +261,7 @@ ui <- fluidPage(id="top",
         #----------- Introduction page ----------------------------------
         tabPanel("Introduction", value="intro",
                  # How to use PIMPLE - Add to top
-          fluidRow(column(12, 
+          fluidRow(column(8, 
             includeMarkdown("introtext/introduction.md")
           )),
           fluidRow(
@@ -521,7 +516,10 @@ ui <- fluidPage(id="top",
         #  )
         #),
         tabPanel("About", value="about",
-          spc_about()
+          fluidRow(column(8, 
+            #includeMarkdown("introtext/introduction.md")
+            spc_about()
+          ))
         )
       )
     )
