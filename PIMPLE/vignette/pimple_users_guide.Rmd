@@ -367,15 +367,13 @@ PI 1 (the probability of being above the LRP) only has a single value because it
 
 # Appendix 1:  Performance indicators
 
-The calculations for these indicators were presented at the WCPFC Scientific Committee Fourteenth Regular Session (SC14) in Busan, Korea in the working paper
-*Performance indicators for comparing management procedures using the MSE modelling framework (WCPFC-SC14-2018/MI-WP-04)*.
-That report included a description of how the performance indicators are calculated.
-Those calculations and descriptions are included here.
-
-Not all of the desired PIs have been calculated. More will be later.
+This section presents details on the performance indicators that are currently calculated.
+The calculations for these indicators were initially presented at the WCPFC Scientific Committee Fourteenth Regular Session (SC14) in Busan, Korea (WCPFC-SC14-2018/MI-WP-04).
+These calculations are summarised and, where appropriate, updated here.
+Note that only those indicators which are currently calculated are included. It is anticipated that other indicators will be included later.
 
 
-## Summary table of objectives and corresponding indicators 
+## Summary table of objectives and corresponding indicators
 
 \begin{table}[H]
 \scriptsize
@@ -383,191 +381,121 @@ Not all of the desired PIs have been calculated. More will be later.
     \hline
        PI & Objective type & MOW4 Strawman & Performance Indicator (WP14)\\
     \hline
-        1 & Biological & Maintain SKJ (and YFT and BET) biomass at or above levels that provide fishery sustainability throughout their range & Probability of $SB/SB_{F=0} > 0.2$ as determined from MSE.\\
+        & Biological &  & $SB/SB_{F=0}$\\
     \hline
-        3 & Economic    & Maximise economic yield from the fishery & Average expected catch. \\
+        1 & Biological & Maintain SKJ (and YFT and BET) biomass at or above levels that provide fishery sustainability throughout their range & Probability of $SB/SB_{F=0} > LRP$\\
     \hline
-        4 & Economic    & Maintain acceptable CPUE & Average deviation of predicted SKJ CPUE from reference period levels. \\
+        3 & Economic    & Maximise economic yield from the fishery & Catch relative to the average catch in 2013-2015 \\
     \hline
-        6 & Economic   & Catch stability & Average annual variation or stability in catch. \\
+        4 & Economic    & Maintain acceptable CPUE & CPUE relative to the CPUE in 2010\\
     \hline
-        7 & Economic   & Stability and continuity of market supply & Effort variation or stability relative to reference period level. \\
+        6 & Economic   & Catch stability & Average annual variation or stability in catch\\
     \hline
-        8 & Economic   & Stability and continuity of market supply & Deviation from $SB/SB_{F=0} > TRP$ (SKJ) in the short-, medium- and long-term as determined from MSE. \\
+        7 & Economic   & Stability and continuity of market supply & Average annual variation or stability in relative effort\\
+    \hline
+        8 & Economic   & Stability and continuity of market supply & The average distance of $SB/SB_{F=0}$ from the TRP\\
     \hline
   \end{tabularx}
-  \caption{\label{tab:execPIs} Summary of proposed performance indicators that can be calculated for the purse seine skipjack tuna fishery presented at SC14, Busan, Korea.}
+  \caption{\label{tab:execPIs} Summary of performance indicators currently calculated for the purse seine skipjack tuna fishery and the assocated objectives.}
 \end{table}
 
+## $SB/SB_{F=0}$
 
-## Indicator 1. Maintain SKJ biomass at or above levels that provide fishery sustainability throughout their range
+The indicator $SB/SB_{F=0}$ is the ratio of the adult biomass to the adult biomass in the absence of fishing (sometimes known as depletion).
 
-The indicator is the probability of $SB/SB_{F=0} > 0.2$ where 0.2 is the LRP for skipjack.
-
-The model for evaluating the HCRs reports the biomass ($SB$) and the unfished biomass ($SB_{F=0}$) by season and region.
+The model for evaluating the MPs reports the biomass ($SB$) and the unfished biomass ($SB_{F=0}$) by season and model area.
 The indicator is based on the mean annual biomass which is calculated by taking the mean biomass over the seasons.
-Although it is possible to calculate the indicator for each of the five regions in the model, here only the total biomass across all regions is considered.
+Although it is possible to calculate the indicator for each of the five areas in the model, here only the total biomass across all areas is considered.
 The unfished biomass is taken as the mean of the unfished biomass over a ten year moving window.
+$SB/SB_{F=0}$ is a measure of stock status and can be compared to the Limit Reference Point (0.2) and the Target Reference Point (0.5, interim) (see performance indicators 1 and 8).
 
-The probability of $SB/SB_{F=0} > 0.2$ in a particular year is calculated as the proportion of the simulations in a year in which $SB/SB_{F=0} > 0.2$:
+## Indicator 1. Probability of $SB/SB_{F=0} > LRP$
 
-$PI1_{y}=\dfrac{\displaystyle\sum_{n=1}^{N} SB/SB_{F=0,n,y} > 0.2}{N}$
+This indicator is linked to the objective: Maintain SKJ biomass at or above levels that provide fishery sustainability throughout their range.
+It measures the probability of $SB/SB_{F=0} > LRP$ where 0.2 is the LRP for skipjack.
 
-where $PI1_{y}$ is the probability of $SB/SB_{F=0} > 0.2$ in year $y$ and $N$ is the number of simulations.
-
+The probability of $SB/SB_{F=0} > 0.2$ in a particular year is calculated as the proportion of the replicates in a year in which $SB/SB_{F=0} > 0.2$.
 The indicator in each time period is then calculated as the average probability over the different time periods (short-, medium-, long-term).
 
-$PI1 = \displaystyle\sum_{y=y_{1}}^{y_{2}} Pr_{y}/ Y$
+## Indicator 3. Catch relative to the average catch in 2013-2015
 
-where $y_{1}$ and $y_{2}$ are the start and end years of the time period and $Y$ is in the number of years in the time period.
+This indicator is linked to the objective: Maximise economic yield from the fishery (average expected catch).
+It is based on the average expected catch, relative to the average catch in the years 2013-2015.
 
-## Indicator 3. Maximise economic yield from the fishery (average expected catch)
+The model used for evaluating the MPs reports catches at the area and fishery level. It is therefore possible to calculate this indicator for each fishery and each region in the model.
+%However, this would result in a large number of values for this indicator, making it challenging to understand the overall relative performances of the candidate MPs.
+Here the indicator is calculated for several different area and fishery groupings:
 
-This indicator is based on the average expected catch.
-The model used for evaluating the HCRs reports catches at the region and fishery level. It is therefore possible to calculate this indicator for each fishery and each region in the model.
-However, this would result in a large number of values for this indicator, making it challenging to understand the overall relative performances of the candidate HCRs.
-Here the indicator is calculated for the total expected catches across all regions and fisheries and also for the total of the expected catches from the tropical purse seine fisheries operating in model regions 2, 3, and 5 .
+\begin{itemize}
+\item Total catch over all areas and fisheries;
+\item Purse seine catches in areas 2, 3 and 5;
+\item Catches from all fisheries in individual areas.
+\end{itemize}
 
-The indicator is calculated by taking the average catch of each simulation over the desired year range (short-, medium- and long-term):
+The indicator is calculated by taking the average catch, relative to the average catch in 2013-2015, of each replicate over the desired year range (short-, medium- and long-term) for each area and fishery grouping.
+This gives a distribution of expected relative catches in each time period for each area and fishery grouping.
 
-$PI3_{n} = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} C_{n,y}}{Y}$
+## Indicator 4. CPUE relative to the CPUE in 2010
 
-Where $C$ is either the total catch of the whole region or of only the tropical purse seine fisheries in model regions 2, 3 and 5.
-This gives a distribution of $N$ expected catches in each time period.
-The median value and 20th and 80th percentiles of the distribution are then calculated.
+This indicator is linked to the objective: Maintain acceptable CPUE.
+It is based on the predicted skipjack CPUE relative to the CPUE in reference period levels. Here, the reference period level is taken to be 2010.
 
-The indicator is also rescaled so that the catches are relative to the average catches in the period 2013-2015.
-
-## Indicator 4. Maintain acceptable CPUE
-
-This indicator is based on the average deviation of predicted skipjack CPUE from reference period levels.
-It is calculated as the CPUE relative to the CPUE in a reference period. 
-Here the reference period is taken to be 2010. 
-
-The HCR evaluation model reports effort and catch at the fishery level which means it could be possible to calculate the indicator at the fishery, region and total level.
+The MP evaluation model reports effort and catch at the fishery level which means it could be possible to calculate the indicator at the fishery, area and total level.
 However, it is not always possible to combine the fishing effort from the different fisheries in the model as the historical effort of each fishery may or may not have been standardised (this does not affect the simulations as internally the effort is scaled).
 This indicator is therefore calculated in each year for the purse seine fisheries operating in model regions 2, 3 and 5 excluding the associated purse seine fishery in region 5 which has a standardised effort index:
 
-$PI4_{n,y} = CPUE_{n,y} / CPUE_{ref}$
-
-The average relative CPUE is calculated for each simulation over the desired year range (short-, medium- and long-term).
-
-$PI4_{n} = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} PI4_{n,y}}{Y}$
-
-This gives a distribution of $N$ values of relative CPUE in each time period.
-The median value and 20th and 80th percentiles of the distribution are then calculated.
-
-
 ## Indicator 6. Catch stability
 
-This indicator is concerned with the average annual variation in catch.
-As with indicator 3, it is possible to calculate this indicator by fishery and region.
-Here it is calculated over the whole region and for the combined purse seine fisheries in model regions 2, 3 and 5.
+This indicator is concerned with the average annual variation and stability in catch.
+As with indicator 3, it is possible to calculate this indicator by fishery and area.
+Here it is calculated using the same fishery and area groups as indicator 3.
 
-The indicator is calculated by taking the absolute annual difference of the catch for each simulation and in each year:
-
-$PI6_{y,n} = |C_{y+1,n} - C_{y,n}|$
-
-The absolute annual difference is then averaged over the desired year range (short-, medium- and long-term): 
-
-$PI6_{n} = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} PI6_{n,y}}{Y}$
-
-This gives a distribution of $N$ values in each time period.
-The median value and 20th and 80th percentiles of the distribution are then calculated.
-
-This indicator measures the variation in the catch, i.e. the higher the value of the indicator, the less stable the catch is.
-It is assumed that an HCR that produces a lower catch variation, i.e. a low value of the indicator, would be preferred.
+This indicator is calculated in two ways: the variability and the stability.
+The variability is calculated by taking the absolute annual difference of the catch for each simulation and in each year.
+This measures the variation in the catch, i.e. the higher the value of the indicator, the less stable the catch is.
+It is assumed that an MP that produces a lower catch variation, i.e. a low value of the indicator, would be preferred.
 
 As well as the variability in the catch, the stability (the inverse of the variability) can be calculated.
 This involves rescaling the variability so that it is between 0 and 1. A stability of 1 implies that the catch does not change at all over time, i.e. it is completely stable.
 A stability of 0 means that the catch is very variable in time.
 
 To calculate stability it is necessary to decide what level of variability gives a stability of 0.
-Here it is assumed that the variability that implies a stability of 0 is the 95th percentile of the observed catch variability across all time periods and HCRs.
-This assumption means that the stability can only be interpreted in relative terms (i.e. when comparing between HCRs and time periods) and does not mean much when a HCR is considered in isolation.
+Here it is assumed that the variability that implies a stability of 0 is the 95th percentile of the observed catch variability across all time periods and MPs, for each fishery and are grouping.
+This assumption means that the stability can only be interpreted in relative terms (i.e. when comparing between MPs and time periods).
 
 The advantage of using stability instead of variability is that a large value is preferred to a small value.
 This is in line with the other indicators where a large value is generally preferred.
+For this reason, the stability is used in PIMPLE as the indicator.
 
-## Indicator 7. Stability and continuity of market supply (effort variation relative to a reference period)
+## Indicator 7. Effort stability
 
-This indicator is concerned with effort variation relative to the effort in a reference period, i.e. stability of the relative effort.
+This indicator is linked to the objective: Stability and continuity of market supply.
+
+This indicator is concerned with the variation of relative effort (effort relative to the effort in a reference period).
 Here the reference period is taken to be 2010. 
 As with performance indicator 4, this indicator is calculated for the purse seine fisheries operating in regions 2, 3 and 5 excluding the associated purse seine fishery in region 5 which has a standardised effort index.
 
 The indicator is calculated in a similar way to performance indicator 6.
-The absolute annual difference of the effort relative to the base effort (in 2010) is calculated for each simulation in each year: 
-
-$PI7_{y,n} = |E_{y+1,n}/E_{ref} - E_{y,n}/E_{ref}|$
-
-The absolute annual difference is averaged over the desired year range (short-, medium- and long-term):
-
-$PI7_{n} = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} PI7_{n,y}}{Y}$
-
-This gives a distribution of the average absolute annual differences.
-The median value and 20th and 80th percentiles of the distribution are then calculated.
-
+The absolute annual difference of the effort relative to the base effort in 2010 is calculated for each replicate in each year. 
 Like indicator 6, this indicator measures the variation in the relative effort, i.e. the higher the value of the indicator, the less stable the relative effort is.
 It is assumed that MPs that produce a low value of this indicator are considered to be perform better.
 
-An alternative indicator that measures the stability (the inverse of the variability) is also calculated.
-It is calculated in the same way as the stability of the catches (indicator 6).
+An alternative indicator that measures the stability (the inverse of the variability) is also calculated in the saem way as the stability of the catches (indicator 6).
+Stability is used in PIMPLE as it is in line with the other indicators, where bigger is better.
 
-## Indicator 8. Stability and continuity of market supply
+## Indicator 8. The average distance of $SB/SB_{F=0}$ from the TRP
 
-This indicator is concerned with maintaining the stock size around the TRP levels (where the interim TRP for skipjack is $SB/SB_{F=0} = 0.5$).
+This indicator is also linked to the objective: Stability and continuity of market supply (along with indicator 7).
+It is concerned with maintaining the stock size around the TRP levels (where the interim TRP for skipjack is $SB/SB_{F=0} = 0.5$).
 It is assumed that the further away $SB/SB_{F=0}$ is from 0.5, the worse the HCR can be thought to be performing, i.e. it is better to have $SB/SB_{F=0}$ close to 0.5 on average.
 
 The deviation is calculated as the absolute difference between $SB/SB_{F=0}$ and the TRP, scaled by the maximum distance from the TRP (for skipjack this is 0.5).
 This value is substracted from 1 to rescale it so that an indicator value of 1 implies that $SB/SB_{F=0}$ is exactly at the TRP and a value of 0 is as far from the TRP as possible.
-This indicator value is calculated for each simulation in each year.
 
-$PI8_{n,y} = 1 - (|SB/SB_{n,y,F=0} - 0.5| / 0.5)$
+Note that this indicator is slightly different to comparing the average value of SB/SBF=0 to the TRP.
+If the average value of SB/SBF=0 over a range of years is close to the TRP it does not necessarily mean that SB/SBF=0 was close to the TRP during those years.
+For example, if SB/SBF=0 oscillated between 0.3 and 0.7 each year, the average value would be 0.5 but it would never have been very close to 0.5 in any year.
 
-The average over the three time periods is then taken to give a distribution of $N$ values for each time period.
-
-$PI8_{n} = \dfrac{\displaystyle\sum_{y=y_{1}}^{y_{2}} PI8_{n,y}}{Y}$
-
-The median value and 20th and 80th percentiles of the distribution are then calculated.
-The lower the value the better the MP is considered to be performing at maintaining $SB/SB_{F=0}$ at the TRP, i.e. a value of 1 means that $SB/SB_{F=0}$ is always exactly equal to the TRP and never deviates from it.
-
-## Mean weight of an individual in the population
-
-This indicator measures the mean weight of an individual in the population, not the catch.
-It is calculated by taking the total weight of individuals across the region and dividing it by the total number of individuals across the region.
-
-These kind of indicators are important because they can provide information on changes to the size structure of a population as a result of fishing and changes in environmental conditions. 
-
-## Summary table of indicator equations
-
-\begin{table}[H]
-\small
-\begin{tabularx}{\textwidth}{|p{0.03\linewidth}|X|X|}
-    \hline
-    & Performance Indicator & Equation \\
-    \hline
-    1 & Probability of $SB/SB_{F=0} > 0.2$. &  $PI1_{y}=\displaystyle\sum_{n=1}^{N} SB/SB_{F=0,n,y} > 0.2/N$ \\
-      & &  $PI1 = \displaystyle\sum_{y=y_{1}}^{y_{2}} PI1_{y}/Y$ \\
-    \hline
-    3 & Average expected catch & $PI3_{n} = \displaystyle\sum_{y=y_{1}}^{y_{2}} C_{n,y}/Y$ \\
-    \hline
-    4 & Average deviation of predicted SKJ CPUE from reference period levels & $PI4_{n,y} = CPUE_{n,y} / CPUE_{ref}$ \\
-    \hline
-    6 & Average annual variation in catch& $PI6_{y,n} = |C_{y+1,n} - C_{y,n}|$ \\
-    \hline
-    7 & Effort variation relative to reference period level& $PI7_{y,n} = |E_{y+1,n}/E_{ref} - E_{y,n}/E_{ref}|$ \\
-    \hline
-    8 & Deviation of $SB/SB_{F=0}$ from TRP (0.5) & $PI8_{n,y} = 1 - (|SB/SB_{n,y,F=0} - 0.5| / 0.5)$ \\
-    \hline
-     \multicolumn{3}{|l|}{PI 4,5,6,7,8 are summarised over the different time periods:
-     $PIX_{n} = \displaystyle\sum_{y=y_{1}}^{y_{2}} PIX_{n,y}/Y$ } \\
-    %\multicolumn{3}{|l|}{}\\
-    \hline
-    \end{tabularx}
-    \caption{\label{tab:PIeqs} Equations for calculating the the proposed performance indicators for the purse seine skipjack tuna fishery.
-    $SB$ is the adult biomass, $E$ is the effort, $C$ is catch, $CPUE$ is the catch per unit of effort, $N$ is the number of simulations, $n$ an individual simulation, $y_{1}$ and $y_{2}$ are the start and end years of the time period, $Y$ is in the number of years in the time period, $y$ is an individual year.
-        }
-    \end{table}
 
 
 <!--
