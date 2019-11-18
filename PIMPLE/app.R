@@ -9,6 +9,7 @@
 #rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
 # Load packages
 library(AMPLE)
+library(ggplot2)
 library(RColorBrewer)
 library(markdown)
 
@@ -16,22 +17,12 @@ library(markdown)
 load("data/preWCPFC2019_results.Rdata")
 
 
-#------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
 # HACKS 
 # This is a brutal hack to overwrite my own unexported palette function in the AMPLE NAMESPACE
+# This should be added to AMPLE for the new version and then removed from here
 get_hcr_colours <- function(hcr_names, chosen_hcr_names){
-  # Looks OK
-  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdYlBu"))(length(hcr_names))
-  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"PiYG"))(length(hcr_names))
-  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Dark2"))(length(hcr_names))
-  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(8,"Set2"))(length(hcr_names))
   allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
-  #  Wes Anderson palette - use Steve Zissou - but too similar at the ends
-  #allcols <- wesanderson::wes_palette("Zissou1", length(hcr_names), type = "continuous")
-  # See these notes:
-  #type: Either "continuous" or "discrete". Use continuous if you want
-  #      to automatically interpolate between colours. @importFrom
-  #      graphics rgb rect par image text
   names(allcols) <- hcr_names
   hcrcols <- allcols[chosen_hcr_names]
   return(hcrcols)
@@ -39,6 +30,43 @@ get_hcr_colours <- function(hcr_names, chosen_hcr_names){
 # WTF?!?!?
 assignInNamespace("get_hcr_colours", get_hcr_colours, ns="AMPLE", pos="package:AMPLE")
 
+#----------------------------------------------------------------------------------------------------
+# Updated radar plot - also add to AMPLE when fixed
+myradar2 <- function(dat, hcr_choices, scaling="scale", polysize=2, textsize=5){
+    hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
+    dat <- subset(dat, hcrref %in% hcr_choices)
+    # Scale by maximum - so max = 1
+    if (scaling=="scale"){
+      #dat <- dat %>% group_by(period, pi) %>% mutate(value = X50. / max(X50.))
+      dat <- dplyr::group_by(dat, period, pi)
+      dat <- dplyr::mutate(dat, value = X50. / max(X50.))
+    }
+    # Rank PI
+    if (scaling=="rank"){
+      #dat <- dat %>% group_by(period, pi) %>% mutate(value = order(X50.) / length(hcr_choices))
+      dat <- dplyr::group_by(dat, period, pi)
+      dat <- dplyr::mutate(dat, value = order(X50.) / length(hcr_choices))
+    }
+    # Need to wrap text of piname
+    max_len <- 15 # max length of label in characters
+    dat$piname_wrap <- sapply(dat$piname, function(y) paste(strwrap(y, max_len), collapse = "\n"), USE.NAMES = FALSE)
+    dat <- dat[order(dat$piname_wrap),]
+    p <- ggplot(data=dat, aes(x=piname_wrap, y=value,group=hcrref))
+    p <- p + geom_polygon(aes(fill=hcrref), colour="black", alpha=0.6, size=polysize)
+    p <- p + xlab("") + ylab("") + theme(legend.position="bottom", legend.title=element_blank())
+    p <- p + scale_fill_manual(values=hcrcols)
+    p <- p + scale_colour_manual(values=hcrcols)
+    p <- p + coord_polar(theta = "x", start = 0, direction = 1, clip = "on")  # clip = "on"
+    p <- p + theme(axis.text.y=element_blank(), axis.ticks.y=element_blank()) # Remove y axis 
+    p <- p + theme(axis.text.x=element_blank()) # Remove x axis 
+    p <- p + ylim(0,1.5)
+    p <- p + facet_wrap(~period)
+    p <- p + geom_text(aes(y = 1.4,label = piname_wrap), size=textsize) # Hand write the labels
+    p <- p + theme(strip.text=element_text(size=16), legend.text=element_text(size=16))
+    return(p)
+}
+
+#----------------------------------------------------------------------------------------------------
 
 # HACK drop SQ HCRs
 hcr_points <- subset(hcr_points, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%")))
@@ -52,10 +80,6 @@ yearqs <- subset(yearqs, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%"))
 periodqs <- subset(periodqs, pi != "mw")
 yearqs <- subset(yearqs, pi != "mw")
 worms <- subset(worms, pi != "mw")
-
-# Set area NA to area 0 (for subsetting)
-#periodqs[is.na(periodqs$area),"area"] <- as.factor("0")
-
 
 # Rename some indicators
 # Catch to Relative catch
@@ -76,12 +100,17 @@ newpi7name <- "PI 7: Effort stability\n(PS in areas 2,3,5 only)"
 periodqs[periodqs$piname == oldpi7name, "piname"] <- newpi7name
 yearqs[yearqs$piname == oldpi7name, "piname"] <- newpi7name
 worms[worms$piname == oldpi7name, "piname"] <- newpi7name
+# Relative effort to effort
+oldpi72name <- "PI 7: Relative effort variability"
+newpi72name <- "PI 7: Relative effort variability\n(PS in areas 2,3,5 only)"
+periodqs[periodqs$piname == oldpi72name, "piname"] <- newpi72name
+yearqs[yearqs$piname == oldpi72name, "piname"] <- newpi72name
+worms[worms$piname == oldpi72name, "piname"] <- newpi72name
 
 
 #------------------------------------------------------------------------------------------------------
 # Can we move all this down to the server side?
 # Data processing
-
 
 # Data for the histogram plots
 # Move all this to the data preparation stage
@@ -116,32 +145,33 @@ worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
 
 # -------------------------------------------
 # Stuff that could be in server()
-  # General plotting parameters
-  # Get these from the data rather than fixing them here
-  short_term <- sort(unique(subset(worms, period=="Short")$year))
-  medium_term <- sort(unique(subset(worms, period=="Medium")$year))
-  long_term <- sort(unique(subset(worms, period=="Long")$year))
-  last_plot_year <- max(long_term)
-  first_plot_year <- 1985
-  # Maybe make this an option in the future?
-  pi_percentiles <- c(10,90)
 
-  # Trim out years for tight time series plots
-  yearqs <- subset(yearqs, year %in% first_plot_year:last_plot_year)
-  worms <- subset(worms, year %in% first_plot_year:last_plot_year)
+# General plotting parameters
+# Get these from the data rather than fixing them here
+short_term <- sort(unique(subset(worms, period=="Short")$year))
+medium_term <- sort(unique(subset(worms, period=="Medium")$year))
+long_term <- sort(unique(subset(worms, period=="Long")$year))
+last_plot_year <- max(long_term)
+first_plot_year <- 1985
+# Maybe make this an option in the future?
+pi_percentiles <- c(10,90)
 
-  # Careful with these - they are only used for plotting lines, NOT for calculating the indicators
-  lrp <- 0.2
-  trp <- 0.5
-  # For the worms - same worms for all plots
-  # This can be increased to 20 - maybe make as option?
-  nworms <- 5
-  # worms are a unique combination of OM and iter
-  # (same om / iter should be in all hcrs)
-  wormiters <- sample(unique(worms$iter), nworms)
+# Trim out years for tight time series plots
+yearqs <- subset(yearqs, year %in% first_plot_year:last_plot_year)
+worms <- subset(worms, year %in% first_plot_year:last_plot_year)
+
+# Careful with these - they are only used for plotting lines, NOT for calculating the indicators
+lrp <- 0.2
+trp <- 0.5
+# For the worms - same worms for all plots
+# This can be increased to 20 - maybe make as option?
+nworms <- 5
+# worms are a unique combination of OM and iter
+# (same om / iter should be in all hcrs)
+wormiters <- sample(unique(worms$iter), nworms)
 
 # -------------------------------------------
-  # General settings for app
+# General settings for app
 
 main_panel_width <- 10
 side_panel_width <- 12 - main_panel_width 
@@ -164,7 +194,7 @@ boxplottext <- "For box plots the box contains the 20-80 percentiles, the whiske
 tabletext <- "The tables show the median indicator values in each time period. The values inside the parentheses are the 10-90 percentiles."
 stabtext <- "Note that the stability can only be compared between time periods, not between areas or area groups, i.e. it is the relative stability in that area."
 
-#------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
 
 # Navbarpage insidea fluidpage?
 # Pretty nasty but it means we get the power of the navparPage and can have common side panel
@@ -173,7 +203,8 @@ ui <- fluidPage(id="top",
   sidebarLayout(
     sidebarPanel(width=side_panel_width,
       br(),
-      img(src = "spc.png", height = 100),
+      img(src = "spc.png", height = 60),
+      br(),
       br(),
       conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs'",
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
@@ -230,45 +261,41 @@ ui <- fluidPage(id="top",
         #----------- Introduction page ----------------------------------
         tabPanel("Introduction", value="intro",
                  # How to use PIMPLE - Add to top
-          fluidRow(column(12, 
+          fluidRow(column(8, 
             includeMarkdown("introtext/introduction.md")
           )),
           fluidRow(
-            column(6, 
+            column(4, 
               includeMarkdown("introtext/barcharttext.md")
             ),
-            column(6,
+            column(8,
               plotOutput("demobarchart")
             )
           ),
           fluidRow(
-            column(6, 
+            column(4, 
               includeMarkdown("introtext/boxplottext.md")
             ),
-            column(6,
+            column(8,
               plotOutput("demoboxplot")
             )
           ),
           fluidRow(
-            column(6, 
+            column(4, 
               includeMarkdown("introtext/timeseriestext.md")
             ),
-            column(6,
+            column(8,
               plotOutput("demotimeseriesplot")
             )
           ),
           fluidRow(
-            column(6, 
+            column(4, 
               includeMarkdown("introtext/radarplottext.md")
             ),
-            column(6,
-              plotOutput("demoradarplot")
+            column(8,
+              plotOutput("demoradarplot", height="600px")
             )
           )
-                 
-                 
-                 
-                 
         ),
 
         #----------------------------------------------------------------------------
@@ -297,6 +324,12 @@ ui <- fluidPage(id="top",
                 p(pi36text)
               ))
             ),
+            tabPanel("Time series plots", value="timeseries",
+              fluidRow(column(12,
+                p("Note that not all indicators have time series plots. The widths of the ribbons are the 10-90 percentiles. The dashed, black line is the median value."),
+                plotOutput("plot_timeseries_comparehcr", height="auto") # height is variable
+              ))
+            ),
             tabPanel("Radar plots", value="radar",
               fluidRow(
                 #selectInput(inputId = "radarscaling", label="Radar plot scaling", choices = list("Scale by max"="scale", "Rank"="rank"), selected="scale"),
@@ -308,12 +341,6 @@ ui <- fluidPage(id="top",
                 p(biotext),
                 p(pi36text)
               )
-            ),
-            tabPanel("Time series plots", value="timeseries",
-              fluidRow(column(12,
-                p("Note that not all indicators have time series plots. The widths of the ribbons are the 10-90 percentiles. The dashed, black line is the median value."),
-                plotOutput("plot_timeseries_comparehcr", height="auto") # height is variable
-              ))
             ),
             tabPanel("Table", value="bigtable",
               tags$span(title="Median indicator values. The values inside the parentheses are the 10-90 percentiles",
@@ -489,7 +516,10 @@ ui <- fluidPage(id="top",
         #  )
         #),
         tabPanel("About", value="about",
-          spc_about()
+          fluidRow(column(8, 
+            #includeMarkdown("introtext/introduction.md")
+            spc_about()
+          ))
         )
       )
     )
@@ -578,9 +608,7 @@ output$demoradarplot <- renderPlot({
   # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
   dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == "Short" & piname %in% pi_choices & metric %in% metric_choices)
   scaling_choice <- "scale"
-  p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
-  #p <- p + ggplot2::theme(axis.text=ggplot2::element_text(size=8), axis.title=ggplot2::element_text(size=8), strip.text=ggplot2::element_text(size=8), legend.text=ggplot2::element_text(size=8))
-  p <- p + ggplot2::theme(axis.text=ggplot2::element_text(size=8), axis.title=ggplot2::element_text(size=8))
+  p <- myradar2(dat=dat, hcr_choices=hcr_choices, scaling_choice)
   return(p)
 })
 
@@ -671,7 +699,8 @@ output$demoradarplot <- renderPlot({
 
     #scaling_choice <- input$radarscaling
     scaling_choice <- "scale"
-    p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
+    #p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
+    p <- myradar2(dat=dat, hcr_choices=hcr_choices, scaling_choice)
     return(p)
   })
 
