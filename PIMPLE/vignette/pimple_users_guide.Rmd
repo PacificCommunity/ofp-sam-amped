@@ -2,7 +2,7 @@
 title: "Performance Indicators and Management Procedures Explorer - PIMPLE"
 subtitle: "User Guide"
 author: "Finlay Scott - OFP, SPC"
-date: "2019-18-06"
+date: "2019-18-11"
 colorlinks: true
 urlcolor: blue
 geometry: "left=3cm,right=3cm,top=2cm,bottom=2cm"
