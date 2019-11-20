@@ -5,6 +5,57 @@ library(AMPLE)
 library(shinyjs)
 library(shinyWidgets)
 
+
+
+
+#----------------------------------------------------
+# Added signif argument to be added to AMPLE
+pitablehack <- function(dat, percentile_range = c(20,80), signif=3){
+    # Rows are the PIs, columns are the HCRs
+    percentile_min <- dat[,paste("X",percentile_range[1],".",sep="")]
+    percentile_max <- dat[,paste("X",percentile_range[2],".",sep="")]
+    dat$value <- paste(signif(dat$X50.,signif), " (", signif(percentile_min, signif), ",", signif(percentile_max, signif), ")", sep="")
+    # Fix pi1
+    dat[dat$pi=="pi1", "value"] <- signif(dat[dat$pi=="pi1", "X50."],signif)
+    tabdat <- dat[,c("hcrref", "piname", "value")]
+    tabdat[tabdat$name=="Biomass","piname"] <- "SB/SBF=0"
+    tabdat <- as.data.frame(tidyr::spread(tabdat, key="hcrref", value="value"))
+    # Have rownames?
+    #rnames <- tabdat[,1]
+    #tabdat <- tabdat[,-1]
+    #rownames(tabdat) <- rnames
+    colnames(tabdat)[1] <- "Indicator"
+    return(tabdat)
+}
+
+current_pi_tablehack <- function(dat, app_params, years, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP"), signif = 3){
+  out <- subset(dat, period != "Rest" & piname %in% piname_choice)
+  
+  perc1 <- out[,paste("X",percentile_range[1],".",sep="")]
+  perc2 <- out[,paste("X",percentile_range[2],".",sep="")]
+  out$value <- paste(signif(out$X50., signif), " (", signif(perc1, signif), ",", signif(perc2, signif),")", sep="")
+  # Except pi1 as it is a probability
+  pi1value <- signif(out$X50., signif)
+  out[out$pi=="pi1","value"] <- pi1value[out$pi=="pi1"]
+  out <- out[,c("piname","period","value")]
+  out <- tidyr::spread(out, key="period", value="value")
+  # Rorder by piname_choice 
+  out <- out[order(match(out$piname, piname_choice)),]
+  rownames(out) <- out$piname
+  # Drop rownames column
+  out <- out[,colnames(out) != "piname"]
+  # Mess about with colnames by adding year range
+  time_periods <- get_time_periods(app_params, nyears=length(years))
+  period_yrs <- lapply(time_periods, function(x){paste("<br>(",paste(years[x][c(1,length(x))], collapse="-"),")",sep="")})
+  colnames(out)[1] <- paste(colnames(out)[1], " term", period_yrs$short_term, sep="")
+  colnames(out)[2] <- paste(colnames(out)[2], " term", period_yrs$medium_term, sep="")
+  colnames(out)[3] <- paste(colnames(out)[3], " term", period_yrs$long_term, sep="")
+  return(out)
+}
+
+
+
+#----------------------------------------------------
 ui <- navbarPage(
   title="Comparing performance",
   tabPanel("HCR Selection", 
@@ -239,8 +290,6 @@ server <- function(input, output,session) {
     periodqs <- periodqs()
     worms <- worms()
     yearqs <- yearqs()
-    
-    
     save(periodqs, worms, yearqs, file='dumped.Rdata')
   })
 
@@ -388,7 +437,7 @@ server <- function(input, output,session) {
     }
     # Use pitemp() to fill table
     years <- dimnames(stock$biomass)$year
-    current_pi_table(pitemp()$periodqs, app_params=app_params, years=years, percentile_range=pi_percentiles, piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP"))
+    current_pi_tablehack(pitemp()$periodqs, app_params=app_params, years=years, percentile_range=pi_percentiles, piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP"))
     },
     bordered = TRUE,
     sanitize.text.function=identity,
@@ -408,7 +457,7 @@ server <- function(input, output,session) {
       return()
     }
     dat <- subset(periodqs(), hcrref %in% hcr_choices & period == period_choice & piname %in% pi_choices)
-    tabdat <- pitable(dat, percentile_range = pi_percentiles)
+    tabdat <- pitablehack(dat, percentile_range = pi_percentiles)
     return(tabdat)
   }
 
