@@ -2,8 +2,8 @@
 
 PIMPLE reference sheets are available (right-click to open in a new tab or save-as):
 
-* [Performance indicators for skipjack](PIposter.pdf)
-* [PIMPLE reference](PIMPLEposter2sided.pdf)
+* <a href="PIposter.pdf" target="_blank">Performance indicators for skipjack</a>
+* <a href="PIMPLEposter2sided.pdf" target="_blank">PIMPLE reference</a>
 
 ## What is PIMPLE?
 
