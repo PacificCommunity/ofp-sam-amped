@@ -187,7 +187,7 @@ mediumtext <- paste(medium, collapse="-")
 longtext <- paste(long, collapse="-")
 yearrangetext <- paste("Short-term is: ", shorttext, ", medium-term is: ", mediumtext, " and long-term is: ", longtext,".",sep="")
 pi47text <- "Note that PIs 4 and 7 are for the purse seines in model areas 2, 3 and 5 only (excluding the associated purse seines in area 5.)"
-pi36text <- "The grouping for PIs 3 and 6 is given by the drop down menu on the left."
+pi36text <- "The grouping for PIs 3 and 6 can be selected with the drop down menu on the left."
 biotext <- "PIs 1, 8 and SB/SBF=0 are calculated over all model areas."
 relcatchtext <- "Note that the catches are relative to the average catch in that area grouping in the years 2013-2015."
 boxplottext <- "For box plots the box contains the 20-80 percentiles, the whiskers the 5-95 percentiles and the horizontal line is the median."
