@@ -229,7 +229,12 @@ ui <- navbarPage(
         p("It should be noted that these PIs don't all point the same way.  It is generally thought that the higher the value of " , em("Prob. SB>LRP"), ",", em("Catch"), ", ", em("Relative CPUE"), ", the stability indicators and ", em("Proximity to TRP"), " the better the HCR is performing. However, for ", em("Relative effort"), " lower values are preferred because the higher the effort, the greater the costs. Also, ", em("SB/SBF=0"), "should be close to the TRP, rather than high. Care must therefore be taken when using PIs to compare performance of HCRs."),
         h1("Comparing performance"),
         p("Choose the ", strong("Compare performance"), " tab for a range of plots and tables that allow the comparison of the performance of the HCRs through performance indicators and other metrics."),
-        p("The performance indicators and HCRs can be selected and delselected to help with the comparison.")
+        p("The performance indicators and HCRs can be selected and delselected to help with the comparison."),
+        h1("Tutorial"),
+        p("A more detailed tutorial can be found at these links:"),
+        a("Tutorial (pdf)",target="_blank",href= "comparingPerformance.pdf"), 
+        br(),
+        a("Tutorial (html)",target="_blank",href="comparingPerformance.html") 
       )
     )
   ),
