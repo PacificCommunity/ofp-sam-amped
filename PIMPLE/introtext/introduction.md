@@ -83,7 +83,7 @@ They are calculated over several groupings, based on area and fishery:
 ### 4. Relative Catch per Unit Effort (CPUE)
 
 The CPUE is only calculated for the purse seines in areas 2, 3 and 5 (excluding the associated purse seines in area 5).
-The CPUE is presented as relative to the CPUE in 2010.
+The CPUE is presented as relative to the CPUE in 2012.
 
 ### 6. Catch stability
 
@@ -102,7 +102,7 @@ A variability of 0 means that the catches are not changing over time.
 ### 7. Effort stability
 
 This is similar to PI 6 (catch stability).
-It measures the stability of effort relative to the effort in 2010.
+It measures the stability of effort relative to the effort in 2012.
 It is also possible to investigate the variability, as well as the stability.
 
 As with PI 4 (Relative CPUE), this indicator is only calculated for the purse seines in areas 2, 3 and 5 (excluding the associated purse seines in area 5).
