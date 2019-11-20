@@ -1,5 +1,10 @@
 # Performance Indicators and Management Procedures Explorer (PIMPLE)
 
+PIMPLE reference sheets are available (right-click to open in a new tab or save-as):
+
+* <a href="PIposter.pdf" target="_blank">Performance indicators for skipjack</a>
+* <a href="PIMPLEposter2sided.pdf" target="_blank">PIMPLE reference</a>
+
 ## What is PIMPLE?
 
 PIMPLE is a tool for exploring and comparing the performance of alternative candidate Management Procedures (MPs).

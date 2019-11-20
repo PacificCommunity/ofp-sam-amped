@@ -3,7 +3,59 @@
 
 library(AMPLE)
 library(shinyjs)
+library(shinyWidgets)
 
+
+
+
+#----------------------------------------------------
+# Added signif argument to be added to AMPLE
+pitablehack <- function(dat, percentile_range = c(20,80), signif=3){
+    # Rows are the PIs, columns are the HCRs
+    percentile_min <- dat[,paste("X",percentile_range[1],".",sep="")]
+    percentile_max <- dat[,paste("X",percentile_range[2],".",sep="")]
+    dat$value <- paste(signif(dat$X50.,signif), " (", signif(percentile_min, signif), ",", signif(percentile_max, signif), ")", sep="")
+    # Fix pi1
+    dat[dat$pi=="pi1", "value"] <- signif(dat[dat$pi=="pi1", "X50."],signif)
+    tabdat <- dat[,c("hcrref", "piname", "value")]
+    tabdat[tabdat$name=="Biomass","piname"] <- "SB/SBF=0"
+    tabdat <- as.data.frame(tidyr::spread(tabdat, key="hcrref", value="value"))
+    # Have rownames?
+    #rnames <- tabdat[,1]
+    #tabdat <- tabdat[,-1]
+    #rownames(tabdat) <- rnames
+    colnames(tabdat)[1] <- "Indicator"
+    return(tabdat)
+}
+
+current_pi_tablehack <- function(dat, app_params, years, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP"), signif = 3){
+  out <- subset(dat, period != "Rest" & piname %in% piname_choice)
+  
+  perc1 <- out[,paste("X",percentile_range[1],".",sep="")]
+  perc2 <- out[,paste("X",percentile_range[2],".",sep="")]
+  out$value <- paste(signif(out$X50., signif), " (", signif(perc1, signif), ",", signif(perc2, signif),")", sep="")
+  # Except pi1 as it is a probability
+  pi1value <- signif(out$X50., signif)
+  out[out$pi=="pi1","value"] <- pi1value[out$pi=="pi1"]
+  out <- out[,c("piname","period","value")]
+  out <- tidyr::spread(out, key="period", value="value")
+  # Rorder by piname_choice 
+  out <- out[order(match(out$piname, piname_choice)),]
+  rownames(out) <- out$piname
+  # Drop rownames column
+  out <- out[,colnames(out) != "piname"]
+  # Mess about with colnames by adding year range
+  time_periods <- get_time_periods(app_params, nyears=length(years))
+  period_yrs <- lapply(time_periods, function(x){paste("<br>(",paste(years[x][c(1,length(x))], collapse="-"),")",sep="")})
+  colnames(out)[1] <- paste(colnames(out)[1], " term", period_yrs$short_term, sep="")
+  colnames(out)[2] <- paste(colnames(out)[2], " term", period_yrs$medium_term, sep="")
+  colnames(out)[3] <- paste(colnames(out)[3], " term", period_yrs$long_term, sep="")
+  return(out)
+}
+
+
+
+#----------------------------------------------------
 ui <- navbarPage(
   title="Comparing performance",
   tabPanel("HCR Selection", 
@@ -18,12 +70,20 @@ ui <- navbarPage(
         mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort")),
         br(),
         actionButton("project", "Project", icon=icon("fish")), 
+        #actionBttn("project", "Project", icon=icon("fish"), size="lg"), 
+        br(),
+        br(),
+        textInput(inputId="userhcr", label="HCR Display Name (optional)", value=as.character(NA), placeholder="Name of HCR", width='50%'), 
         actionButton("add_basket", "Add HCR to basket", icon=icon("shopping-basket")),
+        #actionBttn("add_basket", "Add HCR to basket", icon=icon("shopping-basket")),
         # How many HCRs do we have in the store
+        br(),
+        br(),
         textOutput("nstoredstocks"),
         br(),
         # This should reset everything - empty the stores
         actionButton("empty_basket", "Empty basket")
+        #actionBttn("empty_basket", "Empty basket")
       ),
       mainPanel(width=9,
         column(6,
@@ -143,7 +203,9 @@ ui <- navbarPage(
           # Total number of years (including historical years)
           numericInput("nyears", "Number of years", value = 30, min=20, max=100, step=1),
           # Number of iteration
-          numericInput("niters", "Number of iterations", value = 1000, min=10, max=1000, step=10)
+          numericInput("niters", "Number of iterations", value = 1000, min=10, max=1000, step=10),
+          br(),
+          actionButton("dump", "Dump data")
         )
       )
     )
@@ -167,7 +229,12 @@ ui <- navbarPage(
         p("It should be noted that these PIs don't all point the same way.  It is generally thought that the higher the value of " , em("Prob. SB>LRP"), ",", em("Catch"), ", ", em("Relative CPUE"), ", the stability indicators and ", em("Proximity to TRP"), " the better the HCR is performing. However, for ", em("Relative effort"), " lower values are preferred because the higher the effort, the greater the costs. Also, ", em("SB/SBF=0"), "should be close to the TRP, rather than high. Care must therefore be taken when using PIs to compare performance of HCRs."),
         h1("Comparing performance"),
         p("Choose the ", strong("Compare performance"), " tab for a range of plots and tables that allow the comparison of the performance of the HCRs through performance indicators and other metrics."),
-        p("The performance indicators and HCRs can be selected and delselected to help with the comparison.")
+        p("The performance indicators and HCRs can be selected and delselected to help with the comparison."),
+        h1("Tutorial"),
+        p("A more detailed tutorial can be found at these links:"),
+        a("Tutorial (pdf)",target="_blank",href= "comparingPerformance.pdf"), 
+        br(),
+        a("Tutorial (html)",target="_blank",href="comparingPerformance.html") 
       )
     )
   ),
@@ -220,6 +287,15 @@ server <- function(input, output,session) {
   # Only allow Add HCR to Basket if Project has been pressed
   observe({
     shinyjs::toggleState("add_basket", OKtostore()==TRUE)
+    shinyjs::toggleState("userhcr", OKtostore()==TRUE)
+  })
+  
+  observeEvent(input$dump, {
+    # Dump the data
+    periodqs <- periodqs()
+    worms <- worms()
+    yearqs <- yearqs()
+    save(periodqs, worms, yearqs, file='dumped.Rdata')
   })
 
   # Store the stock in the basket and create a new empty one
@@ -233,12 +309,18 @@ server <- function(input, output,session) {
     stock_params <- get_stock_params()
     mp_params <- get_mp_params()
     hcrno <- length(unique(worms()$hcrref)) + 1
-    hcrname <- paste(hcrno, ". ",mp_params$name,sep="")
-    hcrref <- paste("HCR ", hcrno, sep="") # Used for legends
+    hcrref <- input$userhcr # What if empty?
+    # If no name given make one
+    if(hcrref== "" || is.na(hcrref)){
+      hcrref <- paste("HCR ", hcrno, sep="") # Used for legends
+    }
+    else(
+     hcrref <- paste(hcrno, hcrref, sep=" ") 
+    )
+    hcrname <- paste(hcrref, ".<br>",mp_params$name,sep="") # Use <br> for html linebreak
     worms(rbind(worms(), cbind(pitemp()$worms, hcrref=hcrref, hcrname=hcrname)))
     periodqs(rbind(periodqs(), cbind(pitemp()$periodqs, hcrref=hcrref, hcrname=hcrname)))
     yearqs(rbind(yearqs(), cbind(pitemp()$yearqs, hcrref=hcrref, hcrname=hcrname)))
-
     # Update the available PIs checkboxes - although this doesn't really dynamically change
     # It just saves having to maintain a list in the UI at the top AND in the PI calculation function
     # Because the options come from the pistore and if no pistore yet, no names
@@ -275,18 +357,18 @@ server <- function(input, output,session) {
     selected <- NULL
     choiceNames <- character(0)
     choiceValues <- character(0)
-
     if(length(unique(periodqs()$hcrname)) > 0){
       selected <- unique(periodqs()$hcrref)
       choiceNames <- as.character(unique(periodqs()$hcrname))
       choiceValues <- unique(periodqs()$hcrref)
     }
-
+    choiceNames <- lapply(choiceNames, HTML) # To use <br> line break
     updateCheckboxGroupInput(session, "hcrchoice",
       selected = selected,
       choiceNames = choiceNames,
       choiceValues = choiceValues
     )
+    updateTextInput(session,"userhcr",value="")
   })
   
   # Empty the basket and reset the current stock
@@ -360,7 +442,7 @@ server <- function(input, output,session) {
     }
     # Use pitemp() to fill table
     years <- dimnames(stock$biomass)$year
-    current_pi_table(pitemp()$periodqs, app_params=app_params, years=years, percentile_range=pi_percentiles, piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP"))
+    current_pi_tablehack(pitemp()$periodqs, app_params=app_params, years=years, percentile_range=pi_percentiles, piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP"))
     },
     bordered = TRUE,
     sanitize.text.function=identity,
@@ -380,7 +462,7 @@ server <- function(input, output,session) {
       return()
     }
     dat <- subset(periodqs(), hcrref %in% hcr_choices & period == period_choice & piname %in% pi_choices)
-    tabdat <- pitable(dat, percentile_range = pi_percentiles)
+    tabdat <- pitablehack(dat, percentile_range = pi_percentiles)
     return(tabdat)
   }
 
