@@ -260,7 +260,7 @@ Additionally, either the catches relating to the whole region, only purse seine 
 
 ## PI 4: Relative CPUE
 
-This tab is concerned with the CPUE relative to the CPUE in 2010 (PI 4).
+This tab is concerned with the CPUE relative to the CPUE in 2012 (PI 4).
 Note that the CPUE is only calculated for purse seine fisheries in assessment regions 2, 3 and 5 excluding the associated purse seines in region 5.
 This tab has a time series plot of relative CPUE as well as a bar chart and box plot of the average relative CPUE in the different time periods.
 
@@ -277,7 +277,7 @@ Note that the size of the boxes in the box plots do not reflect the uncertainty 
 
 ## PI 7: Relative effort variability
 
-Relative effort is the effort relative to the effort in 2010 (PI 7).
+Relative effort is the effort relative to the effort in 2012 (PI 7).
 Note that the relative effort is only calculated for purse seine fisheries in regions 2, 3 and 5 of the stock assessment excluding the associated purse seines in region 5.
 
 The relative effort variability is presented as either the *variability* or the *stability*.
@@ -306,7 +306,7 @@ Note that only those indicators which are currently calculated are included. It 
     \hline
         3 & Economic    & Maximise economic yield from the fishery & Catch relative to the average catch in 2013-2015 \\
     \hline
-        4 & Economic    & Maintain acceptable CPUE & CPUE relative to the CPUE in 2010\\
+        4 & Economic    & Maintain acceptable CPUE & CPUE relative to the CPUE in 2012\\
     \hline
         6 & Economic   & Catch stability & Average annual variation or stability in catch\\
     \hline
@@ -354,10 +354,10 @@ Here the indicator is calculated for several different area and fishery grouping
 The indicator is calculated by taking the average catch, relative to the average catch in 2013-2015, of each replicate over the desired year range (short-, medium- and long-term) for each area and fishery grouping.
 This gives a distribution of expected relative catches in each time period for each area and fishery grouping.
 
-## Indicator 4. CPUE relative to the CPUE in 2010
+## Indicator 4. CPUE relative to the CPUE in 2012
 
 This indicator is linked to the objective: Maintain acceptable CPUE.
-It is based on the predicted skipjack CPUE relative to the CPUE in reference period levels. Here, the reference period level is taken to be 2010.
+It is based on the predicted skipjack CPUE relative to the CPUE in reference period levels. Here, the reference period level is taken to be 2012.
 
 The MP evaluation model reports effort and catch at the fishery level which means it could be possible to calculate the indicator at the fishery, area and total level.
 However, it is not always possible to combine the fishing effort from the different fisheries in the model as the historical effort of each fishery may or may not have been standardised (this does not affect the simulations as internally the effort is scaled).
@@ -391,11 +391,11 @@ For this reason, the stability is used in PIMPLE as the indicator.
 This indicator is linked to the objective: Stability and continuity of market supply.
 
 This indicator is concerned with the variation of relative effort (effort relative to the effort in a reference period).
-Here the reference period is taken to be 2010. 
+Here the reference period is taken to be 2012. 
 As with performance indicator 4, this indicator is calculated for the purse seine fisheries operating in regions 2, 3 and 5 excluding the associated purse seine fishery in region 5 which has a standardised effort index.
 
 The indicator is calculated in a similar way to performance indicator 6.
-The absolute annual difference of the effort relative to the base effort in 2010 is calculated for each replicate in each year. 
+The absolute annual difference of the effort relative to the base effort in 2012 is calculated for each replicate in each year. 
 Like indicator 6, this indicator measures the variation in the relative effort, i.e. the higher the value of the indicator, the less stable the relative effort is.
 It is assumed that MPs that produce a low value of this indicator are considered to be perform better.
 
