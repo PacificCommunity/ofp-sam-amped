@@ -3,6 +3,7 @@
 
 library(AMPLE)
 library(shinyjs)
+library(shinyWidgets)
 
 ui <- navbarPage(
   title="Comparing performance",
@@ -18,12 +19,20 @@ ui <- navbarPage(
         mp_params_setterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort")),
         br(),
         actionButton("project", "Project", icon=icon("fish")), 
+        #actionBttn("project", "Project", icon=icon("fish"), size="lg"), 
+        br(),
+        br(),
+        textInput(inputId="userhcr", label="HCR Display Name (optional)", value=as.character(NA), placeholder="Name of HCR", width='50%'), 
         actionButton("add_basket", "Add HCR to basket", icon=icon("shopping-basket")),
+        #actionBttn("add_basket", "Add HCR to basket", icon=icon("shopping-basket")),
         # How many HCRs do we have in the store
+        br(),
+        br(),
         textOutput("nstoredstocks"),
         br(),
         # This should reset everything - empty the stores
         actionButton("empty_basket", "Empty basket")
+        #actionBttn("empty_basket", "Empty basket")
       ),
       mainPanel(width=9,
         column(6,
@@ -143,7 +152,9 @@ ui <- navbarPage(
           # Total number of years (including historical years)
           numericInput("nyears", "Number of years", value = 30, min=20, max=100, step=1),
           # Number of iteration
-          numericInput("niters", "Number of iterations", value = 1000, min=10, max=1000, step=10)
+          numericInput("niters", "Number of iterations", value = 1000, min=10, max=1000, step=10),
+          br(),
+          actionButton("dump", "Dump data")
         )
       )
     )
@@ -220,6 +231,17 @@ server <- function(input, output,session) {
   # Only allow Add HCR to Basket if Project has been pressed
   observe({
     shinyjs::toggleState("add_basket", OKtostore()==TRUE)
+    shinyjs::toggleState("userhcr", OKtostore()==TRUE)
+  })
+  
+  observeEvent(input$dump, {
+    # Dump the data
+    periodqs <- periodqs()
+    worms <- worms()
+    yearqs <- yearqs()
+    
+    
+    save(periodqs, worms, yearqs, file='dumped.Rdata')
   })
 
   # Store the stock in the basket and create a new empty one
@@ -233,12 +255,18 @@ server <- function(input, output,session) {
     stock_params <- get_stock_params()
     mp_params <- get_mp_params()
     hcrno <- length(unique(worms()$hcrref)) + 1
-    hcrname <- paste(hcrno, ". ",mp_params$name,sep="")
-    hcrref <- paste("HCR ", hcrno, sep="") # Used for legends
+    hcrref <- input$userhcr # What if empty?
+    # If no name given make one
+    if(hcrref== "" || is.na(hcrref)){
+      hcrref <- paste("HCR ", hcrno, sep="") # Used for legends
+    }
+    else(
+     hcrref <- paste(hcrno, hcrref, sep=" ") 
+    )
+    hcrname <- paste(hcrref, ".<br>",mp_params$name,sep="") # Use <br> for html linebreak
     worms(rbind(worms(), cbind(pitemp()$worms, hcrref=hcrref, hcrname=hcrname)))
     periodqs(rbind(periodqs(), cbind(pitemp()$periodqs, hcrref=hcrref, hcrname=hcrname)))
     yearqs(rbind(yearqs(), cbind(pitemp()$yearqs, hcrref=hcrref, hcrname=hcrname)))
-
     # Update the available PIs checkboxes - although this doesn't really dynamically change
     # It just saves having to maintain a list in the UI at the top AND in the PI calculation function
     # Because the options come from the pistore and if no pistore yet, no names
@@ -275,18 +303,18 @@ server <- function(input, output,session) {
     selected <- NULL
     choiceNames <- character(0)
     choiceValues <- character(0)
-
     if(length(unique(periodqs()$hcrname)) > 0){
       selected <- unique(periodqs()$hcrref)
       choiceNames <- as.character(unique(periodqs()$hcrname))
       choiceValues <- unique(periodqs()$hcrref)
     }
-
+    choiceNames <- lapply(choiceNames, HTML) # To use <br> line break
     updateCheckboxGroupInput(session, "hcrchoice",
       selected = selected,
       choiceNames = choiceNames,
       choiceValues = choiceValues
     )
+    updateTextInput(session,"userhcr",value="")
   })
   
   # Empty the basket and reset the current stock
