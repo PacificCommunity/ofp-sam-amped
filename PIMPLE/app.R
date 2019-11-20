@@ -90,7 +90,7 @@ yearqs[yearqs$piname == oldpi3name, "piname"] <- newpi3name
 worms[worms$piname == oldpi3name, "piname"] <- newpi3name
 # Relative CPUE
 oldpi4name <- "PI 4: Relative CPUE"
-newpi4name <- "PI 4: CPUE (rel. to 2010)\n(PS in areas 2,3,5 only)"
+newpi4name <- "PI 4: CPUE (rel. to 2012)\n(PS in areas 2,3,5 only)"
 periodqs[periodqs$piname == oldpi4name, "piname"] <- newpi4name
 yearqs[yearqs$piname == oldpi4name, "piname"] <- newpi4name
 worms[worms$piname == oldpi4name, "piname"] <- newpi4name
@@ -454,7 +454,7 @@ ui <- fluidPage(id="top",
               column(6, fluidRow(
                 plotOutput("plot_box_relcpue")
               )),
-              p("Note that the CPUE only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative CPUE is the CPUE relative to that in 2010."),
+              p("Note that the CPUE only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative CPUE is the CPUE relative to that in 2012."),
               p(yearrangetext),
               p(pi47text)
             ),
@@ -489,7 +489,7 @@ ui <- fluidPage(id="top",
                 plotOutput("plot_box_pi7stab"),
                 plotOutput("plot_box_pi7var")
               )),
-              p("Note that the effort only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative effort is the effort relative to that in 2010."),
+              p("Note that the effort only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative effort is the effort relative to that in 2012."),
               p(yearrangetext),
               p(pi47text)
             )
