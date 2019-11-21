@@ -207,6 +207,16 @@ ui <- fluidPage(id="top",
       img(src = "spc.png", height = 60),
       br(),
       br(),
+      conditionalPanel(condition="input.nvp == 'about'",
+        tags$html(
+          tags$h1("PIMPLE"),
+          tags$p("Performance Indicators and Management Procedures Explorer"),
+          tags$footer(
+            tags$p("version 0.3.0 Carlton Touts"),
+            tags$p("Copyright 2019 OFP SPC MSE Team."),
+            tags$p("Distributed under the GPL 3")
+          )
+      )),
       conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs'",
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
       ),
@@ -518,6 +528,7 @@ ui <- fluidPage(id="top",
         #),
         tabPanel("About", value="about",
           fluidRow(column(8, 
+                          
             #includeMarkdown("introtext/introduction.md")
             spc_about()
           ))
