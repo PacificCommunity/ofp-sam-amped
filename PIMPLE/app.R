@@ -660,7 +660,11 @@ output$demoradarplot <- renderPlot({
       dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
       #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
       # Need to hack pi1 so that all quantiles = X50., else NA
-      dat[dat$pi=="pi1",c("X5.", "X20.", "X80.", "X95.")] <- dat[dat$pi=="pi1","X50."]
+      # Careful! If pi1 not in dat, error
+      # Probably better to do this at the top
+      if("pi1" %in% dat$pi){
+        dat[dat$pi=="pi1",c("X1.", "X5.", "X10.", "X15.", "X20.", "X80.", "X85.", "X90.","X95.","X99.")] <- dat[dat$pi=="pi1","X50."]
+      }
       p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylim(0,NA)
       p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
