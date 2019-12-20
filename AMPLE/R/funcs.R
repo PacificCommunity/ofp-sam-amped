@@ -752,7 +752,6 @@ get_summaries <- function(stock, stock_params, app_params, quantiles){
   # worms - a sample of iters by year
   # yearqs - the quantiles by year
   # periodqs - average over the periods and take quantiles
-
   # Make these match the PIMPLE indicators
   # SBSBF0
   sbsbf0 <- as.data.frame(stock$biomass / stock_params$k)
