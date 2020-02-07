@@ -4,6 +4,8 @@
 library(AMPLE)
 library(shinyjs)
 library(shinyWidgets)
+# This is very bad - should not need to library ggplot2
+library(ggplot2)
 
 
 
@@ -582,7 +584,82 @@ server <- function(input, output,session) {
     if(is.null(hcr_choices)){
       return()
     }
-    plot_majuro(dat=yearqs(), percentile_range=pi_percentiles, hcr_choices=hcr_choices, stock_params=get_stock_params())
+    #plot_majuro(dat=yearqs(), percentile_range=pi_percentiles, hcr_choices=hcr_choices, stock_params=get_stock_params())
+    dat <- yearqs()
+    percentile_range <- pi_percentiles
+    #hcr_choices <- hcr_choices
+    stock_params <- get_stock_params()
+    
+    
+    
+    # Hack from AMPLE / plot
+#plot_majuro <- function(dat, percentile_range = c(20,80), hcr_choices, stock_params){
+    # The use of ::: is very bad
+  hcrcols <- AMPLE:::get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
+  
+  # Magic line to add to package
+  dat <- subset(dat, hcrref %in% hcr_choices)
+  
+  
+  
+  
+  # Need a dataset with percentiles
+  majdat <- subset(dat, piname %in% c("F/FMSY", "SB/SBF=0"))
+  # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
+  # So add 1 to the F years
+  majdat[majdat$pi=="ffmsy","year"] <- majdat[majdat$pi=="ffmsy","year"] + 1
+  majdat <- dplyr::select(majdat, c("pi", "year", paste("X",percentile_range[1],".",sep=""), paste("X",percentile_range[2],".",sep=""), X50., hcrref))
+  # Rename for simplicity
+  majdat <- dplyr::rename(majdat, "min" = paste("X",percentile_range[1],".",sep=""), "max" = paste("X",percentile_range[2],".",sep=""), "med" = "X50.")
+  majdat <- tidyr::gather(majdat, key="XX", value="data", -pi, -year, -hcrref)
+  majdat$pix <- paste(majdat$pi,majdat$XX,sep="")
+  majdat <- tidyr::spread(dplyr::select(majdat, year, hcrref, data, pix), key="pix", value="data")
+  # Remove NA years
+  majdat <- subset(majdat, !(is.na(ffmsymed) | is.na(biomassmed)))
+
+  lrp <- stock_params[["lrp"]]
+  ymax <- max(max(majdat$ffmsymax, na.rm=TRUE) * 0.1, 2.0)
+  
+  p <- ggplot(majdat)
+  # Big red
+  p <- p + geom_rect(data=data.frame(xmin=0, xmax=lrp, ymin=0, ymax=ymax), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="red", colour="black")
+  # Orange one
+  p <- p + geom_rect(data=data.frame(xmin=lrp, xmax=1.0, ymin=1.0, ymax=ymax), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="orange", colour="black")
+  # White one
+  p <- p + geom_rect(data=data.frame(xmin=lrp, xmax=1.0, ymin=0.0, ymax=1.0), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="white", colour="black")
+
+  # Put the lines on - Do twice, once in fat black , then thin with colour
+  # Lines and crosses
+  # Fat black
+  p <- p + geom_line(aes(x=biomassmed, y=ffmsymed), colour="black", size=2)
+  p <- p + geom_errorbar(aes(x=biomassmed, ymin=ffmsymin, ymax=ffmsymax, group=year), colour="black", size=2)
+  p <- p + geom_errorbarh(aes(y=ffmsymed, xmin=biomassmin, xmax=biomassmax, group=year), colour="black", size=2)
+  # Thin colour
+  p <- p + geom_line(aes(x=biomassmed, y=ffmsymed, colour=hcrref), size=1.3)
+  p <- p + geom_errorbar(aes(x=biomassmed, ymin=ffmsymin, ymax=ffmsymax, group=year, colour=hcrref), size=1.3)
+  p <- p + geom_errorbarh(aes(y=ffmsymed, xmin=biomassmin, xmax=biomassmax, group=year, colour=hcrref), size=1.3)
+  # Black point
+  p <- p + geom_point(aes(x=biomassmed, y=ffmsymed))
+  # Final point in white
+  maxyear <- max(majdat$year)
+  p <- p + geom_point(data=subset(majdat, year==maxyear), aes(x=biomassmed, y=ffmsymed), colour="white")
+
+  p <- p + scale_colour_manual(values=hcrcols)
+  p <- p + xlab("SB/SBF=0") + ylab("F/FMSY")
+  p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+  p <- p + theme(legend.position="bottom", legend.title=element_blank())
+
+  p <- p + scale_x_continuous(expand = c(0, 0))
+  p <- p + scale_y_continuous(expand = c(0, 0), limits=c(0,ymax))
+
+  return(p)
+#}
+
+    
+    
+    
+    
+    
   })
 
   #output$plottimeseries <- renderPlot({
