@@ -10,6 +10,7 @@
 # Plotting functions
 # Globals - eesh!
 
+# see cocktailApp() about use of globalVariables()
 # Maybe put them all as part of the pkg_env?
 # Or some kind of theme?
   hcr_lwd <-  2
@@ -59,16 +60,10 @@
 # Check the max number of colours in the palette brewer.pal.info
 # No HCRs is the total number of HCRs - not the number selected
 get_hcr_colours <- function(hcr_names, chosen_hcr_names){
-  # Looks OK
-  #allcols <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdYlBu"))(length(hcr_names))
-  #  Wes Anderson palette - use Steve Zissou
-  allcols <- wesanderson::wes_palette("Zissou1", length(hcr_names), type = "continuous")
-  # See these notes:
-  #type: Either "continuous" or "discrete". Use continuous if you want
-  #      to automatically interpolate between colours. @importFrom
-  #      graphics rgb rect par image text
+  allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
   names(allcols) <- hcr_names
   hcrcols <- allcols[chosen_hcr_names]
+  return(hcrcols)
   return(hcrcols)
 }
 
@@ -1098,7 +1093,7 @@ myboxplot <- function(dat, hcr_choices, plot_type="median_bar"){
 #' @rdname comparison_plots
 #' @name Comparison plots
 #' @export
-myradar <- function(dat, hcr_choices, scaling="scale", polysize=2){
+myradar <- function(dat, hcr_choices, scaling="scale", polysize=2, textsize=5){
     hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
     dat <- subset(dat, hcrref %in% hcr_choices)
     # Scale by maximum - so max = 1
@@ -1113,30 +1108,25 @@ myradar <- function(dat, hcr_choices, scaling="scale", polysize=2){
       dat <- dplyr::group_by(dat, period, pi)
       dat <- dplyr::mutate(dat, value = order(X50.) / length(hcr_choices))
     }
-
     # Need to wrap text of piname
-    max_len <- 10 # max length of label in characters
+    max_len <- 15 # max length of label in characters
     dat$piname_wrap <- sapply(dat$piname, function(y) paste(strwrap(y, max_len), collapse = "\n"), USE.NAMES = FALSE)
     dat <- dat[order(dat$piname_wrap),]
-
     p <- ggplot(data=dat, aes(x=piname_wrap, y=value,group=hcrref))
     p <- p + geom_polygon(aes(fill=hcrref), colour="black", alpha=0.6, size=polysize)
     p <- p + xlab("") + ylab("") + theme(legend.position="bottom", legend.title=element_blank())
-    p <- p + facet_wrap(~period)
     p <- p + scale_fill_manual(values=hcrcols)
     p <- p + scale_colour_manual(values=hcrcols)
-    p <- p + ggproto("CoordRadar", CoordPolar, theta = "x", r = "y", start = 0, direction = 1, is_linear = function(coord) TRUE)
+    p <- p + coord_polar(theta = "x", start = 0, direction = 1, clip = "on")  # clip = "on"
     p <- p + theme(axis.text.y=element_blank(), axis.ticks.y=element_blank()) # Remove y axis 
-    p <- p + ylim(0,1)
-    #p + coord_polar() # For a weird fat look!
-    p <- p + theme(#axis.text=element_text(size=16),
-                axis.text.x  = element_text(size = ggplot2::rel(1.5)), # Make x axes text smaller
-                   axis.title=element_text(size=16),
-                   strip.text=element_text(size=16),
-                   legend.text=element_text(size=16))
-
+    p <- p + theme(axis.text.x=element_blank()) # Remove x axis 
+    p <- p + ylim(0,1.5)
+    p <- p + facet_wrap(~period)
+    p <- p + geom_text(aes(y = 1.4,label = piname_wrap), size=textsize) # Hand write the labels
+    p <- p + theme(strip.text=element_text(size=16), legend.text=element_text(size=16))
     return(p)
 }
+
 
 
 
