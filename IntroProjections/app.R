@@ -153,8 +153,11 @@ ui <- navbarPage(
         amped_maintainer_and_licence()
       ),
       mainPanel(width=9,
-        h1("Instructions"),
-        p("TBD")
+        h1("Tutorials"),
+        p("A detailed tutorial can be found at these links:"),
+        a("Tutorial (pdf)",target="_blank",href= "introProjections.pdf"), 
+        br(),
+        a("Tutorial (html)",target="_blank",href="introProjections.html") 
       )
     )
   ),
