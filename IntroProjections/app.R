@@ -3,6 +3,54 @@
 
 # Load packages ----
 library(AMPLE)
+library(shinyjs)
+
+# Fold this into AMPLE or remove from AMPLE and just keep here
+plot_yieldcurve_projections2 <- function(stock, stock_params, app_params, draw_trajectories){
+  # x-axis = Effort
+  # y-axis = Catch
+  # In final year
+  # Only plot this if running a long term projection?
+  final_ts <- dim(stock$catch)[2]
+
+  rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
+  final_rel_effort <- apply(rel_effort, 1, function(x)x[max(which(!is.na(x)))])
+
+  final_catch <- apply(stock$catch, 1, function(x)x[max(which(!is.na(x)))])
+  
+  # Set x and y range depending on whether to show trjaectories or not
+  if (draw_trajectories){
+    xrange <- c(0,min(max(rel_effort, na.rm=TRUE)*1.1,5, na.rm=TRUE))
+    yrange <- c(0, max(stock$catch, na.rm=TRUE) * 1.1)
+  }
+  if (!draw_trajectories){
+    xrange <- c(0,min(max(final_rel_effort, na.rm=TRUE)*1.1,5, na.rm=TRUE))
+    yrange <- c(0, max(final_catch, na.rm=TRUE) * 1.1)
+  }
+  
+  
+
+  plot(x=xrange, y=yrange, type="n", xlab="Final relative fishing effort", ylab="Final catch", xlim=xrange, ylim=yrange)
+  points(x=final_rel_effort, y=final_catch, pch=16, cex=3)
+  # Draw last one in blue
+  nproj <- nrow(stock$catch)
+  points(x=final_rel_effort[nproj], y=final_catch[nproj], col="blue", pch=16, cex=3)
+
+  # Add lines of full trajectories?
+  # Looks too messy
+  if (draw_trajectories == TRUE){
+    for (proj in 1:nrow(stock$catch)){
+      lines(x=rel_effort[proj,], y=stock$catch[proj,], lty=3, col="black")
+      points(x=rel_effort[proj,], y=stock$catch[proj,], col="black", cex=0.5)
+    }
+  
+    # Draw last one in blue
+    nproj <- nrow(stock$catch)
+    lines(x=rel_effort[nproj,], y=stock$catch[nproj,], lty=3, col="blue")
+    points(x=rel_effort[nproj,], y=stock$catch[nproj,], col="blue", cex=0.5)
+  }
+}
+
 
 # UI
 ui <- navbarPage(
@@ -281,7 +329,9 @@ server <- function(input, output,session) {
     }
     if(input$kobemajuro == "yieldcurve"){
       # Add an extra check box for drawing trajectories
-      plot_yieldcurve_projections(stock=stock, stock_params=get_stock_params(), app_params=app_params, draw_trajectories=input$showtraj)
+      plot_yieldcurve_projections2(stock=stock, stock_params=get_stock_params(), app_params=app_params, draw_trajectories=input$showtraj)
+      # AMPLE plot
+      #plot_yieldcurve_projections(stock=stock, stock_params=get_stock_params(), app_params=app_params)
     }
   })
 
