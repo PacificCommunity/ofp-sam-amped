@@ -5,19 +5,147 @@
 library(AMPLE)
 library(shinyjs)
 
-# Fold this into AMPLE or remove from AMPLE and just keep here
-plot_yieldcurve_projections2 <- function(stock, stock_params, app_params, draw_trajectories){
+#-------------------------------------------------------------------------
+# Some plots before we get started
+plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+  current_col <- "blue"
+  prev_col <- "black"
+  par(mfrow=c(3,1))
+  
+  # And then cock about with margins
+  # Could do with a better layout?
+  # Try as a dashboard?
+  par(mar=c(0, 4.1, 5, 2.1))
+  plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="", ghost_col=prev_col, last_col=current_col, ylim=c(0,1.1), ...)
+
+  par(mar=c(2.5, 4.1, 2.5, 2.1))
+  plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, xaxt='n', xlab="", ghost_col=prev_col, true_col=current_col, ...)
+
+  par(mar=c(5, 4.1, 0, 2.1))
+  plot_releffort(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=quantiles, max_spaghetti_iters=max_spaghetti_iters, ghost_col=prev_col, true_col=current_col, ...)
+}
+
+
+
+# Combine the following two functions
+plot_kobe_majuro_stock <- function(dat, stock_params, choice="kobe"){
+  ymax <- max(c(2.0, 1.1*subset(dat, metric=="ffmsy" & level=="upper")$value, 1.1*subset(dat, metric=="ffmsy" & level=="median")$value), na.rm=TRUE)
+  ymax <- min(ymax, 5.0) # In case of stock collapse
+
+  # xmax and metric depends on choice
+  if(choice=="kobe"){
+    xmax <- max(c(2.0, 1.1*subset(dat, metric=="bbmsy" & level=="upper")$value, 1.1*subset(dat, metric=="bbmsy" & level=="median")$value), na.rm=TRUE)
+    xlab <- "B / BMSY"
+    xmetric <- "bbmsy"
+  }
+  if(choice=="majuro"){
+    xmax <- 1.0
+    xlab <- "SB / SBF=0"
+    xmetric <- "bk"
+  }
+  # Set up the axes
+  plot(x=c(0,xmax), y=c(0,ymax), type="n", xlim=c(0,xmax), ylim=c(0,ymax), xlab = xlab, ylab = "F / FMSY", xaxs="i", yaxs="i")
+  # Set the colour panels
+  if (choice=="kobe"){
+    # The red one - top right
+    rect(0.0,1.0,1.0,ymax, border="black", col="red", lty=1, lwd=1)
+    # Bottom left - yellow
+    rect(0.0, 0.0, 1.0, 1.0, border="black", col="yellow", lty=1, lwd=1)
+    # Top right - yellow
+    rect(1.0, 1.0, xmax, ymax, border="black", col="yellow", lty=1, lwd=1)
+    # Bottom right - green
+    rect(1.0, 0.0, xmax, 1.0, border="black", col="green", lty=1, lwd=1)
+  }
+  if (choice=="majuro"){
+    # The big red one
+    rect(0.0,0.0,stock_params$lrp,ymax, border="black", col="red", lty=1, lwd=1)
+    # The orange one
+    rect(stock_params$lrp,1.0,1.0,ymax, border="black", col="orange", lty=1, lwd=1)
+    # The other one - leave white for now
+    rect(stock_params$lrp,0.0,1.0,1.0, border="black", col="white", lty=1, lwd=1)
+  }
+  # Loop over HCRs
+  # This is all redundant
+  hcrs <- unique(dat$hcr)
+  for (hcrcount in hcrs){
+    hcrdat <- subset(dat, hcr==hcrcount)
+    colour <- hcrdat$colour[1]
+    # Add the medians as points and a line to tell the story
+    medmetric <- subset(hcrdat, metric == xmetric & level=="median")$value
+    medffmsy <- subset(hcrdat, metric == "ffmsy" & level=="median")$value
+    points(x=medmetric, y=medffmsy, pch=16, col=colour)
+    # Do a thick black line then overlay the real line
+    lines(x=medmetric, y=medffmsy, lty=1, lwd=4, col="black")
+    lines(x=medmetric, y=medffmsy, lty=1, lwd=3, col=colour)
+    # Add quantile lines
+    lowermetric <- subset(hcrdat, metric == xmetric & level=="lower")$value
+    lowerffmsy <- subset(hcrdat, metric == "ffmsy" & level=="lower")$value
+    uppermetric <- subset(hcrdat, metric == xmetric & level=="upper")$value
+    upperffmsy <- subset(hcrdat, metric == "ffmsy" & level=="upper")$value
+    # We always have one more B value so use FFMsy for final year
+    finalyr <- max(which(!is.na(medffmsy))) 
+    for (yr in 1:finalyr){
+      lines(x=c(medmetric[yr],medmetric[yr]), y=c(lowerffmsy[yr],upperffmsy[yr]), lty=1, lwd=4, col="black")
+      lines(x=c(medmetric[yr],medmetric[yr]), y=c(lowerffmsy[yr],upperffmsy[yr]), lty=1, lwd=3, col=colour)
+      lines(x=c(lowermetric[yr], uppermetric[yr]),y=c(medffmsy[yr], medffmsy[yr]), lty=1, lwd=4, col="black")
+      lines(x=c(lowermetric[yr], uppermetric[yr]),y=c(medffmsy[yr], medffmsy[yr]), lty=1, lwd=3, col=colour)
+    }
+    # Blob at the end
+    finalbk <- medmetric[finalyr]
+    finalffmsy <- medffmsy[finalyr]
+    points(x=finalbk, y=finalffmsy, pch=21, col=colour, bg="white")
+  }
+}
+
+
+plot_kobe_majuro_projections <- function(stock, stock_params, choice="kobe"){
+  # F/FMSY for Kobe and Majuro
+  fmsy <- stock_params$r / 2
+  f <- stock$catch / stock$biomass 
+  ffmsy <- f / fmsy
+  ffmsy <- as.data.frame(ffmsy)
+  ffmsy <- cbind(ffmsy, hcr=1:nrow(ffmsy))
+  ffmsy <- tidyr::gather(ffmsy, key="year", value="value", -hcr)
+  ffmsy <- cbind(ffmsy, metric="ffmsy", name="F / FMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
+  # BMSY = K / 2 for Kobe
+  bmsy <- stock_params$k / 2
+  bbmsy <- stock$biomass / bmsy
+  bbmsy <- as.data.frame(bbmsy)
+  bbmsy <- cbind(bbmsy, hcr=1:nrow(bbmsy))
+  bbmsy <- tidyr::gather(bbmsy, key="year", value="value", -hcr)
+  bbmsy <- cbind(bbmsy, metric="bbmsy", name="B / BMSY", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
+  # SBSBF=0 for Majuro
+  bk <- stock$biomass / stock_params$k
+  bk <- as.data.frame(bk)
+  bk <- cbind(bk, hcr=1:nrow(bk))
+  bk <- tidyr::gather(bk, key="year", value="value", -hcr)
+  bk <- cbind(bk, metric="bk", name="SB / SBF=0", level="median", colour="black",hcrlegend=NA, stringsAsFactors=FALSE)
+  # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
+  # So add 1 to the F years
+  bbmsy$year <- as.numeric(bbmsy$year)
+  bk$year <- as.numeric(bk$year)
+  ffmsy$year <- as.numeric(ffmsy$year)
+  ffmsy$year <- ffmsy$year + 1
+  # Only include common years between the three sets
+  common_years <- intersect(intersect(bbmsy$year, ffmsy$year), bk$year)
+  # Stick altogether
+  dat <- rbind(subset(bbmsy, year %in% common_years), subset(ffmsy, year %in% common_years), subset(bk, year %in% common_years))
+  # Set last hcr to blue
+  last_hcr <- nrow(stock$catch)
+  dat[dat$hcr==last_hcr,"colour"] <- "blue"
+  # Call the actual plotting routine
+  plot_kobe_majuro_stock(dat, stock_params, choice)
+}
+
+plot_yieldcurve_projections <- function(stock, stock_params, app_params, draw_trajectories){
   # x-axis = Effort
   # y-axis = Catch
   # In final year
   # Only plot this if running a long term projection?
   final_ts <- dim(stock$catch)[2]
-
   rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
   final_rel_effort <- apply(rel_effort, 1, function(x)x[max(which(!is.na(x)))])
-
   final_catch <- apply(stock$catch, 1, function(x)x[max(which(!is.na(x)))])
-  
   # Set x and y range depending on whether to show trjaectories or not
   if (draw_trajectories){
     xrange <- c(0,min(max(rel_effort, na.rm=TRUE)*1.1,5, na.rm=TRUE))
@@ -27,8 +155,6 @@ plot_yieldcurve_projections2 <- function(stock, stock_params, app_params, draw_t
     xrange <- c(0,min(max(final_rel_effort, na.rm=TRUE)*1.1,5, na.rm=TRUE))
     yrange <- c(0, max(final_catch, na.rm=TRUE) * 1.1)
   }
-  
-  
 
   plot(x=xrange, y=yrange, type="n", xlab="Final relative fishing effort", ylab="Final catch", xlim=xrange, ylim=yrange)
   points(x=final_rel_effort, y=final_catch, pch=16, cex=3)
@@ -50,6 +176,10 @@ plot_yieldcurve_projections2 <- function(stock, stock_params, app_params, draw_t
     points(x=rel_effort[nproj,], y=stock$catch[nproj,], col="blue", cex=0.5)
   }
 }
+
+#---------------------------------------------------------
+# The actual Shiny stuff
+#---------------------------------------------------------
 
 
 # UI
@@ -332,14 +462,11 @@ server <- function(input, output,session) {
     }
     if(input$kobemajuro == "yieldcurve"){
       # Add an extra check box for drawing trajectories
-      plot_yieldcurve_projections2(stock=stock, stock_params=get_stock_params(), app_params=app_params, draw_trajectories=input$showtraj)
-      # AMPLE plot
-      #plot_yieldcurve_projections(stock=stock, stock_params=get_stock_params(), app_params=app_params)
+      plot_yieldcurve_projections(stock=stock, stock_params=get_stock_params(), app_params=app_params, draw_trajectories=input$showtraj)
     }
   })
 
   output$pis <- renderTable({
-#If you put an image img1.png in www/img/img1.png, you can refer to it in server.R as <img src=img/img1.png></img> – Ramnath Dec 14 '13 at 1:34
     tabout <- get_projection_pis(stock=stock, stock_params=get_stock_params(), app_params=app_params, current_timestep=current_timestep())
     tabout[,"Notes"] <- ""
     tabout[tabout[,"Last SB/SBF=0"] <= 1e-3,"Notes"] <- '<img src="deadfish.png" height="25"></img>'
