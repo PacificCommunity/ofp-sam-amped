@@ -4,6 +4,25 @@
 # Load packages ----
 library(AMPLE)
 
+#------------------------------------------------------------
+# Plot stuff
+plot_hcr_intro_arrow <- function(stock, timestep){
+  # Arrow from B/K to HCR
+  btimestep <- min(timestep, dim(stock$hcr_ip)[2])
+  last_hcr_ip  <- stock$hcr_ip[1, btimestep]
+  npoints <- 100
+  theta <- seq(from=0, to=pi/2, length=npoints)
+  x <- sin(theta) * last_hcr_ip
+  y <- -1 * cos(theta) * (1-last_hcr_ip)
+  # Set up plot
+  plot(x=x, y=y, xlim=c(0,1), ylim=c(-1,0), type="n", xaxt="n", yaxt="n",xlab="", ylab="", axes=FALSE,xaxs="i", yaxs="i")
+  lines(x=x,y=y,col=guide_col, lwd=guide_lwd)
+  # Add an arrow
+  arrows(x0=x[length(x)-1], y0=y[length(y)-1], x1=x[length(x)], y1=y[length(y)],col=guide_col,lwd=guide_lwd)
+}
+#------------------------------------------------------------
+
+
 # User interface ----
 ui <- navbarPage(
   title="What is a Harvest Control Rule?",

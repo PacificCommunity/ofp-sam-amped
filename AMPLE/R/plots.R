@@ -169,8 +169,6 @@ sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="bl
 #' # Plot catch timeseries
 #' plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
 #' # Plot the projection (biomass, catch and rel cpue)
-#' plot_projection(stock=stock, stock_params=stock_params, mp_params=mp_params,
-#'   app_params=app_params, quantiles=c(0.2,0.8))
 #' # The arrow connecting the HCR to the biomass
 #' plot_hcr_intro_arrow(stock=stock, timestep=15)
 #' # Time series with a histogram on the end
@@ -179,7 +177,6 @@ sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="bl
 #' # Kobe or Majuro plot
 #' # Just a few iters for efficiency
 #' stock2 <- lapply(stock, '[',1:5,)
-#' plot_kobe_majuro_projections(stock=stock2, stock_params=stock_params, choice="kobe")
 #' # Yield curve
 #' plot_yieldcurve_projections(stock=stock2, stock_params=stock_params, app_params=app_params)
 #' @export
@@ -497,31 +494,6 @@ plot_F <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TR
 
 }
 
-
-
-#' plot_hcr_intro_arrow
-#'
-#' plot_hcr_intro_arrow() draws an arrow between the depletion plot and the HCR plot for the Introduction to HCRs app.
-#'
-#' 
-#' @return A plot
-#' @rdname front_page_plots
-#' @name Front page plots
-#' @export
-plot_hcr_intro_arrow <- function(stock, timestep){
-  # Arrow from B/K to HCR
-  btimestep <- min(timestep, dim(stock$hcr_ip)[2])
-  last_hcr_ip  <- stock$hcr_ip[1, btimestep]
-  npoints <- 100
-  theta <- seq(from=0, to=pi/2, length=npoints)
-  x <- sin(theta) * last_hcr_ip
-  y <- -1 * cos(theta) * (1-last_hcr_ip)
-  # Set up plot
-  plot(x=x, y=y, xlim=c(0,1), ylim=c(-1,0), type="n", xaxt="n", yaxt="n",xlab="", ylab="", axes=FALSE,xaxs="i", yaxs="i")
-  lines(x=x,y=y,col=guide_col, lwd=guide_lwd)
-  # Add an arrow
-  arrows(x0=x[length(x)-1], y0=y[length(y)-1], x1=x[length(x)], y1=y[length(y)],col=guide_col,lwd=guide_lwd)
-}
 
 
 # Could combine with function above into a single 
