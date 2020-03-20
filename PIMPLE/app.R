@@ -16,56 +16,6 @@ library(markdown)
 # Load the data
 load("data/preWCPFC2019_results.Rdata")
 
-
-#----------------------------------------------------------------------------------------------------
-# HACKS 
-# This is a brutal hack to overwrite my own unexported palette function in the AMPLE NAMESPACE
-# This should be added to AMPLE for the new version and then removed from here
-get_hcr_colours <- function(hcr_names, chosen_hcr_names){
-  allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
-  names(allcols) <- hcr_names
-  hcrcols <- allcols[chosen_hcr_names]
-  return(hcrcols)
-}
-# WTF?!?!?
-assignInNamespace("get_hcr_colours", get_hcr_colours, ns="AMPLE", pos="package:AMPLE")
-
-#----------------------------------------------------------------------------------------------------
-# Updated radar plot - also add to AMPLE when fixed
-myradar2 <- function(dat, hcr_choices, scaling="scale", polysize=2, textsize=5){
-    hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
-    dat <- subset(dat, hcrref %in% hcr_choices)
-    # Scale by maximum - so max = 1
-    if (scaling=="scale"){
-      #dat <- dat %>% group_by(period, pi) %>% mutate(value = X50. / max(X50.))
-      dat <- dplyr::group_by(dat, period, pi)
-      dat <- dplyr::mutate(dat, value = X50. / max(X50.))
-    }
-    # Rank PI
-    if (scaling=="rank"){
-      #dat <- dat %>% group_by(period, pi) %>% mutate(value = order(X50.) / length(hcr_choices))
-      dat <- dplyr::group_by(dat, period, pi)
-      dat <- dplyr::mutate(dat, value = order(X50.) / length(hcr_choices))
-    }
-    # Need to wrap text of piname
-    max_len <- 15 # max length of label in characters
-    dat$piname_wrap <- sapply(dat$piname, function(y) paste(strwrap(y, max_len), collapse = "\n"), USE.NAMES = FALSE)
-    dat <- dat[order(dat$piname_wrap),]
-    p <- ggplot(data=dat, aes(x=piname_wrap, y=value,group=hcrref))
-    p <- p + geom_polygon(aes(fill=hcrref), colour="black", alpha=0.6, size=polysize)
-    p <- p + xlab("") + ylab("") + theme(legend.position="bottom", legend.title=element_blank())
-    p <- p + scale_fill_manual(values=hcrcols)
-    p <- p + scale_colour_manual(values=hcrcols)
-    p <- p + coord_polar(theta = "x", start = 0, direction = 1, clip = "on")  # clip = "on"
-    p <- p + theme(axis.text.y=element_blank(), axis.ticks.y=element_blank()) # Remove y axis 
-    p <- p + theme(axis.text.x=element_blank()) # Remove x axis 
-    p <- p + ylim(0,1.5)
-    p <- p + facet_wrap(~period)
-    p <- p + geom_text(aes(y = 1.4,label = piname_wrap), size=textsize) # Hand write the labels
-    p <- p + theme(strip.text=element_text(size=16), legend.text=element_text(size=16))
-    return(p)
-}
-
 #----------------------------------------------------------------------------------------------------
 
 # HACK drop SQ HCRs
@@ -620,7 +570,7 @@ output$demoradarplot <- renderPlot({
   # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
   dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == "Short" & piname %in% pi_choices & metric %in% metric_choices)
   scaling_choice <- "scale"
-  p <- myradar2(dat=dat, hcr_choices=hcr_choices, scaling_choice)
+  p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
   return(p)
 })
 
@@ -715,8 +665,7 @@ output$demoradarplot <- renderPlot({
 
     #scaling_choice <- input$radarscaling
     scaling_choice <- "scale"
-    #p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
-    p <- myradar2(dat=dat, hcr_choices=hcr_choices, scaling_choice)
+    p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
     return(p)
   })
 

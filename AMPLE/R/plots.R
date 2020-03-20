@@ -64,9 +64,7 @@ get_hcr_colours <- function(hcr_names, chosen_hcr_names){
   names(allcols) <- hcr_names
   hcrcols <- allcols[chosen_hcr_names]
   return(hcrcols)
-  return(hcrcols)
 }
-
 #-------------------------------------------------------------------------------------
 # Front page plots for the AMPED apps - not used by PIMPLE
 
@@ -824,6 +822,7 @@ myboxplot <- function(dat, hcr_choices, plot_type="median_bar"){
 #' @rdname comparison_plots
 #' @name Comparison plots
 #' @export
+# Updated radar plot - also add to AMPLE when fixed
 myradar <- function(dat, hcr_choices, scaling="scale", polysize=2, textsize=5){
     hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
     dat <- subset(dat, hcrref %in% hcr_choices)
