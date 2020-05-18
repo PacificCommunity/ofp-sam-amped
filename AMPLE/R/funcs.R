@@ -513,11 +513,11 @@ get_time_periods <- function(app_params, nyears){
 #'
 #' @param years A character vector of the years in the simulation.
 #' @param piname_choice A character vector of the indicator names to be included in the table.
+#' @param signif Significant digits for table. Default is 3.
 #' @rdname performance_indicators
 #' @export
-current_pi_table <- function(dat, app_params, years, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP")){
+current_pi_table <- function(dat, app_params, years, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP", signif=3)){
   out <- subset(dat, period != "Rest" & piname %in% piname_choice)
-  signif <- 2
   perc1 <- out[,paste("X",percentile_range[1],".",sep="")]
   perc2 <- out[,paste("X",percentile_range[2],".",sep="")]
   out$value <- paste(signif(out$X50., signif), " (", signif(perc1, signif), ",", signif(perc2, signif),")", sep="")
@@ -575,21 +575,20 @@ replicate_table <- function(stock, app_params, stock_params, percentile_range = 
   return(out)
 }
 
-
-
-
 # The big PI tables for comparing HCRs
 #' pitable
 #'
 #' pitable() is not a plot but a table comparing PIs across HCRs and periods. Only pass in 1 time period at a time.
 #'
+#' @param signif Number of significent digits for table. Default is 3.
+#'
 #' @return A data.frame to be shown as a table.
 #' @rdname comparison_plots
 #' @name Comparison plots
 #' @export
-pitable <- function(dat, percentile_range = c(20,80)){
+# Added signif argument to be added to AMPLE
+pitable <- function(dat, percentile_range = c(20,80), signif=3){
     # Rows are the PIs, columns are the HCRs
-    signif <- 2
     percentile_min <- dat[,paste("X",percentile_range[1],".",sep="")]
     percentile_max <- dat[,paste("X",percentile_range[2],".",sep="")]
     dat$value <- paste(signif(dat$X50.,signif), " (", signif(percentile_min, signif), ",", signif(percentile_max, signif), ")", sep="")
@@ -605,6 +604,7 @@ pitable <- function(dat, percentile_range = c(20,80)){
     colnames(tabdat)[1] <- "Indicator"
     return(tabdat)
 }
+
 
 #-------------------------------------------------------------------
 
