@@ -564,14 +564,26 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
 # Can we get Kobe in here too - just change the background colour and the X data
 # SB/SBF=0, B/BMSY
 
+# Quantile plot - for time series
+# All HCRs on same plot
+# Why sometimes worms and sometime spaghetti?
+
 #' Plots for comparing HCR performance
 #'
-#' plot_majuro() plots a Majuro plot.
+#' quantile_plot() plots times series of indicators for each HCR.
 #'
-#' @param dat The data.frame with the data to be plotted.
-#' @param hcr_choices The names of the HCRs to plot.
-#' @param stock_params A vector of life history and stochasticy parameters.
-#' @param percentile_range A vector of length with minimum and maximum percentile range to plot.
+#' @param wormdat Data set of the spaghetti (worms).
+#' @param alpha20_80 Alpha of the ribbons.
+#' @param linetype_worm Line type of the spaghetti.
+#' @param colour_worm Colour of the spaghetti.
+#' @param size_worm Thickness of the spaghetti.
+#' @param add_start_line Add a line to the start of the projection (TRUE / FALSE).
+#' @param time_period_lines Add a lines to show the time periods (TRUE / FALSE).
+#' @param short_term Year range for the short-term.
+#' @param medium_term Year range for the medium-term.
+#' @param long_term Year range for the long-term.
+#' @param last_plot_year Last year to plot.
+#' @param show_spaghetti Show the spaghetti (worms) (TRUE / FALSE).
 #' 
 #' @return A ggplot2 plot object.
 #' @rdname comparison_plots
@@ -624,8 +636,6 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
 #' pisums$yearqs$hcrref <- "HCR 1"
 #' pisums$periodqs$hcrref <- "HCR 1"
 #'
-#' # Majuro plot
-#' plot_majuro(dat=pisums$yearqs, hcr_choices="HCR 1", stock_params=stock_params)
 #' # Time series quantile plot
 #' quantile_plot(dat=pisums$yearqs, hcr_choices="HCR 1", wormdat=pisums$worms)
 #' # Bar and box plots
@@ -635,85 +645,6 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
 #' myradar(dat=pisums$periodqs, hcr_choices="HCR 1", scaling="scale", polysize=2)
 #' # Table of PIs. Only pass in 1 time period
 #' pitable(dat=subset(pisums$periodqs, period=="Long"))
-#' @export
-plot_majuro <- function(dat, percentile_range = c(20,80), hcr_choices, stock_params){
-  hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
-  # Need a dataset with percentiles
-  majdat <- subset(dat, piname %in% c("F/FMSY", "SB/SBF=0"))
-  # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
-  # So add 1 to the F years
-  majdat[majdat$pi=="ffmsy","year"] <- majdat[majdat$pi=="ffmsy","year"] + 1
-  majdat <- dplyr::select(majdat, c("pi", "year", paste("X",percentile_range[1],".",sep=""), paste("X",percentile_range[2],".",sep=""), X50., hcrref))
-  # Rename for simplicity
-  majdat <- dplyr::rename(majdat, "min" = paste("X",percentile_range[1],".",sep=""), "max" = paste("X",percentile_range[2],".",sep=""), "med" = "X50.")
-  majdat <- tidyr::gather(majdat, key="XX", value="data", -pi, -year, -hcrref)
-  majdat$pix <- paste(majdat$pi,majdat$XX,sep="")
-  majdat <- tidyr::spread(dplyr::select(majdat, year, hcrref, data, pix), key="pix", value="data")
-  # Remove NA years
-  majdat <- subset(majdat, !(is.na(ffmsymed) | is.na(biomassmed)))
-
-  lrp <- stock_params[["lrp"]]
-  ymax <- max(max(majdat$ffmsymax, na.rm=TRUE) * 0.1, 2.0)
-  
-  p <- ggplot(majdat)
-  # Big red
-  p <- p + geom_rect(data=data.frame(xmin=0, xmax=lrp, ymin=0, ymax=ymax), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="red", colour="black")
-  # Orange one
-  p <- p + geom_rect(data=data.frame(xmin=lrp, xmax=1.0, ymin=1.0, ymax=ymax), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="orange", colour="black")
-  # White one
-  p <- p + geom_rect(data=data.frame(xmin=lrp, xmax=1.0, ymin=0.0, ymax=1.0), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="white", colour="black")
-
-  # Put the lines on - Do twice, once in fat black , then thin with colour
-  # Lines and crosses
-  # Fat black
-  p <- p + geom_line(aes(x=biomassmed, y=ffmsymed), colour="black", size=2)
-  p <- p + geom_errorbar(aes(x=biomassmed, ymin=ffmsymin, ymax=ffmsymax, group=year), colour="black", size=2)
-  p <- p + geom_errorbarh(aes(y=ffmsymed, xmin=biomassmin, xmax=biomassmax, group=year), colour="black", size=2)
-  # Thin colour
-  p <- p + geom_line(aes(x=biomassmed, y=ffmsymed, colour=hcrref), size=1.3)
-  p <- p + geom_errorbar(aes(x=biomassmed, ymin=ffmsymin, ymax=ffmsymax, group=year, colour=hcrref), size=1.3)
-  p <- p + geom_errorbarh(aes(y=ffmsymed, xmin=biomassmin, xmax=biomassmax, group=year, colour=hcrref), size=1.3)
-  # Black point
-  p <- p + geom_point(aes(x=biomassmed, y=ffmsymed))
-  # Final point in white
-  maxyear <- max(majdat$year)
-  p <- p + geom_point(data=subset(majdat, year==maxyear), aes(x=biomassmed, y=ffmsymed), colour="white")
-
-  p <- p + scale_colour_manual(values=hcrcols)
-  p <- p + xlab("SB/SBF=0") + ylab("F/FMSY")
-  p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
-  p <- p + theme(legend.position="bottom", legend.title=element_blank())
-
-  p <- p + scale_x_continuous(expand = c(0, 0))
-  p <- p + scale_y_continuous(expand = c(0, 0), limits=c(0,ymax))
-
-  return(p)
-}
-
-# Quantile plot - for time series
-# All HCRs on same plot
-# Why sometimes worms and sometime spaghetti?
-
-#' quantile_plot
-#'
-#' quantile_plot() plots times series of indicators for each HCR.
-#'
-#' @param wormdat Data set of the spaghetti (worms).
-#' @param alpha20_80 Alpha of the ribbons.
-#' @param linetype_worm Line type of the spaghetti.
-#' @param colour_worm Colour of the spaghetti.
-#' @param size_worm Thickness of the spaghetti.
-#' @param add_start_line Add a line to the start of the projection (TRUE / FALSE).
-#' @param time_period_lines Add a lines to show the time periods (TRUE / FALSE).
-#' @param short_term Year range for the short-term.
-#' @param medium_term Year range for the medium-term.
-#' @param long_term Year range for the long-term.
-#' @param last_plot_year Last year to plot.
-#' @param show_spaghetti Show the spaghetti (worms) (TRUE / FALSE).
-#' 
-#' @return A ggplot2 plot object.
-#' @rdname comparison_plots
-#' @name Comparison plots
 #' @export
 quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
                           alpha20_80 = 0.6, linetype_worm=1,
