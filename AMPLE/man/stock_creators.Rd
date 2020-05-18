@@ -7,8 +7,15 @@
 \usage{
 create_stock()
 
-reset_stock(stock, stock_params, mp_params, app_params, initial_biomass,
-  nyears, niters)
+reset_stock(
+  stock,
+  stock_params,
+  mp_params,
+  app_params,
+  initial_biomass,
+  nyears,
+  niters
+)
 }
 \arguments{
 \item{stock}{A list with elements biomass, hcr_ip, hcr_op, effort and catch.}

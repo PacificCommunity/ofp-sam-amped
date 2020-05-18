@@ -270,6 +270,7 @@ estimation_error <- function(input, sigma, bias){
 #' @param app_params A vector of application parameters.
 #' @param max_releffort The maximum relative effort.
 #' @return A stock object (a reactiveValues object with bits for the stock)
+#' @rdname project_functions
 #' @examples
 #' # Set up all the bits for a projection - should be done inside a Shiny app
 #' # Managment procedure bits - should come from Shiny app inputs
@@ -312,7 +313,6 @@ estimation_error <- function(input, sigma, bias){
 #'
 #' # Or just get the HCR op in a single timestep
 #' hcr_op <- get_hcr_op(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=10)
-#' @rdname project_functions
 #' @export
 project <- function(stock, timesteps, stock_params, mp_params, app_params, max_releffort = 10){
   # Check timesteps - should be a range of two values
@@ -484,7 +484,6 @@ constant <- function(mp_params, ...){
 #' app_params <- list(initial_year = 2009, last_historical_timestep = 10)
 #' nyears <- 40
 #' get_time_periods(app_params=app_params, nyears=nyears)
-#'
 #' @export
 get_time_periods <- function(app_params, nyears){
   nyears <- nyears - app_params$last_historical_timestep
@@ -516,7 +515,7 @@ get_time_periods <- function(app_params, nyears){
 #' @param signif Significant digits for table. Default is 3.
 #' @rdname performance_indicators
 #' @export
-current_pi_table <- function(dat, app_params, years, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP", signif=3)){
+current_pi_table <- function(dat, app_params, years, percentile_range = c(20,80), piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch variability", "Catch stability", "Relative effort", "Relative effort variability", "Relative effort stability", "Proximity to TRP"), signif=3){
   out <- subset(dat, period != "Rest" & piname %in% piname_choice)
   perc1 <- out[,paste("X",percentile_range[1],".",sep="")]
   perc2 <- out[,paste("X",percentile_range[2],".",sep="")]
@@ -607,70 +606,6 @@ pitable <- function(dat, percentile_range = c(20,80), signif=3){
 
 
 #-------------------------------------------------------------------
-
-#' peformance_indicators
-#'
-#' get_projection_pis() get the performance indicators for the Introduction to Projections AMPED app
-#'
-#' @param stock A list with elements biomass, hcr_ip, hcr_op, effort and catch.
-#' @param stock_params A vector of life history and stochasticy parameters.
-#' @param app_params A vector of application parameters.
-#' @param current_timestep The current timestep.
-#' @rdname performance_indicators
-#' @export
-get_projection_pis <- function(stock, stock_params, app_params, current_timestep){
-  # Return a data.frame of:
-  # Projection (1,2,3,..)
-  # Last catch
-  # Av. catch
-  # Last effort
-  # Av. effort
-  # Last SB/SBF=0
-  # Av. SB/SBF=0
-  # Prop. years in green
-
-  # Current values are that last value that isn't NA
-  final_catch <- apply(stock$catch, 1, function(x)x[max(which(!is.na(x)))])
-  bk <- stock$biomass / stock_params$k
-  final_sbsbf0 <- apply(bk, 1, function(x)x[max(which(!is.na(x)))])
-  rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
-  final_effort <- apply(rel_effort, 1, function(x)x[max(which(!is.na(x)))])
-
-  # Average values over projection period only
-  proj_period <- (app_params$last_historical_timestep+1):dim(stock$biomass)[2]
-  mean_catch <- apply(stock$catch[,proj_period,drop=FALSE],1,mean,na.rm=TRUE)
-  mean_sbsbf0 <- apply(bk[,proj_period,drop=FALSE],1,mean,na.rm=TRUE)
-  mean_effort <- apply(rel_effort[,proj_period,drop=FALSE],1,mean,na.rm=TRUE)
-  prop_sb_lrp <- apply(bk[,proj_period,drop=FALSE] > stock_params$lrp,1,mean,na.rm=TRUE)
-  bmsy <- stock_params$k / 2
-  prop_sb_bmsy <- apply(stock$biomass[,proj_period,drop=FALSE] > bmsy,1,mean,na.rm=TRUE)
-  dat <- data.frame(Projection = 1:nrow(stock$biomass),
-                    final_catch = final_catch,
-                    average_catch = mean_catch,
-                    final_effort = final_effort,
-                    average_effort = mean_effort,
-                    final_sbsbf0 = final_sbsbf0,
-                    average_sbsbf0 = mean_sbsbf0,
-                    prop_sb_lrp = prop_sb_lrp,
-                    prop_sb_bmsy = prop_sb_bmsy)
-  # Trim the digits a bit
-  #dat <- signif(dat,3)
-  dat <- round(dat,3)
-  final_year <- app_params$initial_year + current_timestep - 1
-  # Better column names
-  colnames(dat) <- c("Projection",
-                     "Last catch",
-                     "Average catch",
-                     "Last effort",
-                     "Average effort",
-                     "Last SB/SBF=0",
-                     "Average SB/SBF=0",
-                     "Prop. SB/SBF=0>LRP",
-                     "Prop. B > BMSY")
-  return(dat)
-}
-
-#-------------------------------------------------------------------
 ## @references Ranta and Kaitala 2001 Proc. R. Soc.
 ## vt = b * vt-1 + s * sqrt(1 - b^2)
 ## s is normally distributed random variable with mean = 0
@@ -745,8 +680,6 @@ next_corrnoise <- function(x, b, sd=0.1){
 #' years=dimnames(stock$biomass)$year,
 #' piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch"))
 #'
-#' # Get the PIs for the Introduction to Projections app
-#' get_projection_pis(stock=out, stock_params=stock_params, app_params=app_params, current_timestep=15)
 #' @export
 get_summaries <- function(stock, stock_params, app_params, quantiles){
   # worms - a sample of iters by year

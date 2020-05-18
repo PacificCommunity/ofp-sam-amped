@@ -9,9 +9,9 @@
 #rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
 # Load packages
 library(AMPLE)
-library(ggplot2)
-library(RColorBrewer)
-library(markdown)
+#library(ggplot2)
+#library(RColorBrewer)
+#library(markdown)
 
 # Load the data
 load("data/preWCPFC2019_results.Rdata")

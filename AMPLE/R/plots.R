@@ -5,8 +5,7 @@
 
 # A metric fuckton of imports
 #' @importFrom graphics "plot" "polygon" "lines"
-#' @importFrom ggplot2 "geom_rect" "scale_x_continuous" "scale_y_continuous" "geom_point" "geom_errorbar" "geom_errorbarh" "geom_ribbon" "geom_line" "geom_vline" "scale_x_continuous" "aes" "ggplot" "geom_bar" "geom_boxplot" "facet_wrap" "element_blank" "element_text" "scale_fill_manual" "theme" "xlab" "ylab" "CoordPolar" "ggproto" "scale_colour_manual" "geom_polygon" "ylim" "xlim" 
-
+#' @importFrom ggplot2 "geom_rect" "scale_x_continuous" "scale_y_continuous" "geom_point" "geom_errorbar" "geom_errorbarh" "geom_ribbon" "geom_line" "geom_vline" "scale_x_continuous" "aes" "ggplot" "geom_bar" "geom_boxplot" "facet_wrap" "element_blank" "element_text" "scale_fill_manual" "theme" "xlab" "ylab" "coord_polar" "ggproto" "scale_colour_manual" "geom_polygon" "ylim" "xlim" "geom_text"
 # Plotting functions
 # Globals - eesh!
 
@@ -59,6 +58,13 @@
 # see for more names: display.brewer.all(colorblindFriendly=TRUE)
 # Check the max number of colours in the palette brewer.pal.info
 # No HCRs is the total number of HCRs - not the number selected
+#' Default palette for HCRs
+#' 
+#' Get the default palette for the HCR colours
+#' 
+#' @param hcr_names The names of all of the HCRs
+#' @param chosen_hcr_names The names of only the chosen HCRs
+#' @export
 get_hcr_colours <- function(hcr_names, chosen_hcr_names){
   allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
   names(allcols) <- hcr_names
@@ -406,91 +412,6 @@ plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep
   }
 }
 
-
-# Generic timeseries plot
-plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, yrange, ylab, add_grid=TRUE, xlab="Year", ghost_col="grey", true_col="black", ...){
-
-  years <- as.numeric(dimnames(stock$biomass)$year)
-  # Plot empty axis
-  plot(x=years, y=years, type="n", ylim=c(yrange[1], yrange[2]), ylab=ylab, xlab=xlab, xaxs="i", yaxs="i",...)
-  if (add_grid){
-    grid()
-  }
-  # Get last iteration 
-  last_iter <- dim(data)[1]
-  # If we have more than X iters, draw envelope of iters
-  if(last_iter > max_spaghetti_iters){
-    # Draw ribbon
-    draw_ribbon(x=years, y=data, quantiles=quantiles)
-    # Add spaghetti
-    for (iter in 1:nspaghetti){
-      lines(x=years, y=data[iter,], lty=spaghetti_lty, lwd=spaghetti_lwd, col=spaghetti_col)
-    }
-  }
-  # Else plot individual iters
-  else{
-    # Plot all iters as ghosts
-    if (last_iter > 1){
-      for (i in 1:last_iter){
-        lines(x=years, y=data[i,], col=ghost_col, lwd=ghost_lwd, lty=ghost_lty)
-      }
-    }
-  }
-  # Current iteration
-  if(show_last){
-    lines(x=years, y=data[last_iter,], col=true_col, lwd=last_lwd, lty=last_lty)
-  }
-
-}
-
-# Relative CPUE
-plot_relcpue <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ymax=NA, ...){
-
-  years <- as.numeric(dimnames(stock$biomass)$year)
-  cpue <- stock$catch / stock$effort
-  rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
-  if(is.na(ymax)){
-    ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
-  }
-  yrange <- c(0, ymax)
-
-  # Plot it
-  plot_indiv_timeseries_base(data=rel_cpue, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="Relative CPUE", add_grid=add_grid, ...)
-
-  # Add 1 line
-  lines(x=years,y=rep(1,length(years)), lty=2)
-
-}
-
-
-plot_releffort <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
-  years <- as.numeric(dimnames(stock$biomass)$year)
-  rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
-  # Set Ylim - use same as HCR plot
-  ymax <- max(c(rel_effort * 1.1, 1.0), na.rm=TRUE)
-  ymax <- min(10, ymax, na.rm=TRUE)
-  yrange <- c(0, ymax)
-
-  # Plot it
-  plot_indiv_timeseries_base(data=rel_effort, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="Relative effort", add_grid=add_grid, ...)
-
-  # Add 1 line
-  lines(x=years,y=rep(1,length(years)), lty=2)
-
-}
-
-
-plot_F <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
-  years <- as.numeric(dimnames(stock$biomass)$year)
-  harvest_rate <- stock$catch / stock$biomass
-  # Set Ylim - use same as HCR plot
-  ymax <- max(harvest_rate, na.rm=TRUE) * 1.1
-  yrange <- c(0, ymax)
-
-  # Plot it
-  plot_indiv_timeseries_base(data=harvest_rate, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="F", add_grid=add_grid, ...)
-
-}
 
 
 

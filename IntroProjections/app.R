@@ -6,7 +6,60 @@ library(AMPLE)
 library(shinyjs)
 
 #-------------------------------------------------------------------------
-# Some plots before we get started
+# Some tables and plots before we get started
+
+get_projection_pis <- function(stock, stock_params, app_params, current_timestep){
+  # Return a data.frame of:
+  # Projection (1,2,3,..)
+  # Last catch
+  # Av. catch
+  # Last effort
+  # Av. effort
+  # Last SB/SBF=0
+  # Av. SB/SBF=0
+  # Prop. years in green
+
+  # Current values are that last value that isn't NA
+  final_catch <- apply(stock$catch, 1, function(x)x[max(which(!is.na(x)))])
+  bk <- stock$biomass / stock_params$k
+  final_sbsbf0 <- apply(bk, 1, function(x)x[max(which(!is.na(x)))])
+  rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
+  final_effort <- apply(rel_effort, 1, function(x)x[max(which(!is.na(x)))])
+
+  # Average values over projection period only
+  proj_period <- (app_params$last_historical_timestep+1):dim(stock$biomass)[2]
+  mean_catch <- apply(stock$catch[,proj_period,drop=FALSE],1,mean,na.rm=TRUE)
+  mean_sbsbf0 <- apply(bk[,proj_period,drop=FALSE],1,mean,na.rm=TRUE)
+  mean_effort <- apply(rel_effort[,proj_period,drop=FALSE],1,mean,na.rm=TRUE)
+  prop_sb_lrp <- apply(bk[,proj_period,drop=FALSE] > stock_params$lrp,1,mean,na.rm=TRUE)
+  bmsy <- stock_params$k / 2
+  prop_sb_bmsy <- apply(stock$biomass[,proj_period,drop=FALSE] > bmsy,1,mean,na.rm=TRUE)
+  dat <- data.frame(Projection = 1:nrow(stock$biomass),
+                    final_catch = final_catch,
+                    average_catch = mean_catch,
+                    final_effort = final_effort,
+                    average_effort = mean_effort,
+                    final_sbsbf0 = final_sbsbf0,
+                    average_sbsbf0 = mean_sbsbf0,
+                    prop_sb_lrp = prop_sb_lrp,
+                    prop_sb_bmsy = prop_sb_bmsy)
+  # Trim the digits a bit
+  #dat <- signif(dat,3)
+  dat <- round(dat,3)
+  final_year <- app_params$initial_year + current_timestep - 1
+  # Better column names
+  colnames(dat) <- c("Projection",
+                     "Last catch",
+                     "Average catch",
+                     "Last effort",
+                     "Average effort",
+                     "Last SB/SBF=0",
+                     "Average SB/SBF=0",
+                     "Prop. SB/SBF=0>LRP",
+                     "Prop. B > BMSY")
+  return(dat)
+}
+
 plot_projection <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
   current_col <- "blue"
   prev_col <- "black"
@@ -176,6 +229,60 @@ plot_yieldcurve_projections <- function(stock, stock_params, app_params, draw_tr
     points(x=rel_effort[nproj,], y=stock$catch[nproj,], col="blue", cex=0.5)
   }
 }
+
+# Generic timeseries plot
+plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, yrange, ylab, add_grid=TRUE, xlab="Year", ghost_col="grey", true_col="black", ...){
+
+  years <- as.numeric(dimnames(stock$biomass)$year)
+  # Plot empty axis
+  plot(x=years, y=years, type="n", ylim=c(yrange[1], yrange[2]), ylab=ylab, xlab=xlab, xaxs="i", yaxs="i",...)
+  if (add_grid){
+    grid()
+  }
+  # Get last iteration 
+  last_iter <- dim(data)[1]
+  # If we have more than X iters, draw envelope of iters
+  if(last_iter > max_spaghetti_iters){
+    # Draw ribbon
+    draw_ribbon(x=years, y=data, quantiles=quantiles)
+    # Add spaghetti
+    for (iter in 1:nspaghetti){
+      lines(x=years, y=data[iter,], lty=spaghetti_lty, lwd=spaghetti_lwd, col=spaghetti_col)
+    }
+  }
+  # Else plot individual iters
+  else{
+    # Plot all iters as ghosts
+    if (last_iter > 1){
+      for (i in 1:last_iter){
+        lines(x=years, y=data[i,], col=ghost_col, lwd=2, lty=1)
+      }
+    }
+  }
+  # Current iteration
+  if(show_last){
+    lines(x=years, y=data[last_iter,], col=true_col, lwd=2, lty=1)
+  }
+
+}
+
+plot_releffort <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+  years <- as.numeric(dimnames(stock$biomass)$year)
+  rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
+  # Set Ylim - use same as HCR plot
+  ymax <- max(c(rel_effort * 1.1, 1.0), na.rm=TRUE)
+  ymax <- min(10, ymax, na.rm=TRUE)
+  yrange <- c(0, ymax)
+
+  # Plot it
+  plot_indiv_timeseries_base(data=rel_effort, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="Relative effort", add_grid=add_grid, ...)
+
+  # Add 1 line
+  lines(x=years,y=rep(1,length(years)), lty=2)
+
+}
+
+
 
 #---------------------------------------------------------
 # The actual Shiny stuff

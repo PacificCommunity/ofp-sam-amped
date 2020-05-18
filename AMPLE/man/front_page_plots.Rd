@@ -5,38 +5,61 @@
 \alias{plot_hcr}
 \alias{plot_biomass}
 \alias{plot_catch}
-\alias{plot_projection}
-\alias{plot_hcr_intro_arrow}
 \alias{plot_metric_with_histo}
-\alias{plot_kobe_majuro_projections}
-\alias{plot_yieldcurve_projections}
 \title{Plots for the front page of the Introduction to HCRs and other AMPED apps.}
 \usage{
-plot_hcr(stock, stock_params, mp_params, app_params, timestep = NULL,
-  show_last = TRUE)
+plot_hcr(
+  stock,
+  stock_params,
+  mp_params,
+  app_params,
+  timestep = NULL,
+  show_last = TRUE
+)
 
-plot_biomass(stock, stock_params, mp_params, timestep = NULL,
-  show_last = TRUE, max_spaghetti_iters = 50, quantiles,
-  nspaghetti = 5, add_grid = TRUE, xlab = "Year",
-  ghost_col = "grey", last_col = "blue", ylim = c(0, 1), ...)
+plot_biomass(
+  stock,
+  stock_params,
+  mp_params,
+  timestep = NULL,
+  show_last = TRUE,
+  max_spaghetti_iters = 50,
+  quantiles,
+  nspaghetti = 5,
+  add_grid = TRUE,
+  xlab = "Year",
+  ghost_col = "grey",
+  last_col = "blue",
+  ylim = c(0, 1),
+  ...
+)
 
-plot_catch(stock, stock_params, mp_params, app_params = NULL,
-  timestep = NULL, show_last = TRUE, max_spaghetti_iters = 50,
-  quantiles, nspaghetti = 5, add_grid = TRUE, xlab = "Year",
-  ghost_col = "grey", true_col = "black", ...)
+plot_catch(
+  stock,
+  stock_params,
+  mp_params,
+  app_params = NULL,
+  timestep = NULL,
+  show_last = TRUE,
+  max_spaghetti_iters = 50,
+  quantiles,
+  nspaghetti = 5,
+  add_grid = TRUE,
+  xlab = "Year",
+  ghost_col = "grey",
+  true_col = "black",
+  ...
+)
 
-plot_projection(stock, stock_params, mp_params, app_params = NULL,
-  show_last = TRUE, max_spaghetti_iters = 50, quantiles,
-  nspaghetti = 5, add_grid = TRUE, ...)
-
-plot_hcr_intro_arrow(stock, timestep)
-
-plot_metric_with_histo(stock, stock_params, mp_params, metric,
-  app_params = NULL, show_last = TRUE, percentile_range = c(20, 80))
-
-plot_kobe_majuro_projections(stock, stock_params, choice = "kobe")
-
-plot_yieldcurve_projections(stock, stock_params, app_params)
+plot_metric_with_histo(
+  stock,
+  stock_params,
+  mp_params,
+  metric,
+  app_params = NULL,
+  show_last = TRUE,
+  percentile_range = c(20, 80)
+)
 }
 \arguments{
 \item{stock}{A list with elements biomass, hcr_ip, hcr_op, effort and catch.}
@@ -74,18 +97,8 @@ plot_yieldcurve_projections(stock, stock_params, app_params)
 \item{metric}{The name of the metric to plot (catch, biomass or relcpue).}
 
 \item{percentile_range}{A vector of length with minimum and maximum percentile range to plot.}
-
-\item{choice}{Either kobe or majuro.}
 }
 \value{
-A plot
-
-A plot
-
-A plot
-
-A plot
-
 A plot
 
 A plot
@@ -101,15 +114,7 @@ plot_biomass() plots time series of 'true' and observed depletion (SB/SBF=0).
 
 plot_catch() plots time series of catches.
 
-plot_projection() plots time series of depletion, catch and relative effort for the Introduction to Projections app.
-
-plot_hcr_intro_arrow() draws an arrow between the depletion plot and the HCR plot for the Introduction to HCRs app.
-
 plot_metric_with_histo() is the generic plotting routine for plotting time series of metrics with histograms of the final time step.
-
-plot_kobe_majuro_projections() plots a Kobe or Majuro plot for the Introduction to Projections app.
-
-plot_yieldcurve_projections() plots a yield curve (catch against effort) for the Introduction to Projections app.
 }
 \examples{
 # Set up all the bits for a projection - should be done inside a Shiny app
@@ -158,8 +163,6 @@ plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, quanti
 # Plot catch timeseries
 plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, quantiles=c(0.2,0.8))
 # Plot the projection (biomass, catch and rel cpue)
-plot_projection(stock=stock, stock_params=stock_params, mp_params=mp_params,
-  app_params=app_params, quantiles=c(0.2,0.8))
 # The arrow connecting the HCR to the biomass
 plot_hcr_intro_arrow(stock=stock, timestep=15)
 # Time series with a histogram on the end
@@ -168,7 +171,6 @@ plot_metric_with_histo(stock=stock, stock_params=stock_params, mp_params=mp_para
 # Kobe or Majuro plot
 # Just a few iters for efficiency
 stock2 <- lapply(stock, '[',1:5,)
-plot_kobe_majuro_projections(stock=stock2, stock_params=stock_params, choice="kobe")
 # Yield curve
 plot_yieldcurve_projections(stock=stock2, stock_params=stock_params, app_params=app_params)
 }
