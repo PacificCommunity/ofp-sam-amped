@@ -38,3 +38,7 @@ rsconnect/
 # VIM swap files
 *.swp
 */google-analytics.html
+
+*.tex
+*.log
+
