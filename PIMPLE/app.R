@@ -2,19 +2,20 @@
 # PIMPLE
 # Performance Indicators and Management Procedures Explorer
 # Main app
+# Updated for SC16 and the eight region model
 
-# Copyright 2019 OFP SPC MSE Team. Distributed under the GPL 3
+# Copyright 2020 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 #--------------------------------------------------------------
 #rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
 # Load packages
 library(AMPLE)
-#library(ggplot2)
-#library(RColorBrewer)
-#library(markdown)
+library(ggplot2)
+library(RColorBrewer)
+library(markdown)
 
 # Load the data
-load("data/preWCPFC2019_results.Rdata")
+load("data/SC16_results.Rdata")
 
 #----------------------------------------------------------------------------------------------------
 
@@ -40,19 +41,19 @@ yearqs[yearqs$piname == oldpi3name, "piname"] <- newpi3name
 worms[worms$piname == oldpi3name, "piname"] <- newpi3name
 # Relative CPUE
 oldpi4name <- "PI 4: Relative CPUE"
-newpi4name <- "PI 4: CPUE (rel. to 2012)\n(PS in areas 2,3,5 only)"
+newpi4name <- "PI 4: CPUE (rel. to 2012)\n(PS in areas 6,7,8 only)"
 periodqs[periodqs$piname == oldpi4name, "piname"] <- newpi4name
 yearqs[yearqs$piname == oldpi4name, "piname"] <- newpi4name
 worms[worms$piname == oldpi4name, "piname"] <- newpi4name
 # Relative effort to effort
 oldpi7name <- "PI 7: Relative effort stability"
-newpi7name <- "PI 7: Effort stability\n(PS in areas 2,3,5 only)"
+newpi7name <- "PI 7: Effort stability\n(PS in areas 6,7,8 only)"
 periodqs[periodqs$piname == oldpi7name, "piname"] <- newpi7name
 yearqs[yearqs$piname == oldpi7name, "piname"] <- newpi7name
 worms[worms$piname == oldpi7name, "piname"] <- newpi7name
 # Relative effort to effort
 oldpi72name <- "PI 7: Relative effort variability"
-newpi72name <- "PI 7: Relative effort variability\n(PS in areas 2,3,5 only)"
+newpi72name <- "PI 7: Relative effort variability\n(PS in areas 6,7,8 only)"
 periodqs[periodqs$piname == oldpi72name, "piname"] <- newpi72name
 yearqs[yearqs$piname == oldpi72name, "piname"] <- newpi72name
 worms[worms$piname == oldpi72name, "piname"] <- newpi72name
@@ -162,8 +163,8 @@ ui <- fluidPage(id="top",
           tags$h1("PIMPLE"),
           tags$p("Performance Indicators and Management Procedures Explorer"),
           tags$footer(
-            tags$p("version 0.3.0 Carlton Touts"),
-            tags$p("Copyright 2019 OFP SPC MSE Team."),
+            tags$p("version 0.4.0 Stick In A Five And Go"),
+            tags$p("Copyright 2020 OFP SPC MSE Team."),
             tags$p("Distributed under the GPL 3")
           )
       )),
@@ -184,13 +185,13 @@ ui <- fluidPage(id="top",
       # Careful with conditional
       conditionalPanel(condition="(input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')))",
         #selectInput(inputId = "catchareachoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235", "Area 1"="1", "Area 2"="2", "Area 3"="3", "Area 4"="4", "Area 5"="5"), selected="total")
-        selectInput(inputId = "catchareachoice", label="Catch grouping (PIs 3 & 6 only)", choices = list("All areas"="total", "Purse seines in areas 2,3 & 5"="ps235"), selected="total")
+        selectInput(inputId = "catchareachoice", label="Catch grouping (PIs 3 & 6 only)", choices = list("All areas"="total", "Purse seines in areas 6,7 & 8"="ps678"), selected="total")
         #selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
       ),
 
       # For selecting catch plots by area 
       conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi32' || input.pitab== 'pi62'))",
-        checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list("All areas" = "total", "Purse seines in areas 2,3 & 5" = "ps235", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5" ), selected="total")
+        checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list("All areas" = "total", "Purse seines in areas 6,7 & 8" = "ps678", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5","Area 6"="6","Area 7"="7","Area 8"="8" ), selected="total")
       ),
 
       # Select plot type by bar, box, time
@@ -519,7 +520,7 @@ output$demobarchart <- renderPlot({
   dat <- dplyr::filter(periodqs, period != "Rest" & pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
   dat$hcrname <- as.character(dat$hcrname)
   dat$hcrref <- as.character(dat$hcrref)
-  hcr_choices <- c("HCR 1", "HCR 6")
+  hcr_choices <- c("HCR 1", "HCR 4")
   p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="median_bar")
   p <- p + ggplot2::ylim(0,NA)
   p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
@@ -534,7 +535,7 @@ output$demoboxplot <- renderPlot({
   dat <- dplyr::filter(periodqs, period != "Rest" & pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
   dat$hcrname <- as.character(dat$hcrname)
   dat$hcrref <- as.character(dat$hcrref)
-  hcr_choices <- c("HCR 1", "HCR 6")
+  hcr_choices <- c("HCR 1", "HCR 4")
   p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="box")
   p <- p + ggplot2::ylim(0,NA)
   p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
@@ -543,7 +544,7 @@ output$demoboxplot <- renderPlot({
 
 output$demotimeseriesplot <- renderPlot({
   # Demo time series plot
-  hcr_choices <- c("HCR 1", "HCR 6")
+  hcr_choices <- c("HCR 1", "HCR 4")
   pi_choices <- c("pi3")
   metric_choices <- c("relative catch")
   area_choices <- "total"
@@ -558,7 +559,7 @@ output$demotimeseriesplot <- renderPlot({
 })
 
 output$demoradarplot <- renderPlot({
-  hcr_choices <- c("HCR 1", "HCR 6")
+  hcr_choices <- c("HCR 1", "HCR 4")
   catch_area_choice <- "total"
   other_area_choice <- c(as.character(NA), "all")
   catch_rel_choice <- "relative catch"
@@ -584,6 +585,7 @@ output$demoradarplot <- renderPlot({
   # Bar or box plot - facetting on PI
   plot_barbox_comparehcr <- function(plot_type="median_bar"){
     rPlot <- renderPlot({
+
       # It gets complicated because each PI has suboption in area, metric columns
       # biomass: area == all and metric == SBSBF0
       # pi1: area == all
@@ -608,6 +610,12 @@ output$demoradarplot <- renderPlot({
       metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
       # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
       dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
+
+      # This subset has stopped working
+#temp <- subset(periodqs,((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)))
+
+
+
       #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
       # Need to hack pi1 so that all quantiles = X50., else NA
       # Careful! If pi1 not in dat, error

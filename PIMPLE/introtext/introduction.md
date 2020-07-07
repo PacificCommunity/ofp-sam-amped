@@ -37,9 +37,9 @@ This allows you to see the indicators in more detail, for example viewing the ca
 
 ## Model Areas
 
-The model used for the evaluations has five areas as seen here:
+The model used for the evaluations has eight areas as seen here:
 
-![](plot_assessment_boundaries.png)
+![](skj_8_region_map.png)
 
 ## Performance Indicators
 
@@ -48,9 +48,9 @@ Their numbers relate to their position in the original table of indicators. Thes
 
 The average values of the PIs are calculated over three time periods:
 
-* Short-term: 2016-2024
-* Medium-term: 2025-2033
-* Long-term: 2034-2042
+* Short-term: 2019-2027
+* Medium-term: 2028-2036
+* Long-term: 2037-2045
 
 With the exception of SB/SBF=0, all of the indicators have been scaled so that 'bigger is better', i.e. the larger the value, the better the MP is thought to be performing for that PI.
 
@@ -77,12 +77,12 @@ The catches are presented as relative to the average catches in the period 2013 
 They are calculated over several groupings, based on area and fishery:
 
 * Total catch over all areas and fisheries
-* Purse seine catches in areas 2, 3 and 5
+* Purse seine catches in areas 6, 7 and 8
 * Catches from all fisheries in individual areas
 
 ### 4. Relative Catch per Unit Effort (CPUE)
 
-The CPUE is only calculated for the purse seines in areas 2, 3 and 5 (excluding the associated purse seines in area 5).
+The CPUE is only calculated for the purse seines in areas 6, 7 and 8 (excluding the associated purse seines in area 6).
 The CPUE is presented as relative to the CPUE in 2012.
 
 ### 6. Catch stability
@@ -105,7 +105,7 @@ This is similar to PI 6 (catch stability).
 It measures the stability of effort relative to the effort in 2012.
 It is also possible to investigate the variability, as well as the stability.
 
-As with PI 4 (Relative CPUE), this indicator is only calculated for the purse seines in areas 2, 3 and 5 (excluding the associated purse seines in area 5).
+As with PI 4 (Relative CPUE), this indicator is only calculated for the purse seines in areas 6, 7 and 8 (excluding the associated purse seines in area 6).
 
 ### 8. Proximity of SB/SBF=0 to the Target Reference Point (TRP)
 
