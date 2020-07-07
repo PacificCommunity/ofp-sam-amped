@@ -7,14 +7,17 @@
 \alias{get_summaries}
 \title{Routines for calculating and displaying various performance indicators.}
 \usage{
-current_pi_table(dat, app_params, years, percentile_range = c(20, 80),
+current_pi_table(
+  dat,
+  app_params,
+  years,
+  percentile_range = c(20, 80),
   piname_choice = c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE",
-  "Catch variability", "Catch stability", "Relative effort",
-  "Relative effort variability", "Relative effort stability",
-  "Proximity to TRP"))
+    "Catch variability", "Catch stability", "Relative effort",
+    "Relative effort variability", "Relative effort stability", "Proximity to TRP")
+)
 
-replicate_table(stock, app_params, stock_params, percentile_range = c(20,
-  80))
+replicate_table(stock, app_params, stock_params, percentile_range = c(20, 80))
 
 get_projection_pis(stock, stock_params, app_params, current_timestep)
 

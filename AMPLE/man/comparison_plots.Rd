@@ -15,19 +15,39 @@ pitable(dat, percentile_range = c(20, 80))
 
 plot_majuro(dat, percentile_range = c(20, 80), hcr_choices, stock_params)
 
-quantile_plot(dat, hcr_choices, wormdat = NULL, alpha20_80 = 0.6,
-  linetype_worm = 1, percentile_range = c(20, 80),
-  colour_worm = "black", size_worm = 0.3, add_start_line = TRUE,
-  time_period_lines = TRUE, short_term = 2016:2024,
-  medium_term = 2025:2033, long_term = 2034:2042,
-  last_plot_year = 2042, show_spaghetti = FALSE)
+quantile_plot(
+  dat,
+  hcr_choices,
+  wormdat = NULL,
+  alpha20_80 = 0.6,
+  linetype_worm = 1,
+  percentile_range = c(20, 80),
+  colour_worm = "black",
+  size_worm = 0.3,
+  add_start_line = TRUE,
+  time_period_lines = TRUE,
+  short_term = 2016:2024,
+  medium_term = 2025:2033,
+  long_term = 2034:2042,
+  last_plot_year = 2042,
+  show_spaghetti = FALSE
+)
 
 myboxplot(dat, hcr_choices, plot_type = "median_bar")
 
-myradar(dat, hcr_choices, scaling = "scale", polysize = 2)
+myradar(dat, hcr_choices, scaling = "scale", polysize = 2, textsize = 5)
 
-hcr_plot(hcr_choices, hcr_shape, hcr_points, lrp, trp, blacklinesize = 4,
-  linesize = 3, pointsize = 4.2, stroke = 3)
+hcr_plot(
+  hcr_choices,
+  hcr_shape,
+  hcr_points,
+  lrp,
+  trp,
+  blacklinesize = 4,
+  linesize = 3,
+  pointsize = 4.2,
+  stroke = 3
+)
 
 hcr_histo_plot(hcr_choices, histodat)
 }

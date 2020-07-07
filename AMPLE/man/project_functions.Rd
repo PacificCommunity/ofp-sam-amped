@@ -5,8 +5,14 @@
 \alias{get_hcr_op}
 \title{Projects the stock over the timesteps given and updates the biomass, HCR ip / op and catches}
 \usage{
-project(stock, timesteps, stock_params, mp_params, app_params,
-  max_releffort = 10)
+project(
+  stock,
+  timesteps,
+  stock_params,
+  mp_params,
+  app_params,
+  max_releffort = 10
+)
 
 get_hcr_op(stock, stock_params, mp_params, yr)
 }

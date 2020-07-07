@@ -13,10 +13,16 @@
 \alias{mp_params_switcheroo}
 \title{Modules for common features of the AMPED Shiny apps.}
 \usage{
-stoch_params_setterUI(id, show_biol_prod_sigma = TRUE,
-  show_biol_est_sigma = TRUE, show_biol_est_bias = TRUE,
-  init_prod_sigma = 0, init_est_sigma = 0, init_est_bias = 0,
-  show_var = TRUE)
+stoch_params_setterUI(
+  id,
+  show_biol_prod_sigma = TRUE,
+  show_biol_est_sigma = TRUE,
+  show_biol_est_bias = TRUE,
+  init_prod_sigma = 0,
+  init_est_sigma = 0,
+  init_est_bias = 0,
+  show_var = TRUE
+)
 
 stoch_params_setter(input, output, session)
 
@@ -28,11 +34,16 @@ stock_params_setter(input, output, session)
 
 get_lh_params(input)
 
-mp_params_setterUI(id, mp_visible = NULL,
+mp_params_setterUI(
+  id,
+  mp_visible = NULL,
   title = "Select the type of HCR you want to test.",
-  init_thresh_max_catch = 140, init_thresh_belbow = 0.5,
-  init_constant_catch = 50, init_constant_effort = 1,
-  input_label = "HCR Type")
+  init_thresh_max_catch = 140,
+  init_thresh_belbow = 0.5,
+  init_constant_catch = 50,
+  init_constant_effort = 1,
+  input_label = "HCR Type"
+)
 
 mp_params_setter(input, output, session)
 
