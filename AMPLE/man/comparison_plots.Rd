@@ -3,7 +3,6 @@
 \name{Comparison plots}
 \alias{Comparison plots}
 \alias{pitable}
-\alias{plot_majuro}
 \alias{quantile_plot}
 \alias{myboxplot}
 \alias{myradar}
@@ -11,9 +10,13 @@
 \alias{hcr_histo_plot}
 \title{pitable}
 \usage{
+<<<<<<< HEAD
 pitable(dat, percentile_range = c(20, 80))
 
 plot_majuro(dat, percentile_range = c(20, 80), hcr_choices, stock_params)
+=======
+pitable(dat, percentile_range = c(20, 80), signif = 3)
+>>>>>>> 9eed0a1dea2cb777da306ae6df6b893cfa60ef29
 
 quantile_plot(
   dat,
@@ -52,13 +55,7 @@ hcr_plot(
 hcr_histo_plot(hcr_choices, histodat)
 }
 \arguments{
-\item{dat}{The data.frame with the data to be plotted.}
-
-\item{percentile_range}{A vector of length with minimum and maximum percentile range to plot.}
-
-\item{hcr_choices}{The names of the HCRs to plot.}
-
-\item{stock_params}{A vector of life history and stochasticy parameters.}
+\item{signif}{Number of significent digits for table. Default is 3.}
 
 \item{wormdat}{Data set of the spaghetti (worms).}
 
@@ -120,13 +117,9 @@ A ggplot2 plot object.
 A ggplot2 plot object.
 
 A ggplot2 plot object.
-
-A ggplot2 plot object.
 }
 \description{
 pitable() is not a plot but a table comparing PIs across HCRs and periods. Only pass in 1 time period at a time.
-
-plot_majuro() plots a Majuro plot.
 
 quantile_plot() plots times series of indicators for each HCR.
 
@@ -186,8 +179,6 @@ pisums$worms$hcrref <- "HCR 1"
 pisums$yearqs$hcrref <- "HCR 1"
 pisums$periodqs$hcrref <- "HCR 1"
 
-# Majuro plot
-plot_majuro(dat=pisums$yearqs, hcr_choices="HCR 1", stock_params=stock_params)
 # Time series quantile plot
 quantile_plot(dat=pisums$yearqs, hcr_choices="HCR 1", wormdat=pisums$worms)
 # Bar and box plots

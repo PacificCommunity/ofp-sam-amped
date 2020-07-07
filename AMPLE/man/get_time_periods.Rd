@@ -21,5 +21,4 @@ Used when calculating the performance indicators over the three time periods.
 app_params <- list(initial_year = 2009, last_historical_timestep = 10)
 nyears <- 40
 get_time_periods(app_params=app_params, nyears=nyears)
-
 }

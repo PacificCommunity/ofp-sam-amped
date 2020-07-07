@@ -3,7 +3,6 @@
 \name{current_pi_table}
 \alias{current_pi_table}
 \alias{replicate_table}
-\alias{get_projection_pis}
 \alias{get_summaries}
 \title{Routines for calculating and displaying various performance indicators.}
 \usage{
@@ -14,19 +13,25 @@ current_pi_table(
   percentile_range = c(20, 80),
   piname_choice = c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE",
     "Catch variability", "Catch stability", "Relative effort",
+<<<<<<< HEAD
     "Relative effort variability", "Relative effort stability", "Proximity to TRP")
 )
 
 replicate_table(stock, app_params, stock_params, percentile_range = c(20, 80))
 
 get_projection_pis(stock, stock_params, app_params, current_timestep)
+=======
+    "Relative effort variability", "Relative effort stability", "Proximity to TRP"),
+  signif = 3
+)
+
+replicate_table(stock, app_params, stock_params, percentile_range = c(20, 80))
+>>>>>>> 9eed0a1dea2cb777da306ae6df6b893cfa60ef29
 
 get_summaries(stock, stock_params, app_params, quantiles)
 }
 \arguments{
 \item{dat}{A data.frame with the 20th, 80th and 50th percentile value of each indicator.}
-
-\item{app_params}{A vector of application parameters.}
 
 \item{years}{A character vector of the years in the simulation.}
 
@@ -34,11 +39,7 @@ get_summaries(stock, stock_params, app_params, quantiles)
 
 \item{piname_choice}{A character vector of the indicator names to be included in the table.}
 
-\item{stock}{A list with elements biomass, hcr_ip, hcr_op, effort and catch.}
-
-\item{stock_params}{A vector of life history and stochasticy parameters.}
-
-\item{current_timestep}{The current timestep.}
+\item{signif}{Significant digits for table. Default is 3.}
 
 \item{quantiles}{The quantiles to calculate the indicators over.}
 }
@@ -49,8 +50,6 @@ Various data.frames with summaries in different formats.
 current_pi_table() takes the processed indicators and formats them into a table.
 
 replicate_table() shows the final values for SB/SBF=0, catch and relative CPUE for each replicate.
-
-get_projection_pis() get the performance indicators for the Introduction to Projections AMPED app
 
 get_summaries() gets the current indicators including SB/SBF=0, catch and the probability of being above the limit reference point.
 }
@@ -100,6 +99,4 @@ current_pi_table(dat=pisums$periodqs, app_params=app_params,
 years=dimnames(stock$biomass)$year,
 piname_choice=c("SB/SBF=0", "Prob. SB>LRP", "Catch"))
 
-# Get the PIs for the Introduction to Projections app
-get_projection_pis(stock=out, stock_params=stock_params, app_params=app_params, current_timestep=15)
 }

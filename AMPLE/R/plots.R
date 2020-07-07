@@ -5,8 +5,7 @@
 
 # A metric fuckton of imports
 #' @importFrom graphics "plot" "polygon" "lines"
-#' @importFrom ggplot2 "geom_rect" "scale_x_continuous" "scale_y_continuous" "geom_point" "geom_errorbar" "geom_errorbarh" "geom_ribbon" "geom_line" "geom_vline" "scale_x_continuous" "aes" "ggplot" "geom_bar" "geom_boxplot" "facet_wrap" "element_blank" "element_text" "scale_fill_manual" "theme" "xlab" "ylab" "CoordPolar" "ggproto" "scale_colour_manual" "geom_polygon" "ylim" "xlim" 
-
+#' @importFrom ggplot2 "geom_rect" "scale_x_continuous" "scale_y_continuous" "geom_point" "geom_errorbar" "geom_errorbarh" "geom_ribbon" "geom_line" "geom_vline" "scale_x_continuous" "aes" "ggplot" "geom_bar" "geom_boxplot" "facet_wrap" "element_blank" "element_text" "scale_fill_manual" "theme" "xlab" "ylab" "coord_polar" "ggproto" "scale_colour_manual" "geom_polygon" "ylim" "xlim" "geom_text"
 # Plotting functions
 # Globals - eesh!
 
@@ -59,6 +58,13 @@
 # see for more names: display.brewer.all(colorblindFriendly=TRUE)
 # Check the max number of colours in the palette brewer.pal.info
 # No HCRs is the total number of HCRs - not the number selected
+#' Default palette for HCRs
+#' 
+#' Get the default palette for the HCR colours
+#' 
+#' @param hcr_names The names of all of the HCRs
+#' @param chosen_hcr_names The names of only the chosen HCRs
+#' @export
 get_hcr_colours <- function(hcr_names, chosen_hcr_names){
   allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
   names(allcols) <- hcr_names
@@ -407,91 +413,6 @@ plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep
 }
 
 
-# Generic timeseries plot
-plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, yrange, ylab, add_grid=TRUE, xlab="Year", ghost_col="grey", true_col="black", ...){
-
-  years <- as.numeric(dimnames(stock$biomass)$year)
-  # Plot empty axis
-  plot(x=years, y=years, type="n", ylim=c(yrange[1], yrange[2]), ylab=ylab, xlab=xlab, xaxs="i", yaxs="i",...)
-  if (add_grid){
-    grid()
-  }
-  # Get last iteration 
-  last_iter <- dim(data)[1]
-  # If we have more than X iters, draw envelope of iters
-  if(last_iter > max_spaghetti_iters){
-    # Draw ribbon
-    draw_ribbon(x=years, y=data, quantiles=quantiles)
-    # Add spaghetti
-    for (iter in 1:nspaghetti){
-      lines(x=years, y=data[iter,], lty=spaghetti_lty, lwd=spaghetti_lwd, col=spaghetti_col)
-    }
-  }
-  # Else plot individual iters
-  else{
-    # Plot all iters as ghosts
-    if (last_iter > 1){
-      for (i in 1:last_iter){
-        lines(x=years, y=data[i,], col=ghost_col, lwd=ghost_lwd, lty=ghost_lty)
-      }
-    }
-  }
-  # Current iteration
-  if(show_last){
-    lines(x=years, y=data[last_iter,], col=true_col, lwd=last_lwd, lty=last_lty)
-  }
-
-}
-
-# Relative CPUE
-plot_relcpue <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ymax=NA, ...){
-
-  years <- as.numeric(dimnames(stock$biomass)$year)
-  cpue <- stock$catch / stock$effort
-  rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
-  if(is.na(ymax)){
-    ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
-  }
-  yrange <- c(0, ymax)
-
-  # Plot it
-  plot_indiv_timeseries_base(data=rel_cpue, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="Relative CPUE", add_grid=add_grid, ...)
-
-  # Add 1 line
-  lines(x=years,y=rep(1,length(years)), lty=2)
-
-}
-
-
-plot_releffort <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
-  years <- as.numeric(dimnames(stock$biomass)$year)
-  rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
-  # Set Ylim - use same as HCR plot
-  ymax <- max(c(rel_effort * 1.1, 1.0), na.rm=TRUE)
-  ymax <- min(10, ymax, na.rm=TRUE)
-  yrange <- c(0, ymax)
-
-  # Plot it
-  plot_indiv_timeseries_base(data=rel_effort, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="Relative effort", add_grid=add_grid, ...)
-
-  # Add 1 line
-  lines(x=years,y=rep(1,length(years)), lty=2)
-
-}
-
-
-plot_F <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
-  years <- as.numeric(dimnames(stock$biomass)$year)
-  harvest_rate <- stock$catch / stock$biomass
-  # Set Ylim - use same as HCR plot
-  ymax <- max(harvest_rate, na.rm=TRUE) * 1.1
-  yrange <- c(0, ymax)
-
-  # Plot it
-  plot_indiv_timeseries_base(data=harvest_rate, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="F", add_grid=add_grid, ...)
-
-}
-
 
 
 # Could combine with function above into a single 
@@ -564,14 +485,26 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
 # Can we get Kobe in here too - just change the background colour and the X data
 # SB/SBF=0, B/BMSY
 
+# Quantile plot - for time series
+# All HCRs on same plot
+# Why sometimes worms and sometime spaghetti?
+
 #' Plots for comparing HCR performance
 #'
-#' plot_majuro() plots a Majuro plot.
+#' quantile_plot() plots times series of indicators for each HCR.
 #'
-#' @param dat The data.frame with the data to be plotted.
-#' @param hcr_choices The names of the HCRs to plot.
-#' @param stock_params A vector of life history and stochasticy parameters.
-#' @param percentile_range A vector of length with minimum and maximum percentile range to plot.
+#' @param wormdat Data set of the spaghetti (worms).
+#' @param alpha20_80 Alpha of the ribbons.
+#' @param linetype_worm Line type of the spaghetti.
+#' @param colour_worm Colour of the spaghetti.
+#' @param size_worm Thickness of the spaghetti.
+#' @param add_start_line Add a line to the start of the projection (TRUE / FALSE).
+#' @param time_period_lines Add a lines to show the time periods (TRUE / FALSE).
+#' @param short_term Year range for the short-term.
+#' @param medium_term Year range for the medium-term.
+#' @param long_term Year range for the long-term.
+#' @param last_plot_year Last year to plot.
+#' @param show_spaghetti Show the spaghetti (worms) (TRUE / FALSE).
 #' 
 #' @return A ggplot2 plot object.
 #' @rdname comparison_plots
@@ -624,8 +557,6 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
 #' pisums$yearqs$hcrref <- "HCR 1"
 #' pisums$periodqs$hcrref <- "HCR 1"
 #'
-#' # Majuro plot
-#' plot_majuro(dat=pisums$yearqs, hcr_choices="HCR 1", stock_params=stock_params)
 #' # Time series quantile plot
 #' quantile_plot(dat=pisums$yearqs, hcr_choices="HCR 1", wormdat=pisums$worms)
 #' # Bar and box plots
@@ -635,85 +566,6 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
 #' myradar(dat=pisums$periodqs, hcr_choices="HCR 1", scaling="scale", polysize=2)
 #' # Table of PIs. Only pass in 1 time period
 #' pitable(dat=subset(pisums$periodqs, period=="Long"))
-#' @export
-plot_majuro <- function(dat, percentile_range = c(20,80), hcr_choices, stock_params){
-  hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
-  # Need a dataset with percentiles
-  majdat <- subset(dat, piname %in% c("F/FMSY", "SB/SBF=0"))
-  # Need to shunt the years by 1 as B in year Y is the result of F in year Y-1 
-  # So add 1 to the F years
-  majdat[majdat$pi=="ffmsy","year"] <- majdat[majdat$pi=="ffmsy","year"] + 1
-  majdat <- dplyr::select(majdat, c("pi", "year", paste("X",percentile_range[1],".",sep=""), paste("X",percentile_range[2],".",sep=""), X50., hcrref))
-  # Rename for simplicity
-  majdat <- dplyr::rename(majdat, "min" = paste("X",percentile_range[1],".",sep=""), "max" = paste("X",percentile_range[2],".",sep=""), "med" = "X50.")
-  majdat <- tidyr::gather(majdat, key="XX", value="data", -pi, -year, -hcrref)
-  majdat$pix <- paste(majdat$pi,majdat$XX,sep="")
-  majdat <- tidyr::spread(dplyr::select(majdat, year, hcrref, data, pix), key="pix", value="data")
-  # Remove NA years
-  majdat <- subset(majdat, !(is.na(ffmsymed) | is.na(biomassmed)))
-
-  lrp <- stock_params[["lrp"]]
-  ymax <- max(max(majdat$ffmsymax, na.rm=TRUE) * 0.1, 2.0)
-  
-  p <- ggplot(majdat)
-  # Big red
-  p <- p + geom_rect(data=data.frame(xmin=0, xmax=lrp, ymin=0, ymax=ymax), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="red", colour="black")
-  # Orange one
-  p <- p + geom_rect(data=data.frame(xmin=lrp, xmax=1.0, ymin=1.0, ymax=ymax), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="orange", colour="black")
-  # White one
-  p <- p + geom_rect(data=data.frame(xmin=lrp, xmax=1.0, ymin=0.0, ymax=1.0), mapping=aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="white", colour="black")
-
-  # Put the lines on - Do twice, once in fat black , then thin with colour
-  # Lines and crosses
-  # Fat black
-  p <- p + geom_line(aes(x=biomassmed, y=ffmsymed), colour="black", size=2)
-  p <- p + geom_errorbar(aes(x=biomassmed, ymin=ffmsymin, ymax=ffmsymax, group=year), colour="black", size=2)
-  p <- p + geom_errorbarh(aes(y=ffmsymed, xmin=biomassmin, xmax=biomassmax, group=year), colour="black", size=2)
-  # Thin colour
-  p <- p + geom_line(aes(x=biomassmed, y=ffmsymed, colour=hcrref), size=1.3)
-  p <- p + geom_errorbar(aes(x=biomassmed, ymin=ffmsymin, ymax=ffmsymax, group=year, colour=hcrref), size=1.3)
-  p <- p + geom_errorbarh(aes(y=ffmsymed, xmin=biomassmin, xmax=biomassmax, group=year, colour=hcrref), size=1.3)
-  # Black point
-  p <- p + geom_point(aes(x=biomassmed, y=ffmsymed))
-  # Final point in white
-  maxyear <- max(majdat$year)
-  p <- p + geom_point(data=subset(majdat, year==maxyear), aes(x=biomassmed, y=ffmsymed), colour="white")
-
-  p <- p + scale_colour_manual(values=hcrcols)
-  p <- p + xlab("SB/SBF=0") + ylab("F/FMSY")
-  p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
-  p <- p + theme(legend.position="bottom", legend.title=element_blank())
-
-  p <- p + scale_x_continuous(expand = c(0, 0))
-  p <- p + scale_y_continuous(expand = c(0, 0), limits=c(0,ymax))
-
-  return(p)
-}
-
-# Quantile plot - for time series
-# All HCRs on same plot
-# Why sometimes worms and sometime spaghetti?
-
-#' quantile_plot
-#'
-#' quantile_plot() plots times series of indicators for each HCR.
-#'
-#' @param wormdat Data set of the spaghetti (worms).
-#' @param alpha20_80 Alpha of the ribbons.
-#' @param linetype_worm Line type of the spaghetti.
-#' @param colour_worm Colour of the spaghetti.
-#' @param size_worm Thickness of the spaghetti.
-#' @param add_start_line Add a line to the start of the projection (TRUE / FALSE).
-#' @param time_period_lines Add a lines to show the time periods (TRUE / FALSE).
-#' @param short_term Year range for the short-term.
-#' @param medium_term Year range for the medium-term.
-#' @param long_term Year range for the long-term.
-#' @param last_plot_year Last year to plot.
-#' @param show_spaghetti Show the spaghetti (worms) (TRUE / FALSE).
-#' 
-#' @return A ggplot2 plot object.
-#' @rdname comparison_plots
-#' @name Comparison plots
 #' @export
 quantile_plot <- function(dat, hcr_choices, wormdat=NULL,
                           alpha20_80 = 0.6, linetype_worm=1,
