@@ -9,6 +9,10 @@
 #--------------------------------------------------------------
 #rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
 # Load packages
+
+# Note: get AMPLE this from github - then comment out before uploading to server
+#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="SC16")
+
 library(AMPLE)
 library(ggplot2)
 library(RColorBrewer)
