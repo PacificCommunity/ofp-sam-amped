@@ -13,20 +13,11 @@ current_pi_table(
   percentile_range = c(20, 80),
   piname_choice = c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE",
     "Catch variability", "Catch stability", "Relative effort",
-<<<<<<< HEAD
-    "Relative effort variability", "Relative effort stability", "Proximity to TRP")
-)
-
-replicate_table(stock, app_params, stock_params, percentile_range = c(20, 80))
-
-get_projection_pis(stock, stock_params, app_params, current_timestep)
-=======
     "Relative effort variability", "Relative effort stability", "Proximity to TRP"),
   signif = 3
 )
 
 replicate_table(stock, app_params, stock_params, percentile_range = c(20, 80))
->>>>>>> 9eed0a1dea2cb777da306ae6df6b893cfa60ef29
 
 get_summaries(stock, stock_params, app_params, quantiles)
 }

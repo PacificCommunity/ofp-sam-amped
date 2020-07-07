@@ -10,13 +10,7 @@
 \alias{hcr_histo_plot}
 \title{pitable}
 \usage{
-<<<<<<< HEAD
-pitable(dat, percentile_range = c(20, 80))
-
-plot_majuro(dat, percentile_range = c(20, 80), hcr_choices, stock_params)
-=======
 pitable(dat, percentile_range = c(20, 80), signif = 3)
->>>>>>> 9eed0a1dea2cb777da306ae6df6b893cfa60ef29
 
 quantile_plot(
   dat,

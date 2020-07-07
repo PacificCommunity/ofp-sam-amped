@@ -3,15 +3,9 @@
 export(amped_maintainer_and_licence)
 export(create_stock)
 export(current_pi_table)
-<<<<<<< HEAD
-export(get_hcr_op)
-export(get_lh_params)
-export(get_projection_pis)
-=======
 export(get_hcr_colours)
 export(get_hcr_op)
 export(get_lh_params)
->>>>>>> 9eed0a1dea2cb777da306ae6df6b893cfa60ef29
 export(get_summaries)
 export(get_time_periods)
 export(hcr_histo_plot)
@@ -26,10 +20,6 @@ export(pitable)
 export(plot_biomass)
 export(plot_catch)
 export(plot_hcr)
-<<<<<<< HEAD
-export(plot_majuro)
-=======
->>>>>>> 9eed0a1dea2cb777da306ae6df6b893cfa60ef29
 export(plot_metric_with_histo)
 export(project)
 export(quantile_plot)
