@@ -12,7 +12,7 @@
 
 # Note: get AMPLE from github, not from CRAN
 # Run the below command then comment out
-#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="SC16")
+# devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="SC16")
 library(AMPLE)
 
 library(ggplot2)
@@ -207,7 +207,7 @@ ui <- fluidPage(id="top",
       ),
 
       # Stability or variability
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi62'))",
+      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi62'||  input.pitab== 'pi7'))",
         radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
       )
 
