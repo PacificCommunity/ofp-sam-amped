@@ -54,7 +54,7 @@ load("data/albpimple_test.Rdata")
 # wormid - unique combination of msectrl (or hcrref) and iter, e.g. 
 
 
-#-----------------------------------------------------
+#--------------------------------------------------------------------------------------------
 # Fix column name
 #periodqs$hcrref <- periodqs$hrcref
 #yearqs$hcrref <- yearqs$msename
@@ -76,7 +76,7 @@ piselector <- as.list(pis_list)
 pis_text <- unlist(lapply(strsplit(pis_list,"\n"),'[',1))
 names(piselector) <- pis_text
 
-# -------------------------------------------
+# --------------------------------------------------------------------------------------------
 # Stuff that could be in server()
 
 # General plotting parameters
@@ -106,7 +106,7 @@ nworms <- 5
 # (same om / iter should be in all hcrs)
 wormiters <- sample(unique(worms$iter), nworms)
 
-# -------------------------------------------
+# -------------------------------------------------------------------------------------------
 # General settings for app
 
 main_panel_width <- 10
@@ -151,8 +151,8 @@ ui <- fluidPage(id="top",
       br(),
       conditionalPanel(condition="input.nvp == 'about'",
         tags$html(
-          tags$h1("PIMPLE"),
-          tags$p("Performance Indicators and Management Procedures Explorer"),
+          tags$h1("SPAMPLE"),
+          tags$p("South Pacific Albacore Management Procedures Explorer"),
           tags$footer(
             tags$p("version 0.4.0 Stick In A Five And Go"),
             tags$p("Copyright 2020 OFP SPC MSE Team."),
@@ -216,11 +216,11 @@ ui <- fluidPage(id="top",
       tags$style(type="text/css", "body {padding-top: 70px;}"), # padding - as we use fixed-top for position, applies to all tabs
       navbarPage(id="nvp",
         collapsible=TRUE,  # Should help if using small screens like tablets
-        windowTitle="PIMPLE",
+        windowTitle="SPAMPLE",
         position="fixed-top",
         #title="PIMPLE", # Needed or "" else first tab vanishes
         #title="", # Needed or "" else first tab vanishes
-        title="Performance Indicators and Management Procedures Explorer",
+        title="South Pacific Albacore Management Procedures Explorer",
         #----------- Introduction page ----------------------------------
         #tabPanel("Introduction", value="intro",
         #         # How to use PIMPLE - Add to top
@@ -357,7 +357,7 @@ ui <- fluidPage(id="top",
                 #p("Note that the catches are relative to the average catch in the years 2013-2015."),
                 #p(yearrangetext),
                 plotOutput("plot_pi3", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-                p(relcatchtext),
+                p("Note that the catches are relative to the average catch in that area grouping in the years 2014-2016."),
                 p(yearrangetext)
               ))
             ),
@@ -368,7 +368,7 @@ ui <- fluidPage(id="top",
                 #p("Note that the catches are relative to the average catch in the years 2013-2015."),
                 #p(yearrangetext),
                 plotOutput("plot_pi4", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-                p(relcatchtext),
+                p("Note that the CPUE is relative to the CPUE in year 2013 plus 8% increase."),
                 p(yearrangetext)
               ))
             ),
@@ -376,7 +376,7 @@ ui <- fluidPage(id="top",
             tabPanel("PI 6: Catch stability by area",value="pi62",
               column(12, fluidRow(
                 plotOutput("plot_pi6", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-                p(relcatchtext),
+                p("Note that the catches are relative to the average catch in that area grouping in the years 2014-2016."),
                 p(yearrangetext),
                 p(stabtext)
               ))
@@ -747,7 +747,7 @@ output$demoradarplot <- renderPlot({
       return()
     }
 
-    ylabel <- "PI 3: Catch (rel. to 2013-2015)"
+    ylabel <- "PI 3: Catch (rel. to 2014-2016)"
     plot_choice <- input$plotchoicebarboxtime
     area_choice <- input$areachoice
     if(length(area_choice) < 1){
