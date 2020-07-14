@@ -222,44 +222,44 @@ ui <- fluidPage(id="top",
         #title="", # Needed or "" else first tab vanishes
         title="South Pacific Albacore Management Procedures Explorer",
         #----------- Introduction page ----------------------------------
-        #tabPanel("Introduction", value="intro",
-        #         # How to use PIMPLE - Add to top
-        #  fluidRow(column(8, 
-        #    includeMarkdown("introtext/introduction.md")
-        #  )),
-        #  fluidRow(
-        #    column(4, 
-        #      includeMarkdown("introtext/barcharttext.md")
-        #    ),
-        #    column(8,
-        #      plotOutput("demobarchart")
-        #    )
-        #  ),
-        #  fluidRow(
-        #    column(4, 
-        #      includeMarkdown("introtext/boxplottext.md")
-        #    ),
-        #    column(8,
-        #      plotOutput("demoboxplot")
-        #    )
-        #  ),
-        #  fluidRow(
-        #    column(4, 
-        #      includeMarkdown("introtext/timeseriestext.md")
-        #    ),
-        #    column(8,
-        #      plotOutput("demotimeseriesplot")
-        #    )
-        #  ),
-        #  fluidRow(
-        #    column(4, 
-        #      includeMarkdown("introtext/radarplottext.md")
-        #    ),
-        #    column(8,
-        #      plotOutput("demoradarplot", height="600px")
-        #    )
-        #  )
-        #),
+        tabPanel("Introduction", value="intro",
+                 # How to use PIMPLE - Add to top
+          fluidRow(column(8, 
+            includeMarkdown("introtext/introduction.md")
+         )),
+          fluidRow(
+            column(4, 
+              includeMarkdown("introtext/barcharttext.md")
+            ),
+           column(8,
+             plotOutput("demobarchart")
+            )
+          ),
+          fluidRow(
+            column(4, 
+              includeMarkdown("introtext/boxplottext.md")
+            ),
+            column(8,
+              plotOutput("demoboxplot")
+            )
+          ),
+          fluidRow(
+            column(4, 
+              includeMarkdown("introtext/timeseriestext.md")
+            ),
+            column(8,
+              plotOutput("demotimeseriesplot")
+            )
+          ),
+          fluidRow(
+            column(4, 
+              includeMarkdown("introtext/radarplottext.md")
+            ),
+            column(8,
+              plotOutput("demoradarplot", height="600px")
+           )
+         )
+        ),
 
         #----------------------------------------------------------------------------
         tabPanel("Compare performance", value="compareMPs",
@@ -674,7 +674,7 @@ output$demoradarplot <- renderPlot({
     auto=TRUE
   )
 
-  #-------------------------------------------------------------------
+  #-------------------------------------------------------------------------------------------
   # Individual PI plots
 
   # Timeseries
@@ -923,3 +923,4 @@ output$demoradarplot <- renderPlot({
 
 # Run the app
 shinyApp(ui, server)
+
