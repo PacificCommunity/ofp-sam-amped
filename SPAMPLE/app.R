@@ -595,7 +595,7 @@ output$demoradarplot <- renderPlot({
 
   # Time series comparisons
   # Which TS to plot
-  pinames_ts <- c("SB/SBF=0", "PI 3: Catch", "PI 4: Cpue", "PI 8: Proximity to TRP")
+  pinames_ts <- c("SB/SBF=0", "PI 3: Catch", "PI 4: CPUE", "PI 8: Proximity to TRP")
   output$plot_timeseries_comparehcr <- renderPlot({
     show_spaghetti <- input$showspag
     hcr_choices <- input$hcrchoice
