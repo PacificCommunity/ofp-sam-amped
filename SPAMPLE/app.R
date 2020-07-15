@@ -14,7 +14,7 @@
 # Run the below command then comment out
 # devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="SC16")
 library(AMPLE)
-
+library(shiny)
 library(ggplot2)
 library(RColorBrewer)
 library(markdown)
@@ -394,7 +394,7 @@ ui <- fluidPage(id="top",
             #  #)),
               column(12, fluidRow(
                 plotOutput("plot_pi7", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-              p("Note that the effort only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative effort is the effort relative to that in 2012."),
+              p("Note that the effort includes longline fisheries in model regions in South Pacific albacore stock assessment area. Relative effort is the effort relative to that in 2013."),
               p(yearrangetext),
               p(pi47text)
               )) # end of column
