@@ -72,6 +72,7 @@ worms <- worms[order(worms$hcrref),]
 
 # Fix names of PI selector - remove PS note
 pis_list <- as.character(unique(periodqs[!periodqs$upsidedown,"piname"]))
+pis_list <- pis_list[-5]
 piselector <- as.list(pis_list)
 pis_text <- unlist(lapply(strsplit(pis_list,"\n"),'[',1))
 names(piselector) <- pis_text
@@ -383,7 +384,7 @@ ui <- fluidPage(id="top",
             ),
 
             # *** PI 7: Relative effort variability***
-            tabPanel("PI 7: Effort stability",value="pi7",
+            tabPanel("PI 7: Effort stability by",value="pi7",
             #  #column(6, fluidRow(
             #  #  plotOutput("plot_bar_pi7stab"),
             #  #  plotOutput("plot_bar_pi7var")
@@ -517,7 +518,7 @@ output$demoradarplot <- renderPlot({
       # pi1: area == all
       # pi3: area == catchareachoice and metric == 'catch' or 'relative catch'
       # pi4: metric == relative_cpue
-      # pi6: area == catchareachoice and metric == 'catch stability' or 'catch variability' - just stab
+      # pi6: area == catchareachoice and metric == 'relative catch stability' or 'relative catch variability' - just stab
       # pi7: metric == 'relative effort stability' or 'relative effort variability' - just stab
       # pi8: area == all
 
@@ -532,7 +533,7 @@ output$demoradarplot <- renderPlot({
       catch_area_choice <- input$catchareachoice
       other_area_choice <- c(as.character(NA), "all")
       catch_rel_choice <- "relative catch"
-      metric_choices <- c(catch_rel_choice, "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+      metric_choices <- c(catch_rel_choice, "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
       # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
       # Important but complicated
       dat <- subset(periodqs, ((pi %in% c("pi3","pi6","pi7","pi4") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6", "pi7", "pi4")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
@@ -576,7 +577,7 @@ output$demoradarplot <- renderPlot({
     catch_area_choice <- input$catchareachoice
     other_area_choice <- c(as.character(NA), "all")
     catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    metric_choices <- c(catch_rel_choice, "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
     
     # We have 8 PIs - but not all are appropriate for a radar plot as bigger is not better.
     # Drop SB/SBF=0 and Size based one 
@@ -595,7 +596,7 @@ output$demoradarplot <- renderPlot({
 
   # Time series comparisons
   # Which TS to plot
-  pinames_ts <- c("SB/SBF=0", "PI 3: Catch", "PI 4: CPUE", "PI 8: Proximity to TRP")
+  pinames_ts <- c("SB/SBF=0", "PI 3: Catch", "PI 4: Relative CPUE", "PI 8: Proximity to TRP")
   output$plot_timeseries_comparehcr <- renderPlot({
     show_spaghetti <- input$showspag
     hcr_choices <- input$hcrchoice
@@ -611,7 +612,7 @@ output$demoradarplot <- renderPlot({
     catch_area_choice <- input$catchareachoice
     other_area_choice <- c(as.character(NA), "all")
     catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    metric_choices <- c(catch_rel_choice, "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
     
     # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
     dat <- subset(yearqs, ((pi %in% c("pi3","pi6","pi4","pi7") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6","pi4","pi7")) & area %in% other_area_choice)) & piname %in% pi_choices & metric %in% metric_choices)
@@ -628,6 +629,10 @@ output$demoradarplot <- renderPlot({
       p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
       p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
     }
+    if ("PI 4: Relative CPUE" %in% pi_choices){
+      p <- p + ggplot2::geom_hline(data=data.frame(yint=1,piname="PI 4: Relative CPUE"), ggplot2::aes(yintercept=yint), linetype=2)
+    }
+    
     return(p)
   }, height=function(){max(height_per_pi*1.5, (height_per_pi * length(input$pichoice[input$pichoice %in% pinames_ts])))})
 
@@ -639,7 +644,7 @@ output$demoradarplot <- renderPlot({
     catch_area_choice <- input$catchareachoice
     other_area_choice <- c(as.character(NA), "all")
     catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    metric_choices <- c(catch_rel_choice, "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
 
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
@@ -691,8 +696,8 @@ output$demoradarplot <- renderPlot({
     wormdat <- subset(worms, pi=="biomass" & metric=="SBSBF0" & area=="all" & iter %in% wormiters) 
     # Else wormdat <- NULL
     p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
-    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=3)
-    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=3)
+    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2)
+    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
     p <- p + ggplot2::ylab("SB/SBF=0")
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
@@ -792,7 +797,7 @@ output$demoradarplot <- renderPlot({
       return()
     }
 
-    ylabel <- "PI 4: CPUE (rel. to 2013 + 8%)"
+    ylabel <- "PI 4: Relative CPUE (rel. to 2013 + 8%)"
     plot_choice <- input$plotchoicebarboxtime
     area_choice <- input$pi4areachoice
     if(length(area_choice) < 1){
@@ -856,8 +861,8 @@ output$demoradarplot <- renderPlot({
     #   bar or box - handled in the plot_choice
     #   stab or variability
     stabvar_choice <- input$stabvarchoice
-    #metric_choice <-  paste("relative catch", stabvar_choice, sep=" ") # or stability
-    metric_choice <-  paste("catch", stabvar_choice, sep=" ") # or stability
+    metric_choice <-  paste("relative catch", stabvar_choice, sep=" ") # or stability
+    #metric_choice <-  paste("catch", stabvar_choice, sep=" ") # or stability
     ylabel <- paste("PI 6: ",   paste0(toupper(substr(stabvar_choice, 1, 1)), substr(stabvar_choice, 2, nchar(stabvar_choice))), " of catch", sep="")
     dat <- subset(periodqs, period != "Rest" & pi=="pi6" & area %in% area_choice & metric == metric_choice & set %in% c("total", "area", "PICT", "DWFN")) 
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
