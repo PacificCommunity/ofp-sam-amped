@@ -126,11 +126,11 @@ yearrangetext <- paste("Short-term is: ", shorttext, ", medium-term is: ", mediu
 
 # These character strings are notes that get put on the app in various places
 # Some of this will need to be updated for SPA or new ones added
-pi47text <- "Note that PIs 4 and 7 are for the purse seines in model areas 2, 3 and 5 only (excluding the associated purse seines in area 5.)"
-relcatchtext <- "Note that the catches are relative to the average catch in that area grouping in the years 2013-2015."
+##pi47text <- "Note that PIs 4 and 7 are for the purse seines in model areas 2, 3 and 5 only (excluding the associated purse seines in area 5.)"
+relcatchtext <- "Note that the catches are relative to the average catch in that area grouping in the years 2014-2016."
 
 # These might be OK
-pi36text <- "The grouping for PIs 3 and 6 can be selected with the drop down menu on the left."
+pi36text <- "The grouping for PIs 3, 4, 6 and 7 can be selected with the drop down menu on the left."
 biotext <- "PIs 1, 8 and SB/SBF=0 are calculated over all model areas."
 boxplottext <- "For box plots the box contains the 20-80 percentiles, the whiskers the 5-95 percentiles and the horizontal line is the median."
 tabletext <- "The tables show the median indicator values in each time period. The values inside the parentheses are the 10-90 percentiles."
@@ -271,7 +271,7 @@ ui <- fluidPage(id="top",
               )),
               fluidRow(column(12,
                 p(yearrangetext),
-                p(pi47text),
+                ##p(pi47text),
                 p(biotext),
                 p(pi36text)
               ))
@@ -283,7 +283,7 @@ ui <- fluidPage(id="top",
               fluidRow(column(12,
                 p(boxplottext),
                 p(yearrangetext),
-                p(pi47text),
+                ##p(pi47text),
                 p(biotext),
                 p(pi36text)
               ))
@@ -300,7 +300,7 @@ ui <- fluidPage(id="top",
                   plotOutput("plot_radar_comparehcr", height="600px")),
                 p("Note that only the indicators for which 'bigger is better' are shown in the radar plots."),
                 p(yearrangetext),
-                p(pi47text),
+                ##p(pi47text),
                 p(biotext),
                 p(pi36text)
               )
@@ -312,7 +312,7 @@ ui <- fluidPage(id="top",
                 tableOutput("table_pis_long"),
                 p(tabletext),
                 p(yearrangetext),
-                p(pi47text),
+                ##p(pi47text),
                 p(biotext),
                 p(pi36text)
               )
@@ -366,10 +366,10 @@ ui <- fluidPage(id="top",
             tabPanel("PI 4: Relative CPUE",value="pi4",
               column(12, fluidRow(
                 # Can't put text at end as not very fluid
-                #p("Note that the catches are relative to the average catch in the years 2013-2015."),
+                #p("Note that the catches are relative to the average catch in the years 2014-2016."),
                 #p(yearrangetext),
                 plotOutput("plot_pi4", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-                p("Note that the CPUE is relative to the CPUE in year 2013 plus 8% increase."),
+                p("Note that the CPUE is relative to the CPUE of the grouping in year 2013 plus 8% increase."),
                 p(yearrangetext)
               ))
             ),
@@ -384,7 +384,7 @@ ui <- fluidPage(id="top",
             ),
 
             # *** PI 7: Relative effort variability***
-            tabPanel("PI 7: Effort stability by",value="pi7",
+            tabPanel("PI 7: Effort stability by area",value="pi7",
             #  #column(6, fluidRow(
             #  #  plotOutput("plot_bar_pi7stab"),
             #  #  plotOutput("plot_bar_pi7var")
@@ -395,9 +395,9 @@ ui <- fluidPage(id="top",
             #  #)),
               column(12, fluidRow(
                 plotOutput("plot_pi7", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-              p("Note that the effort includes longline fisheries in model regions in South Pacific albacore stock assessment area. Relative effort is the effort relative to that in 2013."),
-              p(yearrangetext),
-              p(pi47text)
+              p("Note that the catches are relative to the effort in that area grouping in the year 2013."),
+              p(yearrangetext)#,
+              ##p(pi47text)
               )) # end of column
             ) # end of tabPanel
           
