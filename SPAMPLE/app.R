@@ -404,12 +404,10 @@ ui <- fluidPage(id="top",
             #  #)),
               column(12, fluidRow(
                 plotOutput("plot_pi7", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-              p("Note that the catches are relative to the effort in that area grouping in the year 2013."),
-              p(yearrangetext), #,
+              p("Note that the effort are relative to the effort in that area grouping in the year 2013."),
               ##p(pi47text)
-              p("Note that the effort includes longline fisheries in model regions in South Pacific albacore stock assessment area. Relative effort is the effort relative to that in 2013."),
-              p(yearrangetext),
-              p("Note that PIs 4 and 7 are for the longline fisheries in model areas")
+              p(yearrangetext) #,
+              
               )) # end of column
             ) # end of tabPanel
           
