@@ -271,7 +271,7 @@ ui <- fluidPage(id="top",
               )),
               fluidRow(column(12,
                 p(yearrangetext),
-                p(pi47text),
+                p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
                 p(biotext),
                 p(pi36text)
               ))
@@ -283,7 +283,7 @@ ui <- fluidPage(id="top",
               fluidRow(column(12,
                 p(boxplottext),
                 p(yearrangetext),
-                p(pi47text),
+                p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
                 p(biotext),
                 p(pi36text)
               ))
@@ -300,7 +300,7 @@ ui <- fluidPage(id="top",
                   plotOutput("plot_radar_comparehcr", height="600px")),
                 p("Note that only the indicators for which 'bigger is better' are shown in the radar plots."),
                 p(yearrangetext),
-                p(pi47text),
+                p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
                 p(biotext),
                 p(pi36text)
               )
@@ -312,7 +312,7 @@ ui <- fluidPage(id="top",
                 tableOutput("table_pis_long"),
                 p(tabletext),
                 p(yearrangetext),
-                p(pi47text),
+                p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
                 p(biotext),
                 p(pi36text)
               )
@@ -384,7 +384,7 @@ ui <- fluidPage(id="top",
             ),
 
             # *** PI 7: Relative effort variability***
-            tabPanel("PI 7: Effort stability by",value="pi7",
+            tabPanel("PI 7: Effort stability by area",value="pi7",
             #  #column(6, fluidRow(
             #  #  plotOutput("plot_bar_pi7stab"),
             #  #  plotOutput("plot_bar_pi7var")
@@ -397,7 +397,7 @@ ui <- fluidPage(id="top",
                 plotOutput("plot_pi7", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
               p("Note that the effort includes longline fisheries in model regions in South Pacific albacore stock assessment area. Relative effort is the effort relative to that in 2013."),
               p(yearrangetext),
-              p(pi47text)
+              p("Note that PIs 4 and 7 are for the longline fisheries in model areas")
               )) # end of column
             ) # end of tabPanel
           

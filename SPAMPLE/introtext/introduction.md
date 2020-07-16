@@ -37,9 +37,9 @@ This allows you to see the indicators in more detail, for example viewing the ca
 
 ## Model Areas
 
-The model used for the evaluations has eight areas as seen here:
+The model used for the evaluations has five areas as seen here:
 
-![](skj_8_region_map.png)
+![](ALB-region-map-2018.png)
 
 ## Performance Indicators
 
