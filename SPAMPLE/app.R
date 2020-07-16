@@ -272,6 +272,8 @@ ui <- fluidPage(id="top",
               fluidRow(column(12,
                 p(yearrangetext),
                 ##p(pi47text),
+               ## p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
+
                 p(biotext),
                 p(pi36text)
               ))
@@ -284,6 +286,8 @@ ui <- fluidPage(id="top",
                 p(boxplottext),
                 p(yearrangetext),
                 ##p(pi47text),
+
+              ##  p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
                 p(biotext),
                 p(pi36text)
               ))
@@ -301,6 +305,9 @@ ui <- fluidPage(id="top",
                 p("Note that only the indicators for which 'bigger is better' are shown in the radar plots."),
                 p(yearrangetext),
                 ##p(pi47text),
+
+               ## p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
+
                 p(biotext),
                 p(pi36text)
               )
@@ -313,6 +320,8 @@ ui <- fluidPage(id="top",
                 p(tabletext),
                 p(yearrangetext),
                 ##p(pi47text),
+               ## p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
+
                 p(biotext),
                 p(pi36text)
               )
@@ -396,8 +405,11 @@ ui <- fluidPage(id="top",
               column(12, fluidRow(
                 plotOutput("plot_pi7", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
               p("Note that the catches are relative to the effort in that area grouping in the year 2013."),
-              p(yearrangetext)#,
+              p(yearrangetext), #,
               ##p(pi47text)
+              p("Note that the effort includes longline fisheries in model regions in South Pacific albacore stock assessment area. Relative effort is the effort relative to that in 2013."),
+              p(yearrangetext),
+              p("Note that PIs 4 and 7 are for the longline fisheries in model areas")
               )) # end of column
             ) # end of tabPanel
           
@@ -481,7 +493,7 @@ output$demotimeseriesplot <- renderPlot({
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
     p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-    p <- p + ggplot2::ylab("PI 3: Catch (rel. to 2013-2015)")
+    p <- p + ggplot2::ylab("PI 3: Relative catch (rel. to 2013-2015)")
   return(p)
 })
 
@@ -596,7 +608,7 @@ output$demoradarplot <- renderPlot({
 
   # Time series comparisons
   # Which TS to plot
-  pinames_ts <- c("SB/SBF=0", "PI 3: Catch", "PI 4: Relative CPUE", "PI 8: Proximity to TRP")
+  pinames_ts <- c("SB/SBF=0", "PI 3: Relative Catch", "PI 4: Relative CPUE", "PI 8: Proximity to TRP")
   output$plot_timeseries_comparehcr <- renderPlot({
     show_spaghetti <- input$showspag
     hcr_choices <- input$hcrchoice
@@ -613,11 +625,11 @@ output$demoradarplot <- renderPlot({
     other_area_choice <- c(as.character(NA), "all")
     catch_rel_choice <- "relative catch"
     metric_choices <- c(catch_rel_choice, "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    
+
     # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
     dat <- subset(yearqs, ((pi %in% c("pi3","pi6","pi4","pi7") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6","pi4","pi7")) & area %in% other_area_choice)) & piname %in% pi_choices & metric %in% metric_choices)
     wormdat <- subset(worms, ((pi %in% c("pi3","pi6","pi4","pi7") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6","pi4","pi7")) & area %in% other_area_choice)) & piname %in% pi_choices & metric %in% metric_choices & iter %in% wormiters)
-    
+ 
     p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
     #p <- p + ylab("Catch")
     p <- p + ggplot2::ylim(c(0,NA))
