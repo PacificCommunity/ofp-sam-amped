@@ -85,9 +85,9 @@ They are calculated over several groupings, based on area and fishery:
 
 The CPUE are presented as relative to the CPUE in year 2013 with 8% increase (as used as the baseline year in TRP discussions) for longline fisheries. They are calculated over several groupings, based on area and fishery:
 
-* CPUE in all areas
-* DWFN CPUE in all areas
-* PICT CPUE in all areas
+* Total CPUE (all areas combined)
+* Total DWFN CPUE (all areas combined)
+* Total PICT CPUE (all areas combined)
 * PICT CPUE in Area 2
 
 ### 6. Catch stability

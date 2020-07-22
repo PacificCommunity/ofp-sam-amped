@@ -406,7 +406,8 @@ ui <- fluidPage(id="top",
                 plotOutput("plot_pi7", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
               p("Note that the effort are relative to the effort in that area grouping in the year 2013."),
               ##p(pi47text)
-              p(yearrangetext) #,
+              p(yearrangetext) ,
+              p(stabtext)
               
               )) # end of column
             ) # end of tabPanel
