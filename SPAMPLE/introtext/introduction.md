@@ -4,18 +4,19 @@ SPAMPLE reference sheets are available (right-click to open in a new tab or save
 
 * <a href="PIposter.pdf" target="_blank">Performance indicators for South Pacific albacore</a>
 * <a href="PIMPLEposter2sided.pdf" target="_blank">PIMPLE reference</a>
+* <a href="HCR_plot.pdf" target="_blank">HCR Design</a>
 
 ## What is SPAMPLE?
 
-SPAMPLE is a tool for exploring and comparing the performance of alternative candidate Management Procedures (MPs) of South Pacific albacore.
+SPAMPLE is a tool for exploring and comparing the performance of alternative candidate Management Procedures (MPs) of south Pacific albacore.
 
 A Management Procedure has three components:
 
 1. Data collection
-2. Analytical method (stock assessment model)
+2. Estimation model (empirical data)
 3. Harvest Control Rule (HCR)
 
-For the current set of results, the data collection and stock assessment model are the same for each MP, and only the HCRs are different.
+For the current set of results, the data collection are the same for each MP. The empirical data (observed CPUE for HCR1 to HCR6; observed mean length in cathc for HCR7 to HCR9) and the HCRs are different.
 This means that we are comparing the performance of HCRs with the aim of selecting one that is most likely to meet your management objectives.
 
 The performance of each HCR is measured using different performance indicators (PIs).
@@ -77,17 +78,17 @@ The catches are presented as relative to the average catches in the period 2014 
 They are calculated over several groupings, based on area and fishery:
 
 * Total catch over all areas and fisheries
-* DWFN total catches
-* PICT total catches
+* Distant-water (DWFN) total longline catches
+* Pacific Island Countries and Territories (PICT) total longline catches
 
 ### 4. Relative Catch per Unit Effort (CPUE)
 
-The CPUE are presented as relative  to the CPUE in year 2013 with 8% increase for longline fisheries in model areas. They are calculated over several groupings, based on area and fishery:
+The CPUE are presented as relative to the CPUE in year 2013 with 8% increase (as used as the baseline year in TRP discussions) for longline fisheries. They are calculated over several groupings, based on area and fishery:
 
 * CPUE in all areas
-* DWFN CPUE
-* PICT CPUE
-* Area 2 (PICT)
+* DWFN CPUE in all areas
+* PICT CPUE in all areas
+* PICT CPUE in Area 2
 
 ### 6. Catch stability
 
@@ -108,8 +109,6 @@ A variability of 0 means that the catches are not changing over time.
 This is similar to PI 6 (catch stability).
 It measures the stability of effort relative to the effort in 2013.
 It is also possible to investigate the variability, as well as the stability.
-
-As with PI 4 (Relative CPUE), this indicator is only calculated for the purse seines in areas 6, 7 and 8 (excluding the associated purse seines in area 6).
 
 ### 8. Proximity of SB/SBF=0 to the Target Reference Point (TRP)
 

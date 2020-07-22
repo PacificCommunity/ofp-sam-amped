@@ -415,6 +415,16 @@ ui <- fluidPage(id="top",
           ) # End of tabset panel  
         ), # End of Explore Indicators tab
         
+#-----------------------------------------------------------------------------------------------------------------------------------------------
+#tabPanel("HCR Design", value="HCR_plot",
+         # How to use PIMPLE - Add to top
+ #        fluidRow(column(8, 
+                         ##withMathJax(includeMarkdown("introtext/HCR_plot.md"))
+  #                      withMathJax(includeHTML("introtext/HCR_plot.html"))      
+                        ##includeHTML(rmarkdown::render("introtext/HCR_plot.rmd"))
+   ##      ))
+  ##), #end of the HCR design
+#-----------------------------------------------------------------------------------------------------
         tabPanel("About", value="about",
           fluidRow(column(8, 
             #includeMarkdown("introtext/introduction.md")
