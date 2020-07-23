@@ -142,7 +142,7 @@ stabtext <- "Note that the stability can only be compared between time periods, 
 # Navbarpage inside a fluidpage?
 # Pretty nasty but it means we get the power of the navparPage and can have common side panel
 ui <- fluidPage(id="top",
-  #tags$head(includeHTML("google-analytics.html")), 
+  tags$head(includeHTML("google-analytics.html")), 
   #titlePanel("Performance Indicators and Management Procedures Explorer"),
   sidebarLayout(
     sidebarPanel(width=side_panel_width,
@@ -155,7 +155,7 @@ ui <- fluidPage(id="top",
           tags$h1("SPAMPLE"),
           tags$p("South Pacific Albacore Management Procedures Explorer"),
           tags$footer(
-            tags$p("version 0.4.0 Stick In A Five And Go"),
+            tags$p("version 0.1.0 Russian Blue"),
             tags$p("Copyright 2020 OFP SPC MSE Team."),
             tags$p("Distributed under the GPL 3")
           )
