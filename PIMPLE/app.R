@@ -20,6 +20,7 @@ library(markdown)
 
 # Load the data
 load("data/SC16_results.Rdata")
+#load("data/preWCPFC2019_results.Rdata")
 
 #----------------------------------------------------------------------------------------------------
 
@@ -154,7 +155,7 @@ stabtext <- "Note that the stability can only be compared between time periods, 
 # Navbarpage insidea fluidpage?
 # Pretty nasty but it means we get the power of the navparPage and can have common side panel
 ui <- fluidPage(id="top",
-  #tags$head(includeHTML("google-analytics.html")), 
+  tags$head(includeHTML("google-analytics.html")),  # google analytics
   #titlePanel("Performance Indicators and Management Procedures Explorer"),
   sidebarLayout(
     sidebarPanel(width=side_panel_width,
@@ -172,7 +173,7 @@ ui <- fluidPage(id="top",
             tags$p("Distributed under the GPL 3")
           )
       )),
-      conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs'",
+      conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs' || input.nvp == 'mps'",
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
       ),
       # PI choice - only shown in the compare PIs tab
@@ -472,15 +473,18 @@ ui <- fluidPage(id="top",
             #)                             
           )                                
         ),                                 
-        ## The HCRs                        
-        #tabPanel(title="HCRs", value="hcr s",
-        #  column(12, fluidRow(            
-        #    tags$span(title="Shape of the  HCRs under consideration",
-        #      plotOutput("plot_hcrshape",  height="600px")),
+        # The HCRs                        
+        tabPanel(title="Management procedures", value="mps",
+          column(12, fluidRow(            
+              p("Currently all the candidate management procedures have the same analytical method (an 8-region MULTIFAN-CL stock assessment model)."),
+              p("This means that we are only comparing the performance of the HCRs. However, this may not always be the case."),
+            #tags$span(title="Shape of the  HCRs under consideration",
+              plotOutput("plot_hcrshape",  height="600px")),
         #    tags$span(title="Histograms o f which parts of the HCRs were active during the evaluations",
+              tableOutput("table_hcrshape")
         #      plotOutput("plot_hcrhistogr ams")))
-        #  )
-        #),
+          )
+        ),
         tabPanel("About", value="about",
           fluidRow(column(8, 
                           
@@ -724,28 +728,6 @@ output$demoradarplot <- renderPlot({
     }
     return(p)
   }, height=function(){max(height_per_pi*1.5, (height_per_pi * length(input$pichoice[input$pichoice %in% pinames_ts])))})
-
-#  # Plot the HCR shapes and the bits that were active
-#  output$plot_hcrshape <- renderPlot({
-#    # Able to choose which HCRs
-#    hcr_choices <- input$hcrchoice
-#    if(length(hcr_choices) < 1){
-#      return()
-#    }
-#    p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
-#    return(p)
-#  })
-#
-#  # Plot histogram of effort multipliers
-#  output$plot_hcrhistograms <- renderPlot({
-#    hcr_choices <- input$hcrchoice
-#    if(length(hcr_choices) < 1){
-#      return()
-#    }
-#    p <- hcr_histo_plot(hcr_choices, histodat)
-#    return(p)
-#  })
-
 
   get_pi_table <- function(period_choice="Short"){
     hcr_choices <- input$hcrchoice
@@ -1154,6 +1136,46 @@ output$demoradarplot <- renderPlot({
 #
 #  output$plot_bar_mw <- plot_barbox_mw(plot_type="median_bar")
 #  output$plot_box_mw <- plot_barbox_mw(plot_type="box")
+  
+
+  # Plot the HCR shapes and the bits that were active
+  output$plot_hcrshape <- renderPlot({
+    # Able to choose which HCRs
+    hcr_choices <- input$hcrchoice
+    if(length(hcr_choices) < 1){
+      return()
+    }
+    p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
+    return(p)
+  })
+  
+  output$table_hcrshape <- renderTable({
+    # Ultimately this should be a table of MPs with analytical method + HCR
+    # Here all MPs have same analytical method
+    mp_table <- data.frame(HCR = unique(hcr_shape$hcrname),
+                           Description = c(
+                             "Threshold (see plot)",
+                             "As HCR 1 with an additional constraint that the HCR output cannot change by more than 15% from its previous value.",
+                             "Threshold (see plot)",
+                             "Threshold (see plot)",
+                             "Threshold (see plot)",
+                             "Threshold (see plot)"
+                           ))
+    return(mp_table)
+    
+    
+  })
+
+#  # Plot histogram of effort multipliers
+#  output$plot_hcrhistograms <- renderPlot({
+#    hcr_choices <- input$hcrchoice
+#    if(length(hcr_choices) < 1){
+#      return()
+#    }
+#    p <- hcr_histo_plot(hcr_choices, histodat)
+#    return(p)
+#  })
+
 
 
 
