@@ -5,7 +5,7 @@
 # Updated for SC16
 
 # Copyright 2020 OFP SPC MSE Team. Distributed under the GPL 3
-# Maintainer: Finlay Scott, OFP SPC
+# Maintainer: Nan, OFP SPC
 #--------------------------------------------------------------
 #rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
 # Load packages
@@ -18,6 +18,8 @@ library(shiny)
 library(ggplot2)
 library(RColorBrewer)
 library(markdown)
+library(knitr)
+
 
 # Load the data
 # Demo data from SKJ
@@ -140,7 +142,7 @@ stabtext <- "Note that the stability can only be compared between time periods, 
 
 # The User Interface
 # Navbarpage inside a fluidpage?
-# Pretty nasty but it means we get the power of the navparPage and can have common side panel
+# Pretty nasty but it means we get the power of the navparPage and can h  ave common side panel
 ui <- fluidPage(id="top",
   #tags$head(includeHTML("google-analytics.html")), 
   #titlePanel("Performance Indicators and Management Procedures Explorer"),
@@ -417,14 +419,14 @@ ui <- fluidPage(id="top",
         ), # End of Explore Indicators tab
         
 #-----------------------------------------------------------------------------------------------------------------------------------------------
-#tabPanel("HCR Design", value="HCR_plot",
+tabPanel("HCR Design", value="HCR_plot",
          # How to use PIMPLE - Add to top
- #        fluidRow(column(8, 
-                         ##withMathJax(includeMarkdown("introtext/HCR_plot.md"))
-  #                      withMathJax(includeHTML("introtext/HCR_plot.html"))      
-                        ##includeHTML(rmarkdown::render("introtext/HCR_plot.rmd"))
-   ##      ))
-  ##), #end of the HCR design
+         fluidRow(column(8, 
+                         ##withMathJax(includeMarkdown("HCR_plot.md"))
+                        withMathJax(includeHTML("introtext/HCR_plot.html"))      
+                        ##includeMarkdown("introtext/HCR_plot.rmd")
+         ))
+  ), #end of the HCR design
 #-----------------------------------------------------------------------------------------------------
         tabPanel("About", value="about",
           fluidRow(column(8, 
