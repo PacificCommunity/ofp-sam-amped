@@ -3,7 +3,7 @@
 SPAMPLE reference sheets are available (right-click to open in a new tab or save-as):
 
 * <a href="PIposter.pdf" target="_blank">Performance indicators for South Pacific albacore</a>
-* <a href="PIMPLEposter2sided.pdf" target="_blank">PIMPLE reference</a>
+* <a href="PIMPLEposter2sided.pdf" target="_blank">SPAMPLE reference</a>
 * <a href="HCR_plot.pdf" target="_blank">HCR Design</a>
 
 ## What is SPAMPLE?

@@ -1,10 +1,10 @@
 ---
 title: "HCR design for South Pacific Albacore"
 output:
-  pdf_document: default
   html_document:
-    mathjax: local
-    self_contained: no
+  mathjax: "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"
+  runtime: shiny
+
 ---
 
 ## One-phase CPUE based HCR (HCR1, HCR2 and HCR3)

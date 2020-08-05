@@ -1,3 +1,4 @@
+
 #--------------------------------------------------------------
 # SPAMPLE
 # SPA Performance Indicators and Management Procedures Explorer
@@ -5,7 +6,7 @@
 # Updated for SC16
 
 # Copyright 2020 OFP SPC MSE Team. Distributed under the GPL 3
-# Maintainer: Finlay Scott, OFP SPC
+# Maintainer: Nan, OFP SPC
 #--------------------------------------------------------------
 #rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
 # Load packages
@@ -18,6 +19,8 @@ library(shiny)
 library(ggplot2)
 library(RColorBrewer)
 library(markdown)
+library(knitr)
+
 
 # Load the data
 # Demo data from SKJ
@@ -140,301 +143,301 @@ stabtext <- "Note that the stability can only be compared between time periods, 
 
 # The User Interface
 # Navbarpage inside a fluidpage?
-# Pretty nasty but it means we get the power of the navparPage and can have common side panel
+# Pretty nasty but it means we get the power of the navparPage and can h  ave common side panel
 ui <- fluidPage(id="top",
-  #tags$head(includeHTML("google-analytics.html")), 
-  #titlePanel("Performance Indicators and Management Procedures Explorer"),
-  sidebarLayout(
-    sidebarPanel(width=side_panel_width,
-      br(),
-      img(src = "spc.png", height = 60),
-      br(),
-      br(),
-      conditionalPanel(condition="input.nvp == 'about'",
-        tags$html(
-          tags$h1("SPAMPLE"),
-          tags$p("South Pacific Albacore Management Procedures Explorer"),
-          tags$footer(
-            tags$p("version 0.4.0 Stick In A Five And Go"),
-            tags$p("Copyright 2020 OFP SPC MSE Team."),
-            tags$p("Distributed under the GPL 3")
-          )
-      )),
-      # The input devices
-      # It is messy because we only want some of them to appear on certain tabs
-      # So there are lots of conditional statements
-      conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs'",
-        checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
-      ),
-      # PI choice - only shown in the compare PIs tab
-      conditionalPanel(condition="input.nvp == 'compareMPs'",
-        checkboxGroupInput(inputId = "pichoice", label="PI selection",choices = piselector, selected=sort(unique(periodqs$piname)))
-      ),
-      # Show spaghetti on the time series plots - do not show on the HCR tab
-      # Currently shown on all explorePIs tabs - even if no timeseries plot - is this OK?
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab=='pibiomass' || input.pitab=='pi32' || input.pitab=='pi4')) || input.comptab == 'timeseries'",
-        checkboxInput("showspag", "Show trajectories", value=FALSE) 
-      ),
-      
-      # Catch choice - only in the catch and catch stability PI tabs
-      # Careful with conditional
-      conditionalPanel(condition="(input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')))",
-        selectInput(inputId = "catchareachoice", label="Catch / effort grouping (PIs 3, 4, 6 and 7 only)", choices = list("All areas"="total", "DWFN total"="DWFN_total", "PICT total" = "PICT_total"), selected="total")
-        # I had this as an additional choice - do you want absolute or relative catches
-        # I ended up only using relative
-        #selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
-      ),
-
-      # Fix this for the number of areas
-      # For selecting catch plots by area 
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi32' || input.pitab== 'pi62' || input.pitab=='pi7'))",
-        checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list("All areas" = "total", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5", "DWFN total" = "DWFN_total", "PICT total"="PICT_total"), selected="total")
-      ),
-      
-      # Conditional panel for CPUE tab
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi4'))",
-        checkboxGroupInput(inputId = "pi4areachoice", label="Area selection",choices = list("All areas" = "total", "DWFN total" = "DWFN_total", "PICT total"="PICT_total", "Area 2 (PICT)" = "pict2"), selected="total")
-      ),
-
-      # Select plot type by bar, box, time
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi32' || input.pitab== 'pi4'))",
-        radioButtons(inputId = "plotchoicebarboxtime", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar")
-      ),
-
-      # Select plot type by bar, box
-      # Need to include the NVP input too, because the the pitab input still has a value even if not seen
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pibiomass' || input.pitab== 'pi62' || input.pitab== 'pi7'))",
-        radioButtons(inputId = "plotchoicebarbox", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box"), selected="median_bar")
-      ),
-
-      # Stability or variability
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi62'||  input.pitab== 'pi7'))",
-        radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
-      )
-
-    ),
-    mainPanel(width=main_panel_width,
-      tags$style(type="text/css", "body {padding-top: 70px;}"), # padding - as we use fixed-top for position, applies to all tabs
-      navbarPage(id="nvp",
-        collapsible=TRUE,  # Should help if using small screens like tablets
-        windowTitle="SPAMPLE",
-        position="fixed-top",
-        #title="PIMPLE", # Needed or "" else first tab vanishes
-        #title="", # Needed or "" else first tab vanishes
-        title="South Pacific Albacore Management Procedures Explorer",
-        #----------- Introduction page ----------------------------------
-        tabPanel("Introduction", value="intro",
-                 # How to use PIMPLE - Add to top
-          fluidRow(column(8, 
-            includeMarkdown("introtext/introduction.md")
-         )),
-          fluidRow(
-            column(4, 
-              includeMarkdown("introtext/barcharttext.md")
-            ),
-           column(8,
-             plotOutput("demobarchart")
-            )
-          ),
-          fluidRow(
-            column(4, 
-              includeMarkdown("introtext/boxplottext.md")
-            ),
-            column(8,
-              plotOutput("demoboxplot")
-            )
-          ),
-          fluidRow(
-            column(4, 
-              includeMarkdown("introtext/timeseriestext.md")
-            ),
-            column(8,
-              plotOutput("demotimeseriesplot")
-            )
-          ),
-          fluidRow(
-            column(4, 
-              includeMarkdown("introtext/radarplottext.md")
-            ),
-            column(8,
-              plotOutput("demoradarplot", height="600px")
-           )
-         )
-        ),
-
-        #----------------------------------------------------------------------------
-        tabPanel("Compare performance", value="compareMPs",
-          tabsetPanel(id="comptab",
-            tabPanel("Bar charts", value="bar",
-              fluidRow(column(12,
-                plotOutput("plot_bar_comparehcr", height="auto") # Needs function in the plotOutput() function
-              )),
-              fluidRow(column(12,
-                p(yearrangetext),
-                ##p(pi47text),
-               ## p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
-
-                p(biotext),
-                p(pi36text)
-              ))
-            ),
-            tabPanel("Box plots", value="box",
-              fluidRow(column(12,
-                plotOutput("plot_box_comparehcr", height="auto") # Needs function in the plotOutput() function
-              )),
-              fluidRow(column(12,
-                p(boxplottext),
-                p(yearrangetext),
-                ##p(pi47text),
-
-              ##  p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
-                p(biotext),
-                p(pi36text)
-              ))
-            ),
-            tabPanel("Time series plots", value="timeseries",
-              fluidRow(column(12,
-                p("Note that not all indicators have time series plots. The widths of the ribbons are the 10-90 percentiles. The dashed, black line is the median value."),
-                plotOutput("plot_timeseries_comparehcr", height="auto") # height is variable
-              ))
-            ),
-            tabPanel("Radar plots", value="radar",
-              fluidRow(
-                tags$span(title="Note that only the indicators for which 'bigger is better' are shown in the radar plots.",
-                  plotOutput("plot_radar_comparehcr", height="600px")),
-                p("Note that only the indicators for which 'bigger is better' are shown in the radar plots."),
-                p(yearrangetext),
-                ##p(pi47text),
-
-               ## p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
-
-                p(biotext),
-                p(pi36text)
-              )
-            ),
-            tabPanel("Table", value="bigtable",
-              tags$span(title="Median indicator values. The values inside the parentheses are the 10-90 percentiles",
-                tableOutput("table_pis_short"),
-                tableOutput("table_pis_medium"),
-                tableOutput("table_pis_long"),
-                p(tabletext),
-                p(yearrangetext),
-                ##p(pi47text),
-               ## p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
-
-                p(biotext),
-                p(pi36text)
-              )
-            )
-          )
-        ),
-        # Start to put this tab back in, bit by bit
-        tabPanel("Explore indicators", value="explorePIs",
-          tabsetPanel(id="pitab",
-          # --- SBSBF0 and PI 1 & 8 ---
-            tabPanel("PI 1 & 8: Biomass",value="pibiomass",
-              fluidRow(
-                column(12,
-                  # TS of SBSBF0
-                  plotOutput("plot_ts_sbsbf0")
-              )),
-              fluidRow(
-                column(6,
-                  # Bar or box of SB/SBF0
-                  plotOutput("plot_barbox_sbsbf0")
-                ),
-                column(6,
-                  #  PI 1
-                  plotOutput("plot_bar_problrp")
+                tags$head(includeHTML("google-analytics.html")), 
+                #titlePanel("Performance Indicators and Management Procedures Explorer"),
+                sidebarLayout(
+                  sidebarPanel(width=side_panel_width,
+                               br(),
+                               img(src = "spc.png", height = 60),
+                               br(),
+                               br(),
+                               conditionalPanel(condition="input.nvp == 'about'",
+                                                tags$html(
+                                                  tags$h1("SPAMPLE"),
+                                                  tags$p("South Pacific Albacore Management Procedures Explorer"),
+                                                  tags$footer(
+                                                    tags$p("version 0.1.0 Russian Blue"),
+                                                    tags$p("Copyright 2020 OFP SPC MSE Team."),
+                                                    tags$p("Distributed under the GPL 3")
+                                                  )
+                                                )),
+                               # The input devices
+                               # It is messy because we only want some of them to appear on certain tabs
+                               # So there are lots of conditional statements
+                               conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs'",
+                                                checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
+                               ),
+                               # PI choice - only shown in the compare PIs tab
+                               conditionalPanel(condition="input.nvp == 'compareMPs'",
+                                                checkboxGroupInput(inputId = "pichoice", label="PI selection",choices = piselector, selected=sort(unique(periodqs$piname)))
+                               ),
+                               # Show spaghetti on the time series plots - do not show on the HCR tab
+                               # Currently shown on all explorePIs tabs - even if no timeseries plot - is this OK?
+                               conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab=='pibiomass' || input.pitab=='pi32' || input.pitab=='pi4')) || input.comptab == 'timeseries'",
+                                                checkboxInput("showspag", "Show trajectories", value=FALSE) 
+                               ),
+                               
+                               # Catch choice - only in the catch and catch stability PI tabs
+                               # Careful with conditional
+                               conditionalPanel(condition="(input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')))",
+                                                selectInput(inputId = "catchareachoice", label="Catch / effort grouping (PIs 3, 4, 6 and 7 only)", choices = list("All areas"="total", "DWFN total"="DWFN_total", "PICT total" = "PICT_total"), selected="total")
+                                                # I had this as an additional choice - do you want absolute or relative catches
+                                                # I ended up only using relative
+                                                #selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
+                               ),
+                               
+                               # Fix this for the number of areas
+                               # For selecting catch plots by area 
+                               conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi32' || input.pitab== 'pi62' || input.pitab=='pi7'))",
+                                                checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list("All areas" = "total", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5", "DWFN total" = "DWFN_total", "PICT total"="PICT_total"), selected="total")
+                               ),
+                               
+                               # Conditional panel for CPUE tab
+                               conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi4'))",
+                                                checkboxGroupInput(inputId = "pi4areachoice", label="Area selection",choices = list("All areas" = "total", "DWFN total" = "DWFN_total", "PICT total"="PICT_total", "Area 2 (PICT)" = "pict2"), selected="total")
+                               ),
+                               
+                               # Select plot type by bar, box, time
+                               conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi32' || input.pitab== 'pi4'))",
+                                                radioButtons(inputId = "plotchoicebarboxtime", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar")
+                               ),
+                               
+                               # Select plot type by bar, box
+                               # Need to include the NVP input too, because the the pitab input still has a value even if not seen
+                               conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pibiomass' || input.pitab== 'pi62' || input.pitab== 'pi7'))",
+                                                radioButtons(inputId = "plotchoicebarbox", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box"), selected="median_bar")
+                               ),
+                               
+                               # Stability or variability
+                               conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi62'||  input.pitab== 'pi7'))",
+                                                radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
+                               )
+                               
+                  ),
+                  mainPanel(width=main_panel_width,
+                            tags$style(type="text/css", "body {padding-top: 70px;}"), # padding - as we use fixed-top for position, applies to all tabs
+                            navbarPage(id="nvp",
+                                       collapsible=TRUE,  # Should help if using small screens like tablets
+                                       windowTitle="SPAMPLE",
+                                       position="fixed-top",
+                                       #title="PIMPLE", # Needed or "" else first tab vanishes
+                                       #title="", # Needed or "" else first tab vanishes
+                                       title="South Pacific Albacore Management Procedures Explorer",
+                                       #----------- Introduction page ----------------------------------
+                                       tabPanel("Introduction", value="intro",
+                                                # How to use PIMPLE - Add to top
+                                                fluidRow(column(8, 
+                                                                includeMarkdown("introtext/introduction.md")
+                                                )),
+                                                fluidRow(
+                                                  column(4, 
+                                                         includeMarkdown("introtext/barcharttext.md")
+                                                  ),
+                                                  column(8,
+                                                         plotOutput("demobarchart")
+                                                  )
+                                                ),
+                                                fluidRow(
+                                                  column(4, 
+                                                         includeMarkdown("introtext/boxplottext.md")
+                                                  ),
+                                                  column(8,
+                                                         plotOutput("demoboxplot")
+                                                  )
+                                                ),
+                                                fluidRow(
+                                                  column(4, 
+                                                         includeMarkdown("introtext/timeseriestext.md")
+                                                  ),
+                                                  column(8,
+                                                         plotOutput("demotimeseriesplot")
+                                                  )
+                                                ),
+                                                fluidRow(
+                                                  column(4, 
+                                                         includeMarkdown("introtext/radarplottext.md")
+                                                  ),
+                                                  column(8,
+                                                         plotOutput("demoradarplot", height="600px")
+                                                  )
+                                                )
+                                       ),
+                                       
+                                       #----------------------------------------------------------------------------
+                                       tabPanel("Compare performance", value="compareMPs",
+                                                tabsetPanel(id="comptab",
+                                                            tabPanel("Bar charts", value="bar",
+                                                                     fluidRow(column(12,
+                                                                                     plotOutput("plot_bar_comparehcr", height="auto") # Needs function in the plotOutput() function
+                                                                     )),
+                                                                     fluidRow(column(12,
+                                                                                     p(yearrangetext),
+                                                                                     ##p(pi47text),
+                                                                                     ## p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
+                                                                                     
+                                                                                     p(biotext),
+                                                                                     p(pi36text)
+                                                                     ))
+                                                            ),
+                                                            tabPanel("Box plots", value="box",
+                                                                     fluidRow(column(12,
+                                                                                     plotOutput("plot_box_comparehcr", height="auto") # Needs function in the plotOutput() function
+                                                                     )),
+                                                                     fluidRow(column(12,
+                                                                                     p(boxplottext),
+                                                                                     p(yearrangetext),
+                                                                                     ##p(pi47text),
+                                                                                     
+                                                                                     ##  p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
+                                                                                     p(biotext),
+                                                                                     p(pi36text)
+                                                                     ))
+                                                            ),
+                                                            tabPanel("Time series plots", value="timeseries",
+                                                                     fluidRow(column(12,
+                                                                                     p("Note that not all indicators have time series plots. The widths of the ribbons are the 10-90 percentiles. The dashed, black line is the median value."),
+                                                                                     plotOutput("plot_timeseries_comparehcr", height="auto") # height is variable
+                                                                     ))
+                                                            ),
+                                                            tabPanel("Radar plots", value="radar",
+                                                                     fluidRow(
+                                                                       tags$span(title="Note that only the indicators for which 'bigger is better' are shown in the radar plots.",
+                                                                                 plotOutput("plot_radar_comparehcr", height="600px")),
+                                                                       p("Note that only the indicators for which 'bigger is better' are shown in the radar plots."),
+                                                                       p(yearrangetext),
+                                                                       ##p(pi47text),
+                                                                       
+                                                                       ## p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
+                                                                       
+                                                                       p(biotext),
+                                                                       p(pi36text)
+                                                                     )
+                                                            ),
+                                                            tabPanel("Table", value="bigtable",
+                                                                     tags$span(title="Median indicator values. The values inside the parentheses are the 10-90 percentiles",
+                                                                               tableOutput("table_pis_short"),
+                                                                               tableOutput("table_pis_medium"),
+                                                                               tableOutput("table_pis_long"),
+                                                                               p(tabletext),
+                                                                               p(yearrangetext),
+                                                                               ##p(pi47text),
+                                                                               ## p("Note that PIs 4 and 7 are for the longline fisheries in model areas"),
+                                                                               
+                                                                               p(biotext),
+                                                                               p(pi36text)
+                                                                     )
+                                                            )
+                                                )
+                                       ),
+                                       # Start to put this tab back in, bit by bit
+                                       tabPanel("Explore indicators", value="explorePIs",
+                                                tabsetPanel(id="pitab",
+                                                            # --- SBSBF0 and PI 1 & 8 ---
+                                                            tabPanel("PI 1 & 8: Biomass",value="pibiomass",
+                                                                     fluidRow(
+                                                                       column(12,
+                                                                              # TS of SBSBF0
+                                                                              plotOutput("plot_ts_sbsbf0")
+                                                                       )),
+                                                                     fluidRow(
+                                                                       column(6,
+                                                                              # Bar or box of SB/SBF0
+                                                                              plotOutput("plot_barbox_sbsbf0")
+                                                                       ),
+                                                                       column(6,
+                                                                              #  PI 1
+                                                                              plotOutput("plot_bar_problrp")
+                                                                       )
+                                                                     ),
+                                                                     fluidRow(
+                                                                       column(6,
+                                                                              # PI 8 - bar or box
+                                                                              plotOutput("plot_barbox_pi8")
+                                                                       )),
+                                                                     fluidRow(
+                                                                       column(12,
+                                                                              p(yearrangetext),
+                                                                              p(biotext)
+                                                                       )
+                                                                     )
+                                                            ),
+                                                            
+                                                            tabPanel("PI 3: Relative catches by area",value="pi32",
+                                                                     column(12, fluidRow(
+                                                                       # Can't put text at end as not very fluid
+                                                                       #p("Note that the catches are relative to the average catch in the years 2013-2015."),
+                                                                       #p(yearrangetext),
+                                                                       plotOutput("plot_pi3", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
+                                                                       p("Note that the catches are relative to the average catch in that area grouping in the years 2014-2016."),
+                                                                       p(yearrangetext)
+                                                                     ))
+                                                            ),
+                                                            
+                                                            tabPanel("PI 4: Relative CPUE",value="pi4",
+                                                                     column(12, fluidRow(
+                                                                       # Can't put text at end as not very fluid
+                                                                       #p("Note that the catches are relative to the average catch in the years 2014-2016."),
+                                                                       #p(yearrangetext),
+                                                                       plotOutput("plot_pi4", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
+                                                                       p("Note that the CPUE is relative to the CPUE of the grouping in year 2013 plus 8% increase."),
+                                                                       p(yearrangetext)
+                                                                     ))
+                                                            ),
+                                                            
+                                                            tabPanel("PI 6: Catch stability by area",value="pi62",
+                                                                     column(12, fluidRow(
+                                                                       plotOutput("plot_pi6", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
+                                                                       p("Note that the catches are relative to the average catch in that area grouping in the years 2014-2016."),
+                                                                       p(yearrangetext),
+                                                                       p(stabtext)
+                                                                     ))
+                                                            ),
+                                                            
+                                                            # *** PI 7: Relative effort variability***
+                                                            tabPanel("PI 7: Effort stability by area",value="pi7",
+                                                                     #  #column(6, fluidRow(
+                                                                     #  #  plotOutput("plot_bar_pi7stab"),
+                                                                     #  #  plotOutput("plot_bar_pi7var")
+                                                                     #  #)),
+                                                                     #  #column(6, fluidRow(
+                                                                     #  #  plotOutput("plot_box_pi7stab"),
+                                                                     #  #  plotOutput("plot_box_pi7var")
+                                                                     #  #)),
+                                                                     column(12, fluidRow(
+                                                                       plotOutput("plot_pi7", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
+                                                                       p("Note that the effort are relative to the effort in that area grouping in the year 2013."),
+                                                                       ##p(pi47text)
+                                                                       p(yearrangetext) ,
+                                                                       p(stabtext)
+                                                                       
+                                                                     )) # end of column
+                                                            ) # end of tabPanel
+                                                            
+                                                            
+                                                ) # End of tabset panel  
+                                       ), # End of Explore Indicators tab
+                                       
+                                       #-----------------------------------------------------------------------------------------------------------------------------------------------
+                                       tabPanel("HCR Design", value="HCR_plot",
+                                       # How to use PIMPLE - Add to top
+                                               fluidRow(column(8, 
+                                       ##withMathJax(includeMarkdown("introtext/HCR_plot.md"))
+                                                             withMathJax(includeHTML("introtext/HCR_plot.html"))      
+                                       ##includeHTML(rmarkdown::render("introtext/HCR_plot.rmd"))
+                                             ))
+                                       ), #end of the HCR design
+                                       #-----------------------------------------------------------------------------------------------------
+                                       tabPanel("About", value="about",
+                                                fluidRow(column(8, 
+                                                                #includeMarkdown("introtext/introduction.md")
+                                                                spc_about()
+                                                ))
+                                       )
+                            )
+                  )
                 )
-              ),
-              fluidRow(
-                column(6,
-                  # PI 8 - bar or box
-                  plotOutput("plot_barbox_pi8")
-              )),
-              fluidRow(
-                column(12,
-                  p(yearrangetext),
-                  p(biotext)
-                )
-              )
-            ),
-
-            tabPanel("PI 3: Relative catches by area",value="pi32",
-              column(12, fluidRow(
-                # Can't put text at end as not very fluid
-                #p("Note that the catches are relative to the average catch in the years 2013-2015."),
-                #p(yearrangetext),
-                plotOutput("plot_pi3", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-                p("Note that the catches are relative to the average catch in that area grouping in the years 2014-2016."),
-                p(yearrangetext)
-              ))
-            ),
-          
-            tabPanel("PI 4: Relative CPUE",value="pi4",
-              column(12, fluidRow(
-                # Can't put text at end as not very fluid
-                #p("Note that the catches are relative to the average catch in the years 2014-2016."),
-                #p(yearrangetext),
-                plotOutput("plot_pi4", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-                p("Note that the CPUE is relative to the CPUE of the grouping in year 2013 plus 8% increase."),
-                p(yearrangetext)
-              ))
-            ),
-
-            tabPanel("PI 6: Catch stability by area",value="pi62",
-              column(12, fluidRow(
-                plotOutput("plot_pi6", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-                p("Note that the catches are relative to the average catch in that area grouping in the years 2014-2016."),
-                p(yearrangetext),
-                p(stabtext)
-              ))
-            ),
-
-            # *** PI 7: Relative effort variability***
-            tabPanel("PI 7: Effort stability by area",value="pi7",
-            #  #column(6, fluidRow(
-            #  #  plotOutput("plot_bar_pi7stab"),
-            #  #  plotOutput("plot_bar_pi7var")
-            #  #)),
-            #  #column(6, fluidRow(
-            #  #  plotOutput("plot_box_pi7stab"),
-            #  #  plotOutput("plot_box_pi7var")
-            #  #)),
-              column(12, fluidRow(
-                plotOutput("plot_pi7", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
-              p("Note that the effort are relative to the effort in that area grouping in the year 2013."),
-              ##p(pi47text)
-              p(yearrangetext) ,
-              p(stabtext)
-              
-              )) # end of column
-            ) # end of tabPanel
-          
-          
-          ) # End of tabset panel  
-        ), # End of Explore Indicators tab
-        
-#-----------------------------------------------------------------------------------------------------------------------------------------------
-#tabPanel("HCR Design", value="HCR_plot",
-         # How to use PIMPLE - Add to top
- #        fluidRow(column(8, 
-                         ##withMathJax(includeMarkdown("introtext/HCR_plot.md"))
-  #                      withMathJax(includeHTML("introtext/HCR_plot.html"))      
-                        ##includeHTML(rmarkdown::render("introtext/HCR_plot.rmd"))
-   ##      ))
-  ##), #end of the HCR design
-#-----------------------------------------------------------------------------------------------------
-        tabPanel("About", value="about",
-          fluidRow(column(8, 
-            #includeMarkdown("introtext/introduction.md")
-            spc_about()
-          ))
-        )
-      )
-    )
-  )
 )
 
 #---------------------------------------------------------------------------------------------------
