@@ -478,6 +478,7 @@ ui <- fluidPage(id="top",
           column(12, fluidRow(            
               p("Currently all the candidate management procedures have the same analytical method (an 8-region MULTIFAN-CL stock assessment model)."),
               p("This means that we are only comparing the performance of the HCRs. However, this may not always be the case."),
+              p("The current HCRs use a value of estimated depletion (SB/SBF=0) to set a multiplier. This multipler is applied to the catch or effort in 2012 for each fishery to set a new catch or effort limit for the next time period."),
             #tags$span(title="Shape of the  HCRs under consideration",
               plotOutput("plot_hcrshape",  height="600px")),
         #    tags$span(title="Histograms o f which parts of the HCRs were active during the evaluations",
@@ -1146,6 +1147,7 @@ output$demoradarplot <- renderPlot({
       return()
     }
     p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
+    p <- p + ylab("Catch or effort multiplier")
     return(p)
   })
   
@@ -1159,7 +1161,8 @@ output$demoradarplot <- renderPlot({
                              "Threshold (see plot)",
                              "Threshold (see plot)",
                              "Threshold (see plot)",
-                             "Threshold (see plot)"
+                             "Threshold (see plot)",
+                             "Hillary step (see plot)"
                            ))
     return(mp_table)
     
