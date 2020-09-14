@@ -19,8 +19,16 @@ library(RColorBrewer)
 library(markdown)
 
 # Load the data
-load("data/SC16_results.Rdata")
+#load("data/SC16_results.Rdata")
+load("data/postSC16_results.Rdata")
 #load("data/preWCPFC2019_results.Rdata")
+
+# Drop PI 8 - can reinstate later if needed
+periodqs <- subset(periodqs, pi != "pi8")
+yearqs <- subset(yearqs, pi != "pi8")
+worms <- subset(worms, pi != "pi8")
+
+
 
 #----------------------------------------------------------------------------------------------------
 
@@ -62,6 +70,12 @@ newpi72name <- "PI 7: Relative effort variability\n(PS in areas 6,7,8 only)"
 periodqs[periodqs$piname == oldpi72name, "piname"] <- newpi72name
 yearqs[yearqs$piname == oldpi72name, "piname"] <- newpi72name
 worms[worms$piname == oldpi72name, "piname"] <- newpi72name
+# PI 82 closeness to SBSBF0 in 2012
+oldpi82name <- "PI 82: Proximity to SB/SBF=0 (2012)"
+newpi82name <- "PI 82: Proximity to SB/SBF=0 in 2012"
+periodqs[periodqs$piname == oldpi82name, "piname"] <- newpi82name
+yearqs[yearqs$piname == oldpi82name, "piname"] <- newpi82name
+worms[worms$piname == oldpi82name, "piname"] <- newpi82name
 
 
 #------------------------------------------------------------------------------------------------------
@@ -118,7 +132,10 @@ worms <- subset(worms, year %in% first_plot_year:last_plot_year)
 
 # Careful with these - they are only used for plotting lines, NOT for calculating the indicators
 lrp <- 0.2
-trp <- 0.5
+#trp <- 0.5 # Should avoid using this
+mean_ref_sbsbf0 <- 0.425
+
+
 # For the worms - same worms for all plots
 # This can be increased to 20 - maybe make as option?
 nworms <- 5
@@ -144,11 +161,12 @@ longtext <- paste(long, collapse="-")
 yearrangetext <- paste("Short-term is: ", shorttext, ", medium-term is: ", mediumtext, " and long-term is: ", longtext,".",sep="")
 pi47text <- "Note that PIs 4 and 7 are for the purse seines in model areas 2, 3 and 5 only (excluding the associated purse seines in area 5.)"
 pi36text <- "The grouping for PIs 3 and 6 can be selected with the drop down menu on the left."
-biotext <- "PIs 1, 8 and SB/SBF=0 are calculated over all model areas."
+biotext <- "PIs 1, 82 and SB/SBF=0 are calculated over all model areas."
 relcatchtext <- "Note that the catches are relative to the average catch in that area grouping in the years 2013-2015."
 boxplottext <- "For box plots the box contains the 20-80 percentiles, the whiskers the 5-95 percentiles and the horizontal line is the median."
 tabletext <- "The tables show the median indicator values in each time period. The values inside the parentheses are the 10-90 percentiles."
 stabtext <- "Note that the stability can only be compared between time periods, not between areas or area groups, i.e. it is the relative stability in that area."
+sbsbf02012text <- "On the SB/SBF=0 plot, the lower dashed line is the Limit Reference Point and the upper dashed line is the mean SB/SBF=0 in 2012."
 
 #----------------------------------------------------------------------------------------------------
 
@@ -276,7 +294,8 @@ ui <- fluidPage(id="top",
                 p(yearrangetext),
                 p(pi47text),
                 p(biotext),
-                p(pi36text)
+                p(pi36text),
+                p(sbsbf02012text)
               ))
             ),
             tabPanel("Box plots", value="box",
@@ -288,13 +307,20 @@ ui <- fluidPage(id="top",
                 p(yearrangetext),
                 p(pi47text),
                 p(biotext),
-                p(pi36text)
+                p(pi36text),
+                p(sbsbf02012text)
               ))
             ),
             tabPanel("Time series plots", value="timeseries",
               fluidRow(column(12,
                 p("Note that not all indicators have time series plots. The widths of the ribbons are the 10-90 percentiles. The dashed, black line is the median value."),
                 plotOutput("plot_timeseries_comparehcr", height="auto") # height is variable
+              )),
+              fluidRow(column(12,
+                p(pi47text),
+                p(biotext),
+                p(pi36text),
+                p(sbsbf02012text)
               ))
             ),
             tabPanel("Radar plots", value="radar",
@@ -373,12 +399,14 @@ ui <- fluidPage(id="top",
               fluidRow(
                 column(6,
                   # PI 8 - bar or box
-                  plotOutput("plot_barbox_pi8")
+                  #plotOutput("plot_barbox_pi8")
+                  plotOutput("plot_barbox_pi82")
               )),
               fluidRow(
                 column(12,
                   p(yearrangetext),
-                  p(biotext)
+                  p(biotext),
+                  p(sbsbf02012text)
                 )
               )
             ),
@@ -476,7 +504,7 @@ ui <- fluidPage(id="top",
         # The HCRs                        
         tabPanel(title="Management procedures", value="mps",
           column(12, fluidRow(            
-              p("Currently all the candidate management procedures have the same analytical method (an 8-region MULTIFAN-CL stock assessment model)."),
+              p("Currently all the candidate management procedures have the same estimation method (an 8-region MULTIFAN-CL stock assessment model)."),
               p("This means that we are only comparing the performance of the HCRs. However, this may not always be the case."),
               p("The current HCRs use a value of estimated depletion (SB/SBF=0) to set a multiplier. This multipler is applied to the catch or effort in 2012 for each fishery to set a new catch or effort limit for the next time period."),
             #tags$span(title="Shape of the  HCRs under consideration",
@@ -639,7 +667,8 @@ output$demoradarplot <- renderPlot({
       # Only if SB/SBF=0 is in dat
       if ("SB/SBF=0" %in% pi_choices){
         p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
-        p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+        #p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+        p <- p + ggplot2::geom_hline(data=data.frame(yint=mean_ref_sbsbf0,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
       }
       p <- p + ggplot2::facet_wrap(~piname, scales="free", ncol=no_facets_row)
       return(p)
@@ -687,8 +716,8 @@ output$demoradarplot <- renderPlot({
   })
 
   # Time series comparisons
-  #pinames_ts <- c("PI 1: Prob. above LRP", "SB/SBF=0", "PI 3: Catch","PI 4: Relative CPUE", "PI 8: Proximity to TRP", "Mean weight of individual")
-  pinames_ts <- c("SB/SBF=0", newpi3name, newpi4name, "PI 8: Proximity to TRP")
+  #pinames_ts <- c("SB/SBF=0", newpi3name, newpi4name, "PI 8: Proximity to TRP")
+  pinames_ts <- c("SB/SBF=0", newpi3name, newpi4name, newpi82name)
   output$plot_timeseries_comparehcr <- renderPlot({
     show_spaghetti <- input$showspag
     hcr_choices <- input$hcrchoice
@@ -725,7 +754,8 @@ output$demoradarplot <- renderPlot({
     # Add LRP and TRP if SB/SBF=0 is plotted
     if ("SB/SBF=0" %in% pi_choices){
       p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
-      p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+      #p <- p + ggplot2::geom_hline(data=data.frame(yint=trp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+      p <- p + ggplot2::geom_hline(data=data.frame(yint=mean_ref_sbsbf0, piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
     }
     return(p)
   }, height=function(){max(height_per_pi*1.5, (height_per_pi * length(input$pichoice[input$pichoice %in% pinames_ts])))})
@@ -794,7 +824,8 @@ output$demoradarplot <- renderPlot({
     # Else wormdat <- NULL
     p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
     p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=3)
-    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=3)
+    #p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=3)
+    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=mean_ref_sbsbf0), linetype=3)
     p <- p + ggplot2::ylab("SB/SBF=0")
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
@@ -831,10 +862,13 @@ output$demoradarplot <- renderPlot({
     dat <- subset(periodqs, period != "Rest" & pi=="biomass" & metric=="SBSBF0" & area=="all") 
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
     p <- p + ggplot2::ylab("SB/SBF=0") + ggplot2::ylim(c(0,1))
-    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2) + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
+    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2)
+    #p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
+    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=mean_ref_sbsbf0), linetype=2)
     return(p)
   })
 
+  # Not used at moment
   output$plot_barbox_pi8 <- renderPlot({
     plot_type <- input$plotchoicebarbox
     hcr_choices <- input$hcrchoice
@@ -845,6 +879,19 @@ output$demoradarplot <- renderPlot({
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
     # Average closeness to TRP
     p <- p + ggplot2::ylab("PI 8: Proximity to TRP") + ggplot2::ylim(c(0,1))
+    return(p)
+  })
+  
+  output$plot_barbox_pi82 <- renderPlot({
+    plot_type <- input$plotchoicebarbox
+    hcr_choices <- input$hcrchoice
+    if(length(hcr_choices) < 1){
+      return()
+    }
+    dat <- subset(periodqs, period != "Rest" & pi=="pi82" & metric=="SBSBF0" & area=="all") 
+    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+    # Average closeness to TRP
+    p <- p + ggplot2::ylab("PI 82: Proximity to SB/SBF=0 in 2012") + ggplot2::ylim(c(0,1))
     return(p)
   })
 
@@ -1146,7 +1193,8 @@ output$demoradarplot <- renderPlot({
     if(length(hcr_choices) < 1){
       return()
     }
-    p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
+    #p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
+    p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=mean_ref_sbsbf0)
     p <- p + ylab("Catch or effort multiplier")
     return(p)
   })
@@ -1162,7 +1210,9 @@ output$demoradarplot <- renderPlot({
                              "Threshold (see plot)",
                              "Threshold (see plot)",
                              "Threshold (see plot)",
-                             "Hillary step (see plot)"
+                             "Hillary step (see plot)",
+                             "Threshold (see plot)",
+                             "As HCR 8 with an additional constraint that the HCR output cannot change by more than 15% from its previous value."
                            ))
     return(mp_table)
     

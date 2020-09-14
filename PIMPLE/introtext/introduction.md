@@ -12,10 +12,10 @@ PIMPLE is a tool for exploring and comparing the performance of alternative cand
 A Management Procedure has three components:
 
 1. Data collection
-2. Analytical method (stock assessment model)
+2. Estimation method (stock assessment model)
 3. Harvest Control Rule (HCR)
 
-For the current set of results, the data collection and stock assessment model are the same for each MP, and only the HCRs are different.
+For the current set of results, the data collection and estimation method (a stock assessment model) are the same for each MP, and only the HCRs are different.
 This means that we are comparing the performance of HCRs with the aim of selecting one that is most likely to meet your management objectives.
 
 The performance of each HCR is measured using different performance indicators (PIs).
@@ -107,16 +107,19 @@ It is also possible to investigate the variability, as well as the stability.
 
 As with PI 4 (Relative CPUE), this indicator is only calculated for the purse seines in areas 6, 7 and 8 (excluding the associated purse seines in area 6).
 
-### 8. Proximity of SB/SBF=0 to the Target Reference Point (TRP)
+### 82. Proximity of SB/SBF=0 to the average SB/SBF=0 in 2012
 
-This indicator measures how close, on average, the SB/SBF=0 was to the TRP in each year.
-The higher the value of the indicator, the closer SB/SBF=0 was to the TRP in each year, on average.
-A value of 1 means that the SB/SBF=0 was exactly at the TRP in each year.
-A value of 0 means that the SB/SBF=0 was as far from the TRP as possible in each year.
+(Note that as the TRP for skipjack is under discussion, this indicator has been updated to reflect how close the SB/SBF=0 is to SB/SBF=0 in the reference year of 2012)
 
-Note that this indicator is slightly different to comparing the average value of SB/SBF=0 to the TRP.
-If the average value of SB/SBF=0 over a range of years is close to the TRP it does not necessarily mean that SB/SBF=0 was close to the TRP during those years.
-For example, if SB/SBF=0 moved between 0.3 and 0.7 each year, the average value would be 0.5 but it would never have been very close to 0.5 in any year.
+2012 is taken to be a reference year for SB/SBF=0.
+This indicator measures how close, on average, the SB/SBF=0 was to the mean SB/SBF=0 in 2012 (about 0.425).
+The higher the value of the indicator, the closer SB/SBF=0 was to this reference value in each year, on average.
+A value of 1 means that the SB/SBF=0 was exactly at the reference value in each year.
+A value of 0 means that the SB/SBF=0 was as far from the reference value as possible in each year.
+
+Note that this indicator is slightly different to comparing the average value of SB/SBF=0 to the reference value.
+If the average value of SB/SBF=0 over a range of years is close to the reference value it does not necessarily mean that SB/SBF=0 was close to the reference value during those years.
+For example, if SB/SBF=0 moved between 0.225 and 0.625 each year, the average value would be 0.425 but it would never have been very close to 0.425 in any year.
 
 ## Plot Types
 
