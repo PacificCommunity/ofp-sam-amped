@@ -154,7 +154,7 @@ ui <- navbarPage(
           # Total number of years (including historical years)
           numericInput("nyears", "Number of years", value = 30, min=20, max=100, step=1),
           # Number of iteration
-          numericInput("niters", "Number of iterations", value = 1000, min=10, max=1000, step=10),
+          numericInput("niters", "Number of iterations", value = 500, min=10, max=1000, step=10),
           br(),
           actionButton("dump", "Dump data")
         )
@@ -366,19 +366,19 @@ server <- function(input, output,session) {
 
   # Call the HCR plot function
   output$plothcr <- renderPlot({
-    plot_hcr(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, show_last = FALSE)
+    plot_hcr(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, show_last = FALSE, cex.axis=1.1, cex.lab=1.3)
   })
   
   output$plotbiomasshisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", show_last = FALSE, percentile_range = pi_percentiles)
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", show_last = FALSE, percentile_range = pi_percentiles, cex.axis=1.1, cex.lab=1.3)
   })
 
   output$plotcatchhisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", show_last = FALSE, percentile_range = pi_percentiles)
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", show_last = FALSE, percentile_range = pi_percentiles, cex.axis=1.1, cex.lab=1.3)
   })
 
   output$plotrelcpuehisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, show_last = FALSE, percentile_range = pi_percentiles)
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, show_last = FALSE, percentile_range = pi_percentiles, cex.axis=1.1, cex.lab=1.3)
   })
 
 
