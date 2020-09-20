@@ -216,19 +216,19 @@ server <- function(input, output,session) {
   
   # Call the HCR plot function
   output$plothcr <- renderPlot({
-    plot_hcr(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params)
+    plot_hcr(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, cex.axis=1.1, cex.lab=1.3)
   })
   
   output$plotbiomasshisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", percentile_range = pi_percentiles)
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="biomass", percentile_range = pi_percentiles, cex.axis=1.1, cex.lab=1.3)
   })
 
   output$plotcatchhisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", percentile_range = pi_percentiles)
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="catch", percentile_range = pi_percentiles, cex.axis=1.1, cex.lab=1.3)
   })
 
   output$plotrelcpuehisto <- renderPlot({
-    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, percentile_range = pi_percentiles)
+    plot_metric_with_histo(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), metric="relcpue", app_params=app_params, percentile_range = pi_percentiles, cex.axis=1.1, cex.lab=1.3)
   })
 
   output$itercount <- renderText({

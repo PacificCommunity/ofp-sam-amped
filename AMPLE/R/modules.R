@@ -39,15 +39,15 @@ stoch_params_setterUI <- function(id, show_biol_prod_sigma = TRUE, show_biol_est
   options <- list()
   if (show_biol_prod_sigma){
     options[[length(options)+1]] <- 
-    tags$span(title="Natural variability in the productivity of the stock through changes in growth and natural mortality", numericInput(ns("biol_prod_sigma"), label = "Biological productivity variability", value = init_prod_sigma, min=0, max=1, step=0.05))
+    tags$span(title="Natural variability in the stock biological processes (e.g. recruitment and growth)", numericInput(ns("biol_prod_sigma"), label = "Biological variability", value = init_prod_sigma, min=0, max=1, step=0.05))
   }
   if (show_biol_est_sigma){
     options[[length(options)+1]] <- 
-    tags$span(title="Simulating the difference between the 'true' biomass and the 'estimated' biomass used by the HCR by applying randomly generated noise", numericInput(ns("biol_est_sigma"), label = "Estimation error variability", value = init_est_sigma, min=0, max=1, step=0.05))
+    tags$span(title="Simulating the difference between the 'true' biomass and the 'estimated' biomass used by the HCR by applying randomly generated noise", numericInput(ns("biol_est_sigma"), label = "Estimation variability", value = init_est_sigma, min=0, max=1, step=0.05))
   }
   if (show_biol_est_bias){
     options[[length(options)+1]] <- 
-    tags$span(title="Simulating the difference between the 'true' biomass and the 'estimated' biomass used by the HCR by applying a continuous bias (positive or negative)", numericInput(ns("biol_est_bias"), label = "Estimation error bias", value = init_est_bias, min=-0.5, max=0.5, step=0.05))
+    tags$span(title="Simulating the difference between the 'true' biomass and the 'estimated' biomass used by the HCR by applying a continuous bias (positive or negative)", numericInput(ns("biol_est_bias"), label = "Estimation bias", value = init_est_bias, min=-0.5, max=0.5, step=0.05))
   }
 
   vars <- conditionalPanel(condition="input.show_var == true", ns=ns, options)

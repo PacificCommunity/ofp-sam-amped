@@ -184,7 +184,7 @@ sideways_histogram <- function(dat, range, lhist=20, num.dnorm=5*lhist, dcol="bl
 #' # Yield curve
 #' plot_yieldcurve_projections(stock=stock2, stock_params=stock_params, app_params=app_params)
 #' @export
-plot_hcr <- function(stock, stock_params, mp_params, app_params, timestep=NULL, show_last=TRUE){
+plot_hcr <- function(stock, stock_params, mp_params, app_params, timestep=NULL, show_last=TRUE, ...){
 
   if (mp_params$output_type=="catch"){
     ymax <- get_catch_ymax(stock$catch, mp_params)
@@ -202,7 +202,7 @@ plot_hcr <- function(stock, stock_params, mp_params, app_params, timestep=NULL, 
   #xlab <- "Estimated biomass / K"
   xlab <- "Estimated SB/SBF=0"
   # Plot empty axes 
-  plot(x=xrange,y=yrange,type="n",xlab=xlab, ylab=ylab, xaxs="i", yaxs="i", main="The HCR") 
+  plot(x=xrange,y=yrange,type="n",xlab=xlab, ylab=ylab, xaxs="i", yaxs="i", main="The HCR", ...) 
 
   # If model based MP (or NA) add the B/K based reference points
   if (mp_params$mp_type %in% c(as.character(NA), "model")){
@@ -362,13 +362,14 @@ plot_biomass <- function(stock, stock_params, mp_params, timestep=NULL, show_las
 #' @rdname front_page_plots
 #' @name Front page plots
 #' @export
+# Used for IntroHCR and IntroIndicators and maybe others
 plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, xlab="Year", ghost_col="grey", true_col="black", ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Set Ylim - use same as HCR plot
   ymax <- get_catch_ymax(stock$catch, mp_params)
   yrange <- c(0, ymax)
   # Empty axis
-  plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Catch", xlab=xlab, xaxs="i", yaxs="i",...)
+  plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Catch", xlab=xlab, xaxs="i", yaxs="i", ...)
   if (add_grid){
     grid()
   }
@@ -412,6 +413,77 @@ plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep
   }
 }
 
+# Generic timeseries plot
+plot_indiv_timeseries_base <- function(data, stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, yrange, ylab, add_grid=TRUE, xlab="Year", ghost_col="grey", true_col="black", ...){
+  
+  years <- as.numeric(dimnames(stock$biomass)$year)
+  # Plot empty axis
+  plot(x=years, y=years, type="n", ylim=c(yrange[1], yrange[2]), ylab=ylab, xlab=xlab, xaxs="i", yaxs="i",...)
+  if (add_grid){
+    grid()
+  }
+  # Get last iteration 
+  last_iter <- dim(data)[1]
+  # If we have more than X iters, draw envelope of iters
+  if(last_iter > max_spaghetti_iters){
+    # Draw ribbon
+    draw_ribbon(x=years, y=data, quantiles=quantiles)
+    # Add spaghetti
+    for (iter in 1:nspaghetti){
+      lines(x=years, y=data[iter,], lty=spaghetti_lty, lwd=spaghetti_lwd, col=spaghetti_col)
+    }
+  }
+  # Else plot individual iters
+  else{
+    # Plot all iters as ghosts
+    if (last_iter > 1){
+      for (i in 1:last_iter){
+        lines(x=years, y=data[i,], col=ghost_col, lwd=ghost_lwd, lty=ghost_lty)
+      }
+    }
+  }
+  # Current iteration
+  if(show_last){
+    lines(x=years, y=data[last_iter,], col=true_col, lwd=last_lwd, lty=last_lty)
+  }
+  
+}
+
+# Relative CPUE
+plot_relcpue <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ymax=NA, ...){
+  
+  years <- as.numeric(dimnames(stock$biomass)$year)
+  cpue <- stock$catch / stock$effort
+  rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
+  if(is.na(ymax)){
+    ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
+  }
+  yrange <- c(0, ymax)
+  
+  # Plot it
+  plot_indiv_timeseries_base(data=rel_cpue, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="Relative CPUE", add_grid=add_grid, ...)
+  
+  # Add 1 line
+  lines(x=years,y=rep(1,length(years)), lty=2)
+  
+}
+
+
+plot_releffort <- function(stock, stock_params, mp_params, app_params=NULL, show_last=TRUE, max_spaghetti_iters=50, quantiles, nspaghetti=5, add_grid=TRUE, ...){
+  years <- as.numeric(dimnames(stock$biomass)$year)
+  rel_effort <- sweep(stock$effort, 1, stock$effort[,app_params$last_historical_timestep], "/")
+  # Set Ylim - use same as HCR plot
+  ymax <- max(c(rel_effort * 1.1, 1.0), na.rm=TRUE)
+  ymax <- min(10, ymax, na.rm=TRUE)
+  yrange <- c(0, ymax)
+  
+  # Plot it
+  plot_indiv_timeseries_base(data=rel_effort, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, nspaghetti=nspaghetti, yrange=yrange, ylab="Relative effort", add_grid=add_grid, ...)
+  
+  # Add 1 line
+  lines(x=years,y=rep(1,length(years)), lty=2)
+  
+}
 
 
 
@@ -427,7 +499,7 @@ plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep
 #' @rdname front_page_plots
 #' @name Front page plots
 #' @export
-plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_params=NULL, show_last=TRUE, percentile_range = c(20,80)){
+plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_params=NULL, show_last=TRUE, percentile_range = c(20,80), ...){
   def.par <- par(no.readonly = TRUE) # as seen in layout doc
   on.exit(par(def.par))
   # Plot the metric with an extra sideways histogram
@@ -438,7 +510,7 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
   par(mar=c(pext, pext, bspc, bspc), oma=rep(ospc, 4)) # plot parameters
   if (metric == "biomass"){
     # The timeseries of biomass in the big window
-    plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=percentile_range / 100)
+    plot_biomass(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=percentile_range / 100, ...)
     # The histogram should be the true B/K
     final_yr <- dim(stock$biomass)[2]
     dat <- stock$biomass[,final_yr] / stock_params$k
@@ -446,7 +518,7 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
   }
   else if (metric == "catch"){
     # The timeseries of biomass in the big window
-    plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=percentile_range / 100)
+    plot_catch(stock=stock, stock_params=stock_params, mp_params=mp_params, show_last=show_last, quantiles=percentile_range / 100, ...)
     final_yr <- dim(stock$catch)[2]
     dat <- stock$catch[,final_yr]
     range <- c(0, get_catch_ymax(stock$catch, mp_params))
@@ -458,7 +530,7 @@ plot_metric_with_histo <- function(stock, stock_params, mp_params, metric, app_p
     max_rel_cpue <- 2
     rel_cpue[rel_cpue > max_rel_cpue] <- max_rel_cpue
     ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
-    plot_relcpue(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=percentile_range / 100, ymax=ymax)
+    plot_relcpue(stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, show_last=show_last, quantiles=percentile_range / 100, ymax=ymax, ...)
     # data for the histogram
     final_yr <- dim(rel_cpue)[2]
     dat <- rel_cpue[,final_yr]
