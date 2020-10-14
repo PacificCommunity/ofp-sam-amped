@@ -1212,7 +1212,8 @@ output$demoradarplot <- renderPlot({
                              "Threshold (see plot)",
                              "Hillary step (see plot)",
                              "Threshold (see plot)",
-                             "As HCR 8 with an additional constraint that the HCR output cannot change by more than 15% from its previous value."
+                             "As HCR 8 with an additional constraint that the HCR output cannot change by more than 15% from its previous value.",
+                             "Hillary step (see plot)"
                            ))
     return(mp_table)
     
