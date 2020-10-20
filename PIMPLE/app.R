@@ -18,6 +18,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(markdown)
 
+
 # Load the data
 #load("data/SC16_results.Rdata")
 load("data/postSC16_results.Rdata")
@@ -113,6 +114,7 @@ names(piselector) <- pis_text
 worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
 
 
+
 # -------------------------------------------
 # Stuff that could be in server()
 
@@ -136,12 +138,15 @@ lrp <- 0.2
 mean_ref_sbsbf0 <- 0.425
 
 
+# Find common iters between HCRs
+common_iters <- Reduce(intersect, split(hcr_points$iter, hcr_points$hcrname))
 # For the worms - same worms for all plots
 # This can be increased to 20 - maybe make as option?
 nworms <- 5
 # worms are a unique combination of OM and iter
 # (same om / iter should be in all hcrs)
-wormiters <- sample(unique(worms$iter), nworms)
+wormiters <- sample(common_iters, nworms)
+
 
 # -------------------------------------------
 # General settings for app
@@ -231,8 +236,21 @@ ui <- fluidPage(id="top",
       # Stability or variability
       conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi62'))",
         radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
-      )
+      ),
 
+      # In Management Procedures tab, show the points and trajectories
+      # Change false to true to show performance options
+      conditionalPanel(condition="((input.nvp == 'mps') && true)",
+        p("Secret HCR performance options"),
+        # If this is checked the other ones should show
+        checkboxInput("showpoints", "Show points", value=FALSE),
+        conditionalPanel(condition="input.showpoints==true",
+          checkboxInput("showpath", "Show paths", value=FALSE) 
+        ),
+        conditionalPanel(condition="input.showpoints==true",
+          numericInput("mppointiters", label = "No. of replicates (randomly picked)", value = 5, min=1, max=length(common_iters), step=1)
+        )
+      )
     ),
     mainPanel(width=main_panel_width,
       tags$style(type="text/css", "body {padding-top: 70px;}"), # padding - as we use fixed-top for position, applies to all tabs
@@ -509,9 +527,14 @@ ui <- fluidPage(id="top",
               p("The current HCRs use a value of estimated depletion (SB/SBF=0) to set a multiplier. This multipler is applied to the catch or effort in 2012 for each fishery to set a new catch or effort limit for the next time period."),
             #tags$span(title="Shape of the  HCRs under consideration",
               plotOutput("plot_hcrshape",  height="600px")),
-        #    tags$span(title="Histograms o f which parts of the HCRs were active during the evaluations",
-              tableOutput("table_hcrshape")
-        #      plotOutput("plot_hcrhistogr ams")))
+        #    tags$span(title="Histograms of which parts of the HCRs were active during the evaluations",
+              fluidRow(
+              # Uncomment the following line to show the histograms
+                plotOutput("plot_hcrhistograms")
+              ),
+              fluidRow(
+                tableOutput("table_hcrshape")
+              )
           )
         ),
         tabPanel("About", value="about",
@@ -1193,8 +1216,25 @@ output$demoradarplot <- renderPlot({
     if(length(hcr_choices) < 1){
       return()
     }
+
+
+    # Point and path options
+    # Subset out only a limited number of iters to plot on hcr_points
+    # Which iters are common
+    hcr_points_sub <- hcr_points
+    if(input$showpoints==TRUE){
+      niters <- input$mppointiters
+      if(is.na(niters)){
+        niters <- 1
+      }
+      nhcriters <- min(niters, length(common_iters))
+      hcriters <- sample(common_iters, nhcriters)
+      hcr_points_sub <- subset(hcr_points, iter %in% hcriters)
+    }
+
     #p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
-    p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=mean_ref_sbsbf0)
+    #p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points_sub, lrp=lrp, trp=mean_ref_sbsbf0, add_points=TRUE)
+    p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points_sub, lrp=lrp, trp=mean_ref_sbsbf0, add_points=input$showpoints, add_path=input$showpath)
     p <- p + ylab("Catch or effort multiplier")
     return(p)
   })
@@ -1221,14 +1261,14 @@ output$demoradarplot <- renderPlot({
   })
 
 #  # Plot histogram of effort multipliers
-#  output$plot_hcrhistograms <- renderPlot({
-#    hcr_choices <- input$hcrchoice
-#    if(length(hcr_choices) < 1){
-#      return()
-#    }
-#    p <- hcr_histo_plot(hcr_choices, histodat)
-#    return(p)
-#  })
+  output$plot_hcrhistograms <- renderPlot({
+    hcr_choices <- input$hcrchoice
+    if(length(hcr_choices) < 1){
+      return()
+    }
+    p <- hcr_histo_plot(hcr_choices, histodat)
+    return(p)
+  })
 
 
 
