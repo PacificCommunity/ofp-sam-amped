@@ -11,25 +11,23 @@
 # Load packages
 
 # Note: get AMPLE this from github - then comment out before uploading to server
-#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="SC16")
+# Make sure that the branch is correct
+#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="devbranch")
 
 library(AMPLE)
 library(ggplot2)
 library(RColorBrewer)
 library(markdown)
 
-
 # Load the data
 #load("data/SC16_results.Rdata")
 load("data/postSC16_results.Rdata")
 #load("data/preWCPFC2019_results.Rdata")
 
-# Drop PI 8 - can reinstate later if needed
+# Drop PI 8 as no TRP for now - can reinstate later if needed
 periodqs <- subset(periodqs, pi != "pi8")
 yearqs <- subset(yearqs, pi != "pi8")
 worms <- subset(worms, pi != "pi8")
-
-
 
 #----------------------------------------------------------------------------------------------------
 
@@ -110,10 +108,7 @@ piselector <- as.list(pis_list)
 pis_text <- unlist(lapply(strsplit(pis_list,"\n"),'[',1))
 names(piselector) <- pis_text
 
-
 worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
-
-
 
 # -------------------------------------------
 # Stuff that could be in server()
@@ -137,7 +132,6 @@ lrp <- 0.2
 #trp <- 0.5 # Should avoid using this
 mean_ref_sbsbf0 <- 0.425
 
-
 # Find common iters between HCRs
 common_iters <- Reduce(intersect, split(hcr_points$iter, hcr_points$hcrname))
 # For the worms - same worms for all plots
@@ -146,7 +140,6 @@ nworms <- 5
 # worms are a unique combination of OM and iter
 # (same om / iter should be in all hcrs)
 wormiters <- sample(common_iters, nworms)
-
 
 # -------------------------------------------
 # General settings for app
@@ -369,35 +362,7 @@ ui <- fluidPage(id="top",
         ),
         tabPanel("Explore indicators", value="explorePIs",
           tabsetPanel(id="pitab",
-          # --- SBSBF0 and PI 1 & 8 ---
-            #tabPanel("PI 1 & 8: Biomass",value="pi1",
-            #  column(12, fluidRow(
-            #    # TS of SBSBF0
-            #    plotOutput("plot_ts_sbsbf0")
-            #  )),
-            #  column(4, fluidRow(
-            #    # Bar plot of median SBSBF0
-            #    plotOutput("plot_bar_sbsbf0"),
-            #    # Bar of PI 8
-            #    plotOutput("plot_bar_pi8")
-            #  )),
-            #  column(4, fluidRow(
-            #    # Box of SBSBF0
-            #    plotOutput("plot_box_sbsbf0"),
-            #    # Box of PI 8
-            #    plotOutput("plot_box_pi8")
-            #  )),
-            #  column(4, fluidRow(
-            #    # Bar plot of prob
-            #    plotOutput("plot_bar_problrp")
-            #  )),
-            #  column(12, fluidRow(
-            #    p(yearrangetext),
-            #    p(biotext)
-            #  ))
-            #),
-
-            # *** PI 3: Catch based ones ***
+            # --- SBSBF0 and PI 1 & 8 ---
             tabPanel("PI 1 & 8: Biomass",value="pibiomass",
               fluidRow(
                 column(12,
@@ -429,27 +394,9 @@ ui <- fluidPage(id="top",
               )
             ),
 
-
-
             # *** PI 3: Catch based ones ***
-            #tabPanel("PI 3: Catches",value="pi3",
-            #  column(12, fluidRow(
-            #    plotOutput("plot_ts_catch")
-            #  )),
-            #  column(6, fluidRow(
-            #    plotOutput("plot_bar_catch")
-            #  )),
-            #  column(6, fluidRow(
-            #    plotOutput("plot_box_catch")
-            #  )),
-            #  p("Note that the catches are relative to the average catch in the years 2013-2015."),
-            #  p(yearrangetext)
-            #),
             tabPanel("PI 3: Relative catches by area",value="pi32",
               column(12, fluidRow(
-                # Can't put text at end as not very fluid
-                #p("Note that the catches are relative to the average catch in the years 2013-2015."),
-                #p(yearrangetext),
                 plotOutput("plot_pi3", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
                 p(relcatchtext),
                 p(yearrangetext)
@@ -471,17 +418,6 @@ ui <- fluidPage(id="top",
               p(pi47text)
             ),
             # *** PI 6: Catch stability ***
-            #tabPanel("PI 6: Catch stability",value="pi6",
-            #  column(6, fluidRow(
-            #    plotOutput("plot_bar_catchstab"),
-            #    plotOutput("plot_bar_catchvar")
-            #  )),
-            #  column(6, fluidRow(
-            #    plotOutput("plot_box_catchstab"),
-            #    plotOutput("plot_box_catchvar")
-            #  )),
-            #  p(yearrangetext)
-            #),
             tabPanel("PI 6: Catch stability by area",value="pi62",
               column(12, fluidRow(
                 plotOutput("plot_pi6", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
@@ -505,18 +441,6 @@ ui <- fluidPage(id="top",
               p(yearrangetext),
               p(pi47text)
             )
-            # *** Mean weight individual ***
-            #tabPanel("Mean weight of individual",value="mw",
-            #  column(12, fluidRow(
-            #    plotOutput("plot_ts_mw")
-            #  )),
-            #  column(6, fluidRow(
-            #    plotOutput("plot_bar_mw") 
-            #  )),                         
-            #  column(6, fluidRow(         
-            #    plotOutput("plot_box_mw") 
-            #  ))                         
-            #)                             
           )                                
         ),                                 
         # The HCRs                        
@@ -539,8 +463,6 @@ ui <- fluidPage(id="top",
         ),
         tabPanel("About", value="about",
           fluidRow(column(8, 
-                          
-            #includeMarkdown("introtext/introduction.md")
             spc_about()
           ))
         )
@@ -635,7 +557,6 @@ output$demoradarplot <- renderPlot({
   return(p)
 })
 
-
   #-------------------------------------------------------------------
   # Comparison plots
   no_facets_row <- 2#2
@@ -671,12 +592,6 @@ output$demoradarplot <- renderPlot({
       # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
       dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
 
-      # This subset has stopped working
-#temp <- subset(periodqs,((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)))
-
-
-
-      #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
       # Need to hack pi1 so that all quantiles = X50., else NA
       # Careful! If pi1 not in dat, error
       # Probably better to do this at the top
@@ -713,9 +628,6 @@ output$demoradarplot <- renderPlot({
     # Subsetting out as above
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
-    #set_choices <- c(input$catchsetchoice, as.character(NA))
-    #metric_choices <- c(input$catchrelchoice,"mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #area_choices <- c("all", as.character(NA))
     catch_area_choice <- input$catchareachoice
     other_area_choice <- c(as.character(NA), "all")
     catch_rel_choice <- "relative catch"
@@ -727,19 +639,16 @@ output$demoradarplot <- renderPlot({
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
     }
-    #dat <- subset(periodqs, period != "Rest" & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
 
     # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
     dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
 
-    #scaling_choice <- input$radarscaling
     scaling_choice <- "scale"
     p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
     return(p)
   })
 
   # Time series comparisons
-  #pinames_ts <- c("SB/SBF=0", newpi3name, newpi4name, "PI 8: Proximity to TRP")
   pinames_ts <- c("SB/SBF=0", newpi3name, newpi4name, newpi82name)
   output$plot_timeseries_comparehcr <- renderPlot({
     show_spaghetti <- input$showspag
@@ -749,10 +658,6 @@ output$demoradarplot <- renderPlot({
     pi_choices <- input$pichoice
     pi_choices <- pi_choices[pi_choices %in% pinames_ts]
 
-    #set_choices <- c(input$catchsetchoice, as.character(NA))
-    #metric_choices <- c(input$catchrelchoice,"mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #metric_choices <- c("relative catch","mean_weight",  "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #area_choices <- c("all", as.character(NA))
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
     }
@@ -764,9 +669,6 @@ output$demoradarplot <- renderPlot({
     # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
     dat <- subset(yearqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & piname %in% pi_choices & metric %in% metric_choices)
     wormdat <- subset(worms, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & piname %in% pi_choices & metric %in% metric_choices & iter %in% wormiters)
-
-    #dat <- subset(yearqs, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
-    #wormdat <- subset(worms, piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices & iter %in% wormiters)
 
     p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
     #p <- p + ylab("Catch")
@@ -786,10 +688,6 @@ output$demoradarplot <- renderPlot({
   get_pi_table <- function(period_choice="Short"){
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
-    #set_choices <- c(input$catchsetchoice, as.character(NA))
-    #metric_choices <- c(input$catchrelchoice, "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #metric_choices <- c("relative catch", "mean_weight", "catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    #area_choices <- c("all", as.character(NA))
     catch_area_choice <- input$catchareachoice
     other_area_choice <- c(as.character(NA), "all")
     catch_rel_choice <- "relative catch"
@@ -798,7 +696,6 @@ output$demoradarplot <- renderPlot({
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
     }
-    #dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & piname %in% pi_choices & set %in% set_choices & metric %in% metric_choices & area %in% area_choices)
     # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
     dat <- subset(periodqs, hcrref %in% hcr_choices & ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == period_choice & piname %in% pi_choices & metric %in% metric_choices)
     tabdat <- pitable(dat, percentile_range = pi_percentiles)
@@ -858,24 +755,6 @@ output$demoradarplot <- renderPlot({
 
   # Bar and box plot 
   # SBSBF0
-  #plot_barbox_sbsbf0 <- function(plot_type="median_bar"){
-  #  rPlot <- renderPlot({
-  #    hcr_choices <- input$hcrchoice
-  #    if(length(hcr_choices) < 1){
-  #      return()
-  #    }
-  #    dat <- subset(periodqs, period != "Rest" & pi=="biomass" & metric=="SBSBF0" & area=="all") 
-  #    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-  #    p <- p + ggplot2::ylab("SB/SBF=0") + ggplot2::ylim(c(0,1))
-  #    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2) + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
-  #    return(p)
-  #  })
-  #  return(rPlot)
-  #}
-
-  #output$plot_bar_sbsbf0 <- plot_barbox_sbsbf0(plot_type="median_bar")
-  #output$plot_box_sbsbf0 <- plot_barbox_sbsbf0(plot_type="box")
-
   output$plot_barbox_sbsbf0 <- renderPlot({
     plot_type <- input$plotchoicebarbox
     hcr_choices <- input$hcrchoice
@@ -931,26 +810,6 @@ output$demoradarplot <- renderPlot({
     return(p)
   })
 
-  ## Bar and box plot 
-  ## PI 8: SB/SBF=0 proximity to TRP
-  #plot_barbox_pi8 <- function(plot_type="median_bar"){
-  #  rPlot <- renderPlot({
-  #    hcr_choices <- input$hcrchoice
-  #    if(length(hcr_choices) < 1){
-  #      return()
-  #    }
-  #    dat <- subset(periodqs, period != "Rest" & pi=="pi8" & area=="all") 
-  #    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-  #    p <- p + ggplot2::ylab("PI 8: Average proximity to TRP") + ggplot2::ylim(c(0,1))
-  #    return(p)
-  #  })
-  #  return(rPlot)
-  #}
-
-  #output$plot_bar_pi8 <- plot_barbox_pi8(plot_type="median_bar")
-  #output$plot_box_pi8 <- plot_barbox_pi8(plot_type="box")
-
-
   # For exploring the catches in different regions
   output$plot_pi3 <- renderPlot({
     # If no HCRs chosen just leave
@@ -966,9 +825,7 @@ output$demoradarplot <- renderPlot({
       return()
     }
     # Choose if relative to year X
-    #catch_rel_choice <- input$catchrelchoice # or relative catch
     catch_rel_choice <- "relative catch"
-    #catch_rel_choice <- "catch"
 
     if (plot_choice %in% c("median_bar","box")){
       dat <- subset(periodqs, period != "Rest" & pi=="pi3" & area %in% area_choice & metric == catch_rel_choice) 
@@ -1024,60 +881,9 @@ output$demoradarplot <- renderPlot({
     p <- p + ggplot2::facet_wrap(~area_name, ncol=no_facets_row)
     return(p)
 
-
-
   }, height=function(){
     return(max(height_per_area*1.5, (height_per_area * ceiling(length(input$areachoice) / no_facets_row))))
   })
-
-
-
-  # Timeseries
-  # PI 3: Catch
-#  output$plot_ts_catch <- renderPlot({
-#    show_spaghetti <- input$showspag
-#    hcr_choices <- input$hcrchoice
-#    if(length(hcr_choices) < 1){
-#      return()
-#    }
-#    catch_area_choice <- input$catchareachoice
-#    # Choose if relative to year X
-#    #catch_rel_choice <- input$catchrelchoice # or relative catch
-#    catch_rel_choice <- "relative catch"
-#    dat <- subset(yearqs, pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice) 
-#    wormdat <- subset(worms, pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice & iter %in% wormiters) 
-#    # Else wormdat <- NULL
-#    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
-#    p <- p + ggplot2::ylab("Catch")
-#    p <- p +ggplot2:: ylim(c(0,NA))
-#    # Axes limits set here or have tight?
-#    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-#    return(p)
-#  })
-
-  # Bar and box plot 
-  # PI 3: Catch
-  #plot_barbox_catch <- function(plot_type="median_bar"){
-  #  rPlot <- renderPlot({
-  #    hcr_choices <- input$hcrchoice
-  #    if(length(hcr_choices) < 1){
-  #      return()
-  #    }
-  #    # Choose the aggregation (set: total area or PS235 - maybe by area too?)
-  #    catch_area_choice <- input$catchareachoice
-  #    # Choose if relative to year X
-  #    #catch_rel_choice <- input$catchrelchoice # or relative catch
-  #    catch_rel_choice <- "relative catch"
-  #    dat <- subset(periodqs, period != "Rest" & pi=="pi3" & area==catch_area_choice & metric == catch_rel_choice) 
-  #    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-  #    p <- p + ggplot2::ylab("PI 3: Catch") + ggplot2::ylim(c(0,NA))
-  #    return(p)
-  #  })
-  #  return(rPlot)
-  #}
-
-#  output$plot_bar_catch <- plot_barbox_catch(plot_type="median_bar")
-#  output$plot_box_catch <- plot_barbox_catch(plot_type="box")
 
   # Timeseries
   # PI: 4
@@ -1119,31 +925,6 @@ output$demoradarplot <- renderPlot({
   output$plot_box_relcpue <- plot_barbox_relcpue(plot_type="box")
 
   # Bar and box plot 
-  # PI 6: Catch variability and stability
-  #plot_barbox_catchvarstab <- function(plot_type="median_bar", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA)){
-  #  rPlot <- renderPlot({
-  #    hcr_choices <- input$hcrchoice
-  #    if(length(hcr_choices) < 1){
-  #      return()
-  #    }
-  #    # Choose the aggregation (set: total area or PS235 - maybe by area too?)
-  #    catch_area_choice <- input$catchareachoice
-  #    # Choose if relative to year X
-  #    dat <- subset(periodqs, period != "Rest" & pi=="pi6" & area==catch_area_choice & metric==metric_choice) 
-  #    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-  #    p <- p + ggplot2::ylab(ylab) + ggplot2::ylim(ylim)
-  #    return(p)
-  #  })
-  #  return(rPlot)
-  #}
-
-  #output$plot_bar_catchvar <- plot_barbox_catchvarstab(plot_type="median_bar", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA))
-  #output$plot_box_catchvar <- plot_barbox_catchvarstab(plot_type="box", metric_choice="catch variability", ylab="PI 6: Catch variability", ylim=c(0,NA))
-  #output$plot_bar_catchstab <- plot_barbox_catchvarstab(plot_type="median_bar", metric_choice="relative catch stability", ylab="PI 6: Catch stability", ylim=c(0,1))
-  #output$plot_box_catchstab <- plot_barbox_catchvarstab(plot_type="box", metric_choice="relative catch stability", ylab="PI 6: Catch stability", ylim=c(0,1))
-
-
-  # Bar and box plot 
   # PI 7: Effort variability and stability
   plot_barbox_pi7varstab <- function(plot_type="median_bar", metric_choice="relative effort variability", ylab="PI 7: Relative effort variability", ylim=c(0,NA)){
     rPlot <- renderPlot({
@@ -1165,50 +946,6 @@ output$demoradarplot <- renderPlot({
   output$plot_bar_pi7stab <- plot_barbox_pi7varstab(plot_type="median_bar", metric_choice="relative effort stability", ylab="PI 7: Stability", ylim=c(0,1))
   output$plot_box_pi7stab <- plot_barbox_pi7varstab(plot_type="box", metric_choice="relative effort stability", ylab="PI 7: Stability", ylim=c(0,1))
 
-
-
-
-
-#  # Mean weight of individual
-#  # PI: 4
-#  output$plot_ts_mw<- renderPlot({
-#    show_spaghetti <- input$showspag
-#    hcr_choices <- input$hcrchoice
-#    if(length(hcr_choices) < 1){
-#      return()
-#    }
-#    dat <- subset(yearqs, pi=="mw") 
-#    # Add Option for worms
-#    wormdat <- subset(worms, pi=="mw" & iter %in% wormiters) 
-#    # Else wormdat <- NULL
-#    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
-#    p <- p + ggplot2::ylab("Mean weight of an individual")
-#    p <- p + ggplot2::ylim(c(0,NA))
-#    # Axes limits set here or have tight?
-#    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-#    return(p)
-#  })
-#
-#  # Bar and box plot 
-#  # Mean weight of individual
-#  plot_barbox_mw <- function(plot_type="median_bar"){
-#    rPlot <- renderPlot({
-#      hcr_choices <- input$hcrchoice
-#      if(length(hcr_choices) < 1){
-#        return()
-#      }
-#      dat <- subset(periodqs, period != "Rest" & pi=="mw") 
-#      p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-#      p <- p + ggplot2::ylab("Mean weight of an individual") + ggplot2::ylim(c(0,NA))
-#      return(p)
-#    })
-#    return(rPlot)
-#  }
-#
-#  output$plot_bar_mw <- plot_barbox_mw(plot_type="median_bar")
-#  output$plot_box_mw <- plot_barbox_mw(plot_type="box")
-  
-
   # Plot the HCR shapes and the bits that were active
   output$plot_hcrshape <- renderPlot({
     # Able to choose which HCRs
@@ -1216,7 +953,6 @@ output$demoradarplot <- renderPlot({
     if(length(hcr_choices) < 1){
       return()
     }
-
 
     # Point and path options
     # Subset out only a limited number of iters to plot on hcr_points
@@ -1232,8 +968,6 @@ output$demoradarplot <- renderPlot({
       hcr_points_sub <- subset(hcr_points, iter %in% hcriters)
     }
 
-    #p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points, lrp=lrp, trp=trp)
-    #p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points_sub, lrp=lrp, trp=mean_ref_sbsbf0, add_points=TRUE)
     p <- hcr_plot(hcr_choices=hcr_choices, hcr_shape=hcr_shape, hcr_points=hcr_points_sub, lrp=lrp, trp=mean_ref_sbsbf0, add_points=input$showpoints, add_path=input$showpath)
     p <- p + ylab("Catch or effort multiplier")
     return(p)
@@ -1269,12 +1003,6 @@ output$demoradarplot <- renderPlot({
     p <- hcr_histo_plot(hcr_choices, histodat)
     return(p)
   })
-
-
-
-
-
-
 }
 
 # Run the app
