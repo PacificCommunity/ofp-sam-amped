@@ -22,12 +22,16 @@ library(markdown)
 # Load the data
 #load("data/SC16_results.Rdata")
 load("data/postSC16_results.Rdata")
+#load("data/Z15_results.Rdata")
 #load("data/preWCPFC2019_results.Rdata")
 
 # Drop PI 8 as no TRP for now - can reinstate later if needed
 periodqs <- subset(periodqs, pi != "pi8")
 yearqs <- subset(yearqs, pi != "pi8")
 worms <- subset(worms, pi != "pi8")
+
+
+
 
 #----------------------------------------------------------------------------------------------------
 
@@ -132,14 +136,18 @@ lrp <- 0.2
 #trp <- 0.5 # Should avoid using this
 mean_ref_sbsbf0 <- 0.425
 
+
 # Find common iters between HCRs
-common_iters <- Reduce(intersect, split(hcr_points$iter, hcr_points$hcrname))
+common_iters <- Reduce(intersect, split(hcr_points$iter, hcr_points$hcrname, drop=TRUE))
+
 # For the worms - same worms for all plots
 # This can be increased to 20 - maybe make as option?
 nworms <- 5
 # worms are a unique combination of OM and iter
 # (same om / iter should be in all hcrs)
-wormiters <- sample(common_iters, nworms)
+#wormiters <- sample(common_iters, nworms)
+# worms should already have the common iters
+wormiters <- sample(unique(worms$iter), nworms)
 
 # -------------------------------------------
 # General settings for app
@@ -987,7 +995,8 @@ output$demoradarplot <- renderPlot({
                              "Hillary step (see plot)",
                              "Threshold (see plot)",
                              "As HCR 8 with an additional constraint that the HCR output cannot change by more than 15% from its previous value.",
-                             "Hillary step (see plot)"
+                             "Hillary step (see plot)",
+                             "Asymptotic curve (see plot)"
                            ))
     return(mp_table)
     
