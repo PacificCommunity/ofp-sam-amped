@@ -996,7 +996,8 @@ output$demoradarplot <- renderPlot({
                              "Threshold (see plot)",
                              "As HCR 8 with an additional constraint that the HCR output cannot change by more than 15% from its previous value.",
                              "Hillary step (see plot)",
-                             "Asymptotic curve (see plot)"
+                             "Asymptotic curve (see plot)",
+                             "As HCR 10 with an additional constraint that the HCR output cannot change by more than 10% from its previous value."
                            ))
     return(mp_table)
     
