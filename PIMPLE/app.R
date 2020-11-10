@@ -19,74 +19,21 @@ library(ggplot2)
 library(RColorBrewer)
 library(markdown)
 
-# Load the data
-#load("data/SC16_results.Rdata")
+# Load the indicator data - including Kobe and Majuro data
 load("data/postSC16_results.Rdata")
-#load("data/Z15_results.Rdata")
-#load("data/preWCPFC2019_results.Rdata")
+
+#----------------------------------------------------------------------------------------------------
+# Edit the data set
 
 # Drop PI 8 as no TRP for now - can reinstate later if needed
 periodqs <- subset(periodqs, pi != "pi8")
 yearqs <- subset(yearqs, pi != "pi8")
 worms <- subset(worms, pi != "pi8")
 
-
-
-
-#----------------------------------------------------------------------------------------------------
-
-# HACK drop SQ HCRs
-hcr_points <- subset(hcr_points, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%")))
-hcr_shape <- subset(hcr_shape, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%")))
-periodqs <- subset(periodqs, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%")))
-worms <- subset(worms, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%")))
-yearqs <- subset(yearqs, !(hcrref %in% c("SQ", "SQ +10%", "SQ +20%", "SQ +30%")))
-
-# Drop MWI indicator
-# Add back in if we get mean weight in the catch
-periodqs <- subset(periodqs, pi != "mw")
-yearqs <- subset(yearqs, pi != "mw")
-worms <- subset(worms, pi != "mw")
-
-# Rename some indicators
-# Catch to Relative catch
-oldpi3name <- "PI 3: Catch"
-newpi3name <- "PI 3: Catch (rel. to 2013-2015)"
-periodqs[periodqs$piname == oldpi3name, "piname"] <- newpi3name
-yearqs[yearqs$piname == oldpi3name, "piname"] <- newpi3name
-worms[worms$piname == oldpi3name, "piname"] <- newpi3name
-# Relative CPUE
-oldpi4name <- "PI 4: Relative CPUE"
-newpi4name <- "PI 4: CPUE (rel. to 2012)\n(PS in areas 6,7,8 only)"
-periodqs[periodqs$piname == oldpi4name, "piname"] <- newpi4name
-yearqs[yearqs$piname == oldpi4name, "piname"] <- newpi4name
-worms[worms$piname == oldpi4name, "piname"] <- newpi4name
-# Relative effort to effort
-oldpi7name <- "PI 7: Relative effort stability"
-newpi7name <- "PI 7: Effort stability\n(PS in areas 6,7,8 only)"
-periodqs[periodqs$piname == oldpi7name, "piname"] <- newpi7name
-yearqs[yearqs$piname == oldpi7name, "piname"] <- newpi7name
-worms[worms$piname == oldpi7name, "piname"] <- newpi7name
-# Relative effort to effort
-oldpi72name <- "PI 7: Relative effort variability"
-newpi72name <- "PI 7: Relative effort variability\n(PS in areas 6,7,8 only)"
-periodqs[periodqs$piname == oldpi72name, "piname"] <- newpi72name
-yearqs[yearqs$piname == oldpi72name, "piname"] <- newpi72name
-worms[worms$piname == oldpi72name, "piname"] <- newpi72name
-# PI 82 closeness to SBSBF0 in 2012
-oldpi82name <- "PI 82: Proximity to SB/SBF=0 (2012)"
-newpi82name <- "PI 82: Proximity to SB/SBF=0 in 2012"
-periodqs[periodqs$piname == oldpi82name, "piname"] <- newpi82name
-yearqs[yearqs$piname == oldpi82name, "piname"] <- newpi82name
-worms[worms$piname == oldpi82name, "piname"] <- newpi82name
-
-
 #------------------------------------------------------------------------------------------------------
-# Can we move all this down to the server side?
-# Data processing
+# Additional data processing
 
-# Data for the histogram plots
-# Move all this to the data preparation stage
+# Data for the HCR histogram plots
 breaks <- seq(from=0,to=2,by=0.05)
 freqs <- cut(hcr_points$scaler, breaks, labels=FALSE)
 hcr_points$bin <- breaks[freqs]
@@ -94,37 +41,15 @@ histodat <- dplyr::group_by(hcr_points, hcrref, hcrname, period, bin)
 histodat <- dplyr::summarise(histodat, sum=dplyr::n())
 nobs <- dplyr::group_by(hcr_points,hcrref, hcrname, period)
 nobs <- dplyr::summarise(nobs, tnobs=dplyr::n())
-
 histodat <- dplyr::left_join(histodat, nobs)
 histodat$prop <- histodat$sum / histodat$tnobs
 
-# Sort everything by HCR - probably should already be OK
-histodat <- histodat[order(histodat$hcrref),]
-periodqs <- periodqs[order(periodqs$hcrref),]
-yearqs <- yearqs[order(yearqs$hcrref),]
-worms <- worms[order(worms$hcrref),]
-hcr_points <- hcr_points[order(hcr_points$hcrref),]
-hcr_shape <- hcr_shape[order(hcr_shape$hcrref),]
-
-# Fix names of PI selector - remove PS note
-pis_list <- unique(periodqs[!periodqs$upsidedown,"piname"])
-piselector <- as.list(pis_list)
-pis_text <- unlist(lapply(strsplit(pis_list,"\n"),'[',1))
-names(piselector) <- pis_text
-
-worms$wormid <- paste(worms$msectrl, worms$iter, sep="_")
-
-# -------------------------------------------
-# Stuff that could be in server()
-
 # General plotting parameters
-# Get these from the data rather than fixing them here
 short_term <- sort(unique(subset(worms, period=="Short")$year))
 medium_term <- sort(unique(subset(worms, period=="Medium")$year))
 long_term <- sort(unique(subset(worms, period=="Long")$year))
 last_plot_year <- max(long_term)
 first_plot_year <- 1985
-# Maybe make this an option in the future?
 pi_percentiles <- c(10,90)
 
 # Trim out years for tight time series plots
@@ -136,27 +61,42 @@ lrp <- 0.2
 #trp <- 0.5 # Should avoid using this
 mean_ref_sbsbf0 <- 0.425
 
-
 # Find common iters between HCRs
 common_iters <- Reduce(intersect, split(hcr_points$iter, hcr_points$hcrname, drop=TRUE))
 
 # For the worms - same worms for all plots
-# This can be increased to 20 - maybe make as option?
 nworms <- 5
-# worms are a unique combination of OM and iter
-# (same om / iter should be in all hcrs)
-#wormiters <- sample(common_iters, nworms)
-# worms should already have the common iters
 wormiters <- sample(unique(worms$iter), nworms)
+
+#------------------------------------------------------------------------------------------------------
+
+# Sort everything by HCR - probably should already be OK
+histodat <- histodat[order(histodat$hcrref),]
+periodqs <- periodqs[order(periodqs$hcrref),]
+yearqs <- yearqs[order(yearqs$hcrref),]
+worms <- worms[order(worms$hcrref),]
+hcr_points <- hcr_points[order(hcr_points$hcrref),]
+hcr_shape <- hcr_shape[order(hcr_shape$hcrref),]
+majuro_summary_tabs <- lapply(majuro_summary_tabs, function(x) x[order(x$HCR),])
+kobe_summary_tabs <- lapply(kobe_summary_tabs, function(x) x[order(x$HCR),])
+
+# Fix names of PI selector - remove PS note
+#pis_list <- unique(periodqs[!periodqs$upsidedown,"piname"])
+pis_list <- unique(periodqs[,"piname"])
+# Drop the variability ones (they point the wrong way and are alternatives to the stability indicators)
+pis_list <- pis_list[!grepl("variability", pis_list)]
+piselector <- as.list(pis_list)
+pis_text <- unlist(lapply(strsplit(pis_list,"\n"),'[',1))
+names(piselector) <- pis_text
 
 # -------------------------------------------
 # General settings for app
 
+# Whole thing is 12 units wide
 main_panel_width <- 10
 side_panel_width <- 12 - main_panel_width 
 
-# When is short, medium and long-term?
-
+# Get ranges of short, medium and long to make labels with
 short <- range(subset(yearqs, period=="Short")$year)
 medium <- range(subset(yearqs, period=="Medium")$year)
 long <- range(subset(yearqs, period=="Long")$year)
@@ -190,13 +130,15 @@ ui <- fluidPage(id="top",
       conditionalPanel(condition="input.nvp == 'about'",
         tags$html(
           tags$h1("PIMPLE"),
-          tags$p("Performance Indicators and Management Procedures Explorer"),
+          tags$p("Performance Indicators and Management Procedures expLorEr"),
           tags$footer(
             tags$p("version 0.4.0 Stick In A Five And Go"),
             tags$p("Copyright 2020 OFP SPC MSE Team."),
             tags$p("Distributed under the GPL 3")
           )
       )),
+      # Side panel inputs - a bunch of them conditional on what tab you are on
+      # HCR selection
       conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs' || input.nvp == 'mps'",
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
       ),
@@ -204,43 +146,32 @@ ui <- fluidPage(id="top",
       conditionalPanel(condition="input.nvp == 'compareMPs'",
         checkboxGroupInput(inputId = "pichoice", label="PI selection",choices = piselector, selected=sort(unique(periodqs$piname)))
       ),
-
       # Show spaghetti on the time series plots - do not show on the HCR tab
-      # Currently shown on all explorePIs tabs - even if no timeseries plot - is this OK?
       conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab=='pibiomass' || input.pitab=='pi32' || input.pitab=='pi4')) || input.comptab == 'timeseries'",
         checkboxInput("showspag", "Show trajectories", value=FALSE) 
       ),
-      # Catch choice - only in the catch and catch stability PI tabs
-      # Careful with conditional
+      # Catch grouping choice (all or PS in 678)
       conditionalPanel(condition="(input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')))",
-        #selectInput(inputId = "catchareachoice", label="Catch grouping", choices = list("Total"="total", "Purse seine in regions 2,3 & 5"="ps235", "Area 1"="1", "Area 2"="2", "Area 3"="3", "Area 4"="4", "Area 5"="5"), selected="total")
         selectInput(inputId = "catchareachoice", label="Catch grouping (PIs 3 & 6 only)", choices = list("All areas"="total", "Purse seines in areas 6,7 & 8"="ps678"), selected="total")
-        #selectInput(inputId = "catchrelchoice", label="Catch type", choices = list("Absolute catch"="catch", "Relative to average catch in 2013-15"="relative catch"), selected="catch")
       ),
-
       # For selecting catch plots by area 
       conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi32' || input.pitab== 'pi62'))",
         checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list("All areas" = "total", "Purse seines in areas 6,7 & 8" = "ps678", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5","Area 6"="6","Area 7"="7","Area 8"="8" ), selected="total")
       ),
-
-      # Select plot type by bar, box, time
+      # Select plot type by bar, box or  time
       conditionalPanel(condition="(input.nvp == 'explorePIs' && input.pitab== 'pi32')",
         radioButtons(inputId = "plotchoicebarboxtime", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar")
       ),
-
-      # Select plot type by bar, box
-      # Need to include the NVP input too, because the the pitab input still has a value even if not seen
+      # Select plot type by bar, box (Note - need to include the NVP input as the the pitab input still has value even if not seen)
       conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pibiomass' || input.pitab== 'pi62'))",
         radioButtons(inputId = "plotchoicebarbox", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box"), selected="median_bar")
       ),
-
       # Stability or variability
       conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi62'))",
         radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
       ),
-
       # In Management Procedures tab, show the points and trajectories
-      # Change false to true to show performance options
+      # Change false to true to show performance options (can hide from users)
       conditionalPanel(condition="((input.nvp == 'mps') && true)",
         p("Secret HCR performance options"),
         # If this is checked the other ones should show
@@ -251,20 +182,26 @@ ui <- fluidPage(id="top",
         conditionalPanel(condition="input.showpoints==true",
           numericInput("mppointiters", label = "No. of replicates (randomly picked)", value = 5, min=1, max=length(common_iters), step=1)
         )
+      ),
+      # Kobe plot HCR selection - one at a time only
+      conditionalPanel(condition="input.nvp == 'majurokobeplot'",
+        radioButtons(inputId = "hcrchoicekobe", label="HCR selection", selected = unique(periodqs$hcrref)[1], choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref)),
+        radioButtons(inputId = "majurokobe", label="Kobe or Majuro plot", selected = "Kobe", choiceNames = c("Kobe", "Majuro"), choiceValues = c("Kobe", "Majuro"))
       )
     ),
+    #---------------------------------------------
+    # Main panel
+    #---------------------------------------------
     mainPanel(width=main_panel_width,
       tags$style(type="text/css", "body {padding-top: 70px;}"), # padding - as we use fixed-top for position, applies to all tabs
       navbarPage(id="nvp",
         collapsible=TRUE,  # Should help if using small screens like tablets
         windowTitle="PIMPLE",
         position="fixed-top",
-        #title="PIMPLE", # Needed or "" else first tab vanishes
-        #title="", # Needed or "" else first tab vanishes
         title="Performance Indicators and Management Procedures Explorer",
         #----------- Introduction page ----------------------------------
         tabPanel("Introduction", value="intro",
-                 # How to use PIMPLE - Add to top
+          # How to use PIMPLE - Add to top
           fluidRow(column(8, 
             includeMarkdown("introtext/introduction.md")
           )),
@@ -291,17 +228,19 @@ ui <- fluidPage(id="top",
             column(8,
               plotOutput("demotimeseriesplot")
             )
-          ),
-          fluidRow(
-            column(4, 
-              includeMarkdown("introtext/radarplottext.md")
-            ),
-            column(8,
-              plotOutput("demoradarplot", height="600px")
-            )
           )
+          #fluidRow(
+          #  column(4, 
+          #    includeMarkdown("introtext/radarplottext.md")
+          #  ),
+          #  column(8,
+          #    plotOutput("demoradarplot", height="600px")
+          #  )
+          #)
         ),
 
+        #----------------------------------------------------------------------------
+        # Comparing performance across all indicators
         #----------------------------------------------------------------------------
         tabPanel("Compare performance", value="compareMPs",
           tabsetPanel(id="comptab",
@@ -342,18 +281,19 @@ ui <- fluidPage(id="top",
                 p(sbsbf02012text)
               ))
             ),
-            tabPanel("Radar plots", value="radar",
-              fluidRow(
-                #selectInput(inputId = "radarscaling", label="Radar plot scaling", choices = list("Scale by max"="scale", "Rank"="rank"), selected="scale"),
-                tags$span(title="Note that only the indicators for which 'bigger is better' are shown in the radar plots.",
-                  plotOutput("plot_radar_comparehcr", height="600px")),
-                p("Note that only the indicators for which 'bigger is better' are shown in the radar plots."),
-                p(yearrangetext),
-                p(pi47text),
-                p(biotext),
-                p(pi36text)
-              )
-            ),
+            # Fuck Radar plots
+            #tabPanel("Radar plots", value="radar",
+            #  fluidRow(
+            #    #selectInput(inputId = "radarscaling", label="Radar plot scaling", choices = list("Scale by max"="scale", "Rank"="rank"), selected="scale"),
+            #    tags$span(title="Note that only the indicators for which 'bigger is better' are shown in the radar plots.",
+            #      plotOutput("plot_radar_comparehcr", height="600px")),
+            #    p("Note that only the indicators for which 'bigger is better' are shown in the radar plots."),
+            #    p(yearrangetext),
+            #    p(pi47text),
+            #    p(biotext),
+            #    p(pi36text)
+            #  )
+            #),
             tabPanel("Table", value="bigtable",
               tags$span(title="Median indicator values. The values inside the parentheses are the 10-90 percentiles",
                 tableOutput("table_pis_short"),
@@ -368,6 +308,9 @@ ui <- fluidPage(id="top",
             )
           )
         ),
+        #----------------------------------------------------------------------------
+        # Tabs for exploring specific indicators in more detail
+        #----------------------------------------------------------------------------
         tabPanel("Explore indicators", value="explorePIs",
           tabsetPanel(id="pitab",
             # --- SBSBF0 and PI 1 & 8 ---
@@ -434,7 +377,6 @@ ui <- fluidPage(id="top",
                 p(stabtext)
               ))
             ),
-
             # *** PI 7: Relative effort variability***
             tabPanel("PI 7: Effort stability",value="pi7",
               column(6, fluidRow(
@@ -451,7 +393,9 @@ ui <- fluidPage(id="top",
             )
           )                                
         ),                                 
-        # The HCRs                        
+        #------------------------------------------
+        # The Management Procedures
+        #------------------------------------------
         tabPanel(title="Management procedures", value="mps",
           column(12, fluidRow(            
               p("Currently all the candidate management procedures have the same estimation method (an 8-region MULTIFAN-CL stock assessment model)."),
@@ -469,6 +413,27 @@ ui <- fluidPage(id="top",
               )
           )
         ),
+
+        #------------------------------------------
+        # Kobe . Majuro plot
+        #------------------------------------------
+        # Show plot of only a single HCR but table of all of them? - Feels awkward
+        tabPanel(title="Majuro and Kobe plots", value="majurokobeplot",
+                 fluidRow(column(12, 
+                     p("Majuro or Kobe plots for a single HCR (chosen from the input menu on the left) in each time period." ),
+                     p(paste(yearrangetext, "The historical period covers 2000-2018."),sep=" "),
+                     p("The contour colours show the approximate probability of being in that area. Each coloured band represents a 25% chance, e.g. there is a 25% chance of being the blue zone and a 25% chance of being in the yellow zone etc. A random sample of points are shown as an illustration."),
+                     p("The percentage of points falling in each plot quadrant is also shown. This represents the chance of being in that quadrant in that time period. A table of the percentages for all HCRs is next to the plot.")
+                 )),
+                 fluidRow(column(6, plotOutput("plot_kobe_ptables_short")),
+                          column(6, tableOutput("table_kobesummary_short"))),
+                 fluidRow(column(6, plotOutput("plot_kobe_ptables_medium")),
+                          column(6, tableOutput("table_kobesummary_medium"))),
+                 fluidRow(column(6, plotOutput("plot_kobe_ptables_long")),
+                          column(6, tableOutput("table_kobesummary_long"))),
+                 fluidRow(column(6, plotOutput("plot_kobe_ptables_hist")),
+                          column(6, tableOutput("table_kobesummary_hist")))
+        ),
         tabPanel("About", value="about",
           fluidRow(column(8, 
             spc_about()
@@ -480,8 +445,10 @@ ui <- fluidPage(id="top",
 )
 
 
-
+#-------------------------------------------------
 # Server function
+#-------------------------------------------------
+
 server <- function(input, output, session) {
 
   #-------------------------------------------------------------------
@@ -502,68 +469,68 @@ server <- function(input, output, session) {
   #-------------------------------------------------------------------
   # Intro plots
   
-output$demobarchart <- renderPlot({
-  # Demo bar plot
-  pi_choices <- c("pi3")
-  metric_choices <- c("relative catch")
-  area_choices <- "total"
-  dat <- dplyr::filter(periodqs, period != "Rest" & pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
-  dat$hcrname <- as.character(dat$hcrname)
-  dat$hcrref <- as.character(dat$hcrref)
-  hcr_choices <- c("HCR 1", "HCR 4")
-  p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="median_bar")
-  p <- p + ggplot2::ylim(0,NA)
-  p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
-  return(p)
-})
+  output$demobarchart <- renderPlot({
+    # Demo bar plot
+    pi_choices <- c("pi3")
+    metric_choices <- c("relative catch")
+    area_choices <- "total"
+    dat <- dplyr::filter(periodqs, period != "Rest" & pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
+    dat$hcrname <- as.character(dat$hcrname)
+    dat$hcrref <- as.character(dat$hcrref)
+    hcr_choices <- c("HCR 1", "HCR 4")
+    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="median_bar")
+    p <- p + ggplot2::ylim(0,NA)
+    p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
+    return(p)
+  })
 
-output$demoboxplot <- renderPlot({
-  # Demo bar plot
-  pi_choices <- c("pi3")
-  metric_choices <- c("relative catch")
-  area_choices <- "total"
-  dat <- dplyr::filter(periodqs, period != "Rest" & pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
-  dat$hcrname <- as.character(dat$hcrname)
-  dat$hcrref <- as.character(dat$hcrref)
-  hcr_choices <- c("HCR 1", "HCR 4")
-  p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="box")
-  p <- p + ggplot2::ylim(0,NA)
-  p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
-  return(p)
-})
+  output$demoboxplot <- renderPlot({
+    # Demo bar plot
+    pi_choices <- c("pi3")
+    metric_choices <- c("relative catch")
+    area_choices <- "total"
+    dat <- dplyr::filter(periodqs, period != "Rest" & pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
+    dat$hcrname <- as.character(dat$hcrname)
+    dat$hcrref <- as.character(dat$hcrref)
+    hcr_choices <- c("HCR 1", "HCR 4")
+    p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="box")
+    p <- p + ggplot2::ylim(0,NA)
+    p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
+    return(p)
+  })
 
-output$demotimeseriesplot <- renderPlot({
-  # Demo time series plot
-  hcr_choices <- c("HCR 1", "HCR 4")
-  pi_choices <- c("pi3")
-  metric_choices <- c("relative catch")
-  area_choices <- "total"
-  dat <- dplyr::filter(yearqs, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
-  wormdat <- dplyr::filter(worms, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
-  p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=FALSE, percentile_range = pi_percentiles)
-    p <- p + ggplot2::ylim(c(0,NA))
-    # Axes limits set here or have tight?
-    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-    p <- p + ggplot2::ylab("PI 3: Catch (rel. to 2013-2015)")
-  return(p)
-})
+  output$demotimeseriesplot <- renderPlot({
+    # Demo time series plot
+    hcr_choices <- c("HCR 1", "HCR 4")
+    pi_choices <- c("pi3")
+    metric_choices <- c("relative catch")
+    area_choices <- "total"
+    dat <- dplyr::filter(yearqs, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
+    wormdat <- dplyr::filter(worms, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
+    p <- quantile_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=FALSE, percentile_range = pi_percentiles)
+      p <- p + ggplot2::ylim(c(0,NA))
+      # Axes limits set here or have tight?
+      p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+      p <- p + ggplot2::ylab("PI 3: Catch (rel. to 2013-2015)")
+    return(p)
+  })
 
-output$demoradarplot <- renderPlot({
-  hcr_choices <- c("HCR 1", "HCR 4")
-  catch_area_choice <- "total"
-  other_area_choice <- c(as.character(NA), "all")
-  catch_rel_choice <- "relative catch"
-  metric_choices <- c(catch_rel_choice, "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-  # Drop SB/SBF=0 and Size based one 
-  pi_choices <- unique(periodqs[!periodqs$upsidedown,"piname"])
-  not_radar_pinames <- c("SB/SBF=0")
-  pi_choices <- pi_choices[!(pi_choices %in% not_radar_pinames)]
-  # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
-  dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == "Short" & piname %in% pi_choices & metric %in% metric_choices)
-  scaling_choice <- "scale"
-  p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
-  return(p)
-})
+  #output$demoradarplot <- renderPlot({
+  #  hcr_choices <- c("HCR 1", "HCR 4")
+  #  catch_area_choice <- "total"
+  #  other_area_choice <- c(as.character(NA), "all")
+  #  catch_rel_choice <- "relative catch"
+  #  metric_choices <- c(catch_rel_choice, "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+  #  # Drop SB/SBF=0 and Size based one 
+  #  pi_choices <- unique(periodqs[!periodqs$upsidedown,"piname"])
+  #  not_radar_pinames <- c("SB/SBF=0")
+  #  pi_choices <- pi_choices[!(pi_choices %in% not_radar_pinames)]
+  #  # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+  #  dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == "Short" & piname %in% pi_choices & metric %in% metric_choices)
+  #  scaling_choice <- "scale"
+  #  p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
+  #  return(p)
+  #})
 
   #-------------------------------------------------------------------
   # Comparison plots
@@ -583,7 +550,6 @@ output$demoradarplot <- renderPlot({
       # pi6: area == catchareachoice and metric == stability or variability - just stab
       # pi7: metric == stability or variability - just stab
       # pi8: area == all
-      # mw: mean_weight
 
       # Put these together
       # area is catchareachoice
@@ -601,8 +567,8 @@ output$demoradarplot <- renderPlot({
       dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
 
       # Need to hack pi1 so that all quantiles = X50., else NA
-      # Careful! If pi1 not in dat, error
       # Probably better to do this at the top
+      colnames(periodqs)[substr(colnames(periodqs),1,1)=="X"]
       if("pi1" %in% dat$pi){
         dat[dat$pi=="pi1",c("X1.", "X5.", "X10.", "X15.", "X20.", "X80.", "X85.", "X90.","X95.","X99.")] <- dat[dat$pi=="pi1","X50."]
       }
@@ -629,47 +595,47 @@ output$demoradarplot <- renderPlot({
   output$plot_bar_comparehcr <- plot_barbox_comparehcr(plot_type="median_bar")
   output$plot_box_comparehcr <- plot_barbox_comparehcr(plot_type="box")
 
-  # Radar plot
-  # Some repetition of metric, set, area combos
-  # Add border to radar
-  output$plot_radar_comparehcr <- renderPlot({
-    # Subsetting out as above
-    hcr_choices <- input$hcrchoice
-    pi_choices <- input$pichoice
-    catch_area_choice <- input$catchareachoice
-    other_area_choice <- c(as.character(NA), "all")
-    catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-    # We have 8 PIs - but not all are appropriate for a radar plot as bigger is not better.
-    # Drop SB/SBF=0 and Size based one 
-    not_radar_pinames <- c("SB/SBF=0", "Mean weight of individual")
-    pi_choices <- pi_choices[!(pi_choices %in% not_radar_pinames)]
-    if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
-      return()
-    }
+  ## Radar plot
+  ## Some repetition of metric, set, area combos
+  ## Add border to radar
+  #output$plot_radar_comparehcr <- renderPlot({
+  #  # Subsetting out as above
+  #  hcr_choices <- input$hcrchoice
+  #  pi_choices <- input$pichoice
+  #  catch_area_choice <- input$catchareachoice
+  #  other_area_choice <- c(as.character(NA), "all")
+  #  catch_rel_choice <- "relative catch"
+  #  metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+  #  # We have 8 PIs - but not all are appropriate for a radar plot as bigger is not better.
+  #  # Drop SB/SBF=0 and Size based one 
+  #  not_radar_pinames <- c("SB/SBF=0", "Mean weight of individual")
+  #  pi_choices <- pi_choices[!(pi_choices %in% not_radar_pinames)]
+  #  if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
+  #    return()
+  #  }
 
-    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
-    dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
+  #  # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
+  #  dat <- subset(periodqs, ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period != "Rest" & piname %in% pi_choices & metric %in% metric_choices)
 
-    scaling_choice <- "scale"
-    p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
-    return(p)
-  })
+  #  scaling_choice <- "scale"
+  #  p <- myradar(dat=dat, hcr_choices=hcr_choices, scaling_choice)
+  #  return(p)
+  #})
 
   # Time series comparisons
-  pinames_ts <- c("SB/SBF=0", newpi3name, newpi4name, newpi82name)
+  #pinames_ts <- c("SB/SBF=0", newpi3name, newpi4name, newpi82name)
+  pinames_ts <- c("SB/SBF=0", "PI 3: Catch (rel. to 2013-2015)" ,"PI 4: Relative CPUE", "PI 82: Proximity to SB/SBF=0 (2012)")
+  # pis to plot time series of
+
   output$plot_timeseries_comparehcr <- renderPlot({
     show_spaghetti <- input$showspag
     hcr_choices <- input$hcrchoice
-
     # Only these ones allowed
     pi_choices <- input$pichoice
     pi_choices <- pi_choices[pi_choices %in% pinames_ts]
-
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
     }
-
     catch_area_choice <- input$catchareachoice
     other_area_choice <- c(as.character(NA), "all")
     catch_rel_choice <- "relative catch"
@@ -854,9 +820,6 @@ output$demoradarplot <- renderPlot({
       p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
     }
     return(p)
-
-
-
   }, height=function(){
     if(input$plotchoicebarboxtime=="time"){return(max(height_per_area*1.5, (height_per_area * length(input$areachoice))))}
     if(input$plotchoicebarboxtime %in% c("median_bar","box")){return(max(height_per_area*1.5, (height_per_area * ceiling(length(input$areachoice) / no_facets_row))))}
@@ -881,9 +844,7 @@ output$demoradarplot <- renderPlot({
     stabvar_choice <- input$stabvarchoice
     metric_choice <-  paste("relative catch", stabvar_choice, sep=" ") # or stability
     ylabel <- paste("PI 6: ",   paste0(toupper(substr(stabvar_choice, 1, 1)), substr(stabvar_choice, 2, nchar(stabvar_choice))), " of relative catch", sep="")
-
     dat <- subset(periodqs, period != "Rest" & pi=="pi6" & area %in% area_choice & metric == metric_choice) 
-
     p <- myboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
     p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
     p <- p + ggplot2::facet_wrap(~area_name, ncol=no_facets_row)
@@ -1004,7 +965,7 @@ output$demoradarplot <- renderPlot({
     
   })
 
-#  # Plot histogram of effort multipliers
+  # Plot histogram of effort multipliers
   output$plot_hcrhistograms <- renderPlot({
     hcr_choices <- input$hcrchoice
     if(length(hcr_choices) < 1){
@@ -1013,7 +974,51 @@ output$demoradarplot <- renderPlot({
     p <- hcr_histo_plot(hcr_choices, histodat)
     return(p)
   })
-}
+
+  # Kobe / Majuro stuff
+  majuro_kobe_table <- function(period="Short", period_label="Short-term"){
+    outfunc <- renderTable({
+      plot_choice <- input$majurokobe
+      if(plot_choice == "Kobe"){
+        dat <- kobe_summary_tabs[[period]]
+      }
+      else {
+        dat <- majuro_summary_tabs[[period]]
+      }
+      return(dat)
+    },
+    rownames = FALSE,
+    caption = paste(period_label, " summary. Table values show the percentage (%) of observations in each plot quadrant.", sep=""),
+      auto=TRUE)
+    return(outfunc)
+  }
+
+  output$table_kobesummary_short <- majuro_kobe_table(period="Short", period_label="Short-term")
+  output$table_kobesummary_medium <- majuro_kobe_table(period="Medium", period_label="Medium-term")
+  output$table_kobesummary_long <- majuro_kobe_table(period="Long", period_label="Long-term")
+  output$table_kobesummary_hist <- majuro_kobe_table(period="Historical", period_label="Historical")
+
+  majuro_kobe_plot <- function(period){
+    out <- renderPlot({
+      hcr_choice <- input$hcrchoicekobe
+      plot_choice <- input$majurokobe
+      if(plot_choice == "Kobe"){
+        dat <- kobe_ptables_indiv[[hcr_choice]]
+      }
+      else {
+        dat <- majuro_ptables_indiv[[hcr_choice]]
+      }
+      grid::grid.draw(dat[[period]])
+    })
+    return(out)
+  }
+
+  output$plot_kobe_ptables_hist <- majuro_kobe_plot(period="Historical")
+  output$plot_kobe_ptables_long <- majuro_kobe_plot(period="Long")
+  output$plot_kobe_ptables_medium <- majuro_kobe_plot(period="Medium")
+  output$plot_kobe_ptables_short <- majuro_kobe_plot(period="Short")
+
+} # end of server
 
 # Run the app
 shinyApp(ui, server)
