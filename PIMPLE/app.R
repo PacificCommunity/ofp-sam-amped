@@ -132,7 +132,7 @@ ui <- fluidPage(id="top",
           tags$h1("PIMPLE"),
           tags$p("Performance Indicators and Management Procedures expLorEr"),
           tags$footer(
-            tags$p("version 0.4.0 Stick In A Five And Go"),
+            tags$p("version 0.4.1 Stick In A Five And Go"),
             tags$p("Copyright 2020 OFP SPC MSE Team."),
             tags$p("Distributed under the GPL 3")
           )
@@ -423,7 +423,7 @@ ui <- fluidPage(id="top",
                      p("Majuro or Kobe plots for a single HCR (chosen from the input menu on the left) in each time period." ),
                      p(paste(yearrangetext, "The historical period covers 2000-2018."),sep=" "),
                      p("The contour colours show the approximate probability of being in that area. Each coloured band represents a 25% chance, e.g. there is a 25% chance of being the blue zone and a 25% chance of being in the yellow zone etc. A random sample of points are shown as an illustration."),
-                     p("The percentage of points falling in each plot quadrant is also shown. This represents the chance of being in that quadrant in that time period. A table of the percentages for all HCRs is next to the plot.")
+                     p("The percentage of points falling in each plot quadrant is also shown in the small white box. This represents the chance of being in that quadrant in that time period. A table of the percentages for all HCRs is next to the plot.")
                  )),
                  fluidRow(column(6, plotOutput("plot_kobe_ptables_short")),
                           column(6, tableOutput("table_kobesummary_short"))),
