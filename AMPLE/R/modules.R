@@ -200,7 +200,8 @@ mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HC
   all_hcrs <- c("Constant catch" = "constant_catch",
                 "Constant effort" = "constant_effort",
                 "Threshold catch" = "threshold_catch",
-                "Threshold effort" = "threshold_effort")
+                "Threshold effort" = "threshold_effort",
+                "Empirical: CPUE slope only" = "empirical_cpue_slope")
     hcr_choices <- all_hcrs[mp_visible]
 
   # HCR options
@@ -228,7 +229,12 @@ mp_params_setterUI <- function(id, mp_visible=NULL, title="Select the type of HC
     tags$span(title="The minimum and maximum effort limit levels output from the HCR.",
       sliderInput(ns("emin_emax"), "Emin and Emax:", min = 0, max = 3, value = c(0.1,1.0), step = 0.01))
   )
-  out <- tagList(hcr_type, ccpars, cepars, tctepars, tcpars, tepars)
+  empcpueslopepars <- conditionalPanel("input.hcr_type == 'empirical_cpue_slope'", ns=ns,
+    tags$span(title="Empirical HCR based on slope of recent CPUE (catch rate)",
+      sliderInput(ns("gain"), "Gain:", min = 0, max = 5, value = 2, step = 0.1),
+      sliderInput(ns("slope_years"), "Slope years", min=2, max=10, value=3, step = 1)
+    ))
+  out <- tagList(hcr_type, ccpars, cepars, tctepars, tcpars, tepars, empcpueslopepars)
   return(out)
 }
 
@@ -248,7 +254,7 @@ mp_params_setter <- function(input, output, session){
   return(get_mp_params)
 }
 
-#Defined outsode of the reactive above so we can use it non-reactively
+#Defined outside of the reactive above so we can use it non-reactively
 
 #' mp_params_setter
 #'
@@ -259,25 +265,37 @@ mp_params_setter <- function(input, output, session){
 #' @export
 mp_params_switcheroo <- function(input){
     out <- switch(input$hcr_type,
-                          threshold_catch = list(hcr_shape = "threshold", mp_analysis = "assessment",
-                                               mp_type="model", output_type="catch",
-                                               name=paste("Thresh. catch: Blim=",input$blim_belbow[1],",Belbow=",input$blim_belbow[2],",Cmin=",input$cmin_cmax[1],",Cmax=",input$cmin_cmax[2], sep=""), 
-                                               params = c(lim = input$blim_belbow[1], elbow = input$blim_belbow[2],
-                                                          min = input$cmin_cmax[1], max = input$cmin_cmax[2])),
-                          constant_catch = list(hcr_shape = "constant", mp_analysis = "assessment",
-                                               mp_type="model", output_type="catch",
-                                               name=paste("Const. catch: level=",input$constant_catch_level,sep=""),
-                                               params = c(constant_level = input$constant_catch_level)),
-                          threshold_effort = list(hcr_shape = "threshold", mp_analysis = "assessment",
-                                                  mp_type="model", output_type="relative effort",
-                                               name=paste("Thresh. effort: Blim=",input$blim_belbow[1],",Belbow=",input$blim_belbow[2],",Emin=",input$emin_emax[1],",Emax=",input$emin_emax[2], sep=""), 
-                                                  params = c(lim = input$blim_belbow[1], elbow = input$blim_belbow[2],
-                                                             min = input$emin_emax[1], max = input$emin_emax[2])),
-                          constant_effort = list(hcr_shape = "constant", mp_analysis = "assessment", mp_type="model",
-                                                 output_type="relative effort",
-                                                 name=paste("Const. effort: level=",input$constant_effort_level,sep=""),
-                                                 params = c(constant_level = input$constant_effort_level)),
-                          stop("In mp_params_setter. Unrecognised hcr_type.")) 
+      threshold_catch = list(hcr_shape = "threshold", mp_analysis = "assessment",
+        mp_type="model", output_type="catch",
+        name=paste("Thresh. catch: Blim=",input$blim_belbow[1],",Belbow=",input$blim_belbow[2],",Cmin=",input$cmin_cmax[1],",Cmax=",input$cmin_cmax[2], sep=""), 
+        params = c(lim = input$blim_belbow[1], elbow = input$blim_belbow[2],
+          min = input$cmin_cmax[1], max = input$cmin_cmax[2])),
+      
+      constant_catch = list(hcr_shape = "constant", mp_analysis = "assessment",
+        mp_type="model", output_type="catch",
+        name=paste("Const. catch: level=",input$constant_catch_level,sep=""),
+        params = c(constant_level = input$constant_catch_level)),
+      
+      threshold_effort = list(hcr_shape = "threshold", mp_analysis = "assessment",
+        mp_type="model", output_type="relative effort",
+        name=paste("Thresh. effort: Blim=",input$blim_belbow[1],",Belbow=",input$blim_belbow[2],",Emin=",input$emin_emax[1],",Emax=",input$emin_emax[2], sep=""), 
+        params = c(lim = input$blim_belbow[1], elbow = input$blim_belbow[2],
+          min = input$emin_emax[1], max = input$emin_emax[2])),
+      
+      constant_effort = list(hcr_shape = "constant", mp_analysis = "assessment", mp_type="model",
+         output_type="relative effort",
+         name=paste("Const. effort: level=",input$constant_effort_level,sep=""),
+         params = c(constant_level = input$constant_effort_level)),
+                  
+      # mp_analysis - name of function to generate HCR ip, mp_type - not sure it does anything
+      empirical_cpue_slope = list(hcr_shape = "empirical_cpue_slope_op", mp_analysis = "empirical_cpue_slope_ip",
+        mp_type="empirical", output_type="catch multiplier",
+        name=paste("Empirical CPUE slope: Gain=",input$gain,",Slope years=",input$slope_years, sep=""), 
+        params = c(gain = input$gain, slope_years = input$slope_years)),
+      
+      stop("In mp_params_setter. Unrecognised hcr_type.")) 
+      # End of switch
+    
     out$timelag <- 0 # 2
     return(out)
 }

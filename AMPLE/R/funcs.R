@@ -92,6 +92,7 @@ clear_stock <- function(stock, app_params, nyears, niters){
   stock$hcr_op <- initial_array
   stock$catch <- initial_array
   stock$effort <- initial_array
+  stock$estimated_cpue <- initial_array
   # Not sure this return statement is needed but means we can call this function from tests
   return(stock)
 }
@@ -138,9 +139,13 @@ fill_initial_stock <- function(stock, stock_params, mp_params, initial_biomass, 
   # The IP and OP functions must work for iters
   # yr argument is the timestep range of the HCR IP - i.e. lagging behind catch
   # Should be able to handle multiple iters
+  
   stock$hcr_ip[,hcr_ip_yrs] <- get_hcr_ip(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=hcr_ip_yrs)
   stock$hcr_op[,hcr_op_yrs] <- get_hcr_op(stock=stock, stock_params=stock_params, mp_params=mp_params, yr=hcr_ip_yrs)
   stock$effort <- stock$catch / (stock$biomass * stock_params[["q"]])
+  # estimated cpue
+  stock$estimated_cpue <- stock$catch / stock$effort
+  
   # Not sure this return statement is needed but means we can call this function from tests
   return(stock)
 }
@@ -160,7 +165,8 @@ create_stock <- function(){
     hcr_ip = NULL,
     hcr_op = NULL,
     effort = NULL,
-    catch = NULL
+    catch = NULL,
+    estimated_cpue = NULL
   )
   return(stock)
 }
@@ -332,12 +338,20 @@ project <- function(stock, timesteps, stock_params, mp_params, app_params, max_r
 
     # Get HCR OP in yr instead of at end?
     # But should already have been set given biomass which is always y+1
+    #browser()
 
     base_effort <- stock$effort[,app_params$last_historical_timestep]
     # Implementation function stuff
     # Test this to death with different yr ranges etc
     if (mp_params$output_type == "catch"){
       stock$catch[,yr] <- stock$hcr_op[,yr]
+      stock$effort[,yr] <- stock$catch[,yr] / (stock_params$q * stock$biomass[,yr]) 
+    }
+    if (mp_params$output_type == "catch multiplier"){
+      # Careful - yr may be 1, so yr-1 may be null
+      new_catch <- stock$catch[,yr-1] * stock$hcr_op[,yr]
+      new_catch[new_catch < 10] <- 10 # A minimum catch
+      stock$catch[,yr]<- new_catch
       stock$effort[,yr] <- stock$catch[,yr] / (stock_params$q * stock$biomass[,yr]) 
     }
     if (mp_params$output_type == "relative effort"){
@@ -439,9 +453,91 @@ get_hcr_ip <- function(stock, stock_params, mp_params, yr){
 
 # Analysis functions:
 # Called by get_hcr_ip()
+
+# Stored as the mp_analysis in the MP switcheroo
+# empirical_cpue_slope - called by HCR empirical cpue slope
+# Called by get_hcr_ip()
+empirical_cpue_slope_ip <- function(stock, mp_params, stock_params, yr){
+  #stock$effort <- stock$catch[,drop=FALSE] / (stock$biomass[,drop=FALSE] * stock_params[["q"]])
+  #true_cpue <- stock$catch / stock$effort
+  #browser()
+  true_cpue <- stock$biomass * stock_params[["q"]]
+  # This should be observation error rather than estimation error?
+  # How to return this so we can plot it?
+  est_cpue <- estimation_error(input =  true_cpue, sigma = stock_params$biol_est_sigma, bias = stock_params$biol_est_bias)
+  
+  # Get CPUE relative to CPUE in last historical year
+  #rel_est_cpue <- sweep(est_cpue, 1, est_cpue[,app_params$last_historical_timestep], "/")
+  # Hard wired at 11
+  rel_est_cpue <- sweep(est_cpue, 1, est_cpue[,10], "/")
+  
+  # Alternate HCR:
+  # grad. * (CPUE / CPUEref) + (1 - grad.)
+  # Rearrange to:
+  # grad. ((CPUE / CPUEref) - 1) + 1 - should this be mean CPUE over X years? Same years as the gradient?
+  # Then x gain?
+  # Takes into account current CPUE (relative to reference) AND the gradient
+  
+  # Current HCR - just the gradient of the relative CPUE
+  # multiplier = grad_relcpue * gain + 1
+  
+  
+  # Is it slope of relative CPUE?
+  # Either pass in app_params (using ..., need to add to all analysis functions)
+  # or set a new mp for relative year to be same as last historical year (so relative cpue plot matches)
+  
+  # But do we need to do all years?
+  # Slope using yr - 1, as catch only up to yr - 1
+  # i.e. biomass is up to 2020, but catch only up 2019
+  est_cpue_slope <- apply(rel_est_cpue, 1, function(est_cpue_row){
+    #y <- est_cpue_row[(max(yr) - mp_params$params["slope_years"] + 1):max(yr)]
+    y <- est_cpue_row[(max(yr-1) - mp_params$params["slope_years"] + 1):max(yr-1)]
+    est_cpue_row_slope <- lm(y ~ c(1:length(y)))$coefficients[2]
+    return(est_cpue_row_slope)
+  })
+  # Pad out the early years with NA
+  early_yrs <- matrix(NA,nrow=nrow(stock$hcr_ip), ncol=length(yr)-1)
+  est_cpue_slope <- cbind(early_yrs, unname(est_cpue_slope))
+  return(est_cpue_slope)
+}
+
+# Empirical shape function
+# Stored as the hcr_shape in the MP switcheroo
+# Called by get_hcr_op()
+# Applies gain to the CPUE slope to produce catch output
+# But is it catch scalar or real catch
+empirical_cpue_slope_op <- function(input, mp_params, ...){
+  output <- array(NA, dim=dim(input))
+  
+  # HCR function is a straight line from bottom-left to top-right
+  # Input is slope
+  # When slope < 0, output is < 1 (with a hard stop at 0)
+  # When slope >= 0, output is >= 1 up to...
+  # Gradient of HCR function is the 'gain' parameter
+  # out = gain . slope + 1
+  # If slope = 0, i.e. cpue is stable, output multiplier = 1
+  # If slope is -ve, out is < 1 (min = 0)
+  # If slope is +ve, put is > 1 (max = 10?)
+  
+  # To get to a particular CPUE, make this could be relative to target CPUE?
+  
+  output <- input * mp_params$params["gain"] + 1
+  # Set some limits
+  output[output < 0] <- 0
+  # Limit on max increase?
+  #output[output >= 10] <- 0
+  
+  
+  return(output)
+}
+
+
+
 # asessment: a stock assessment that estimates biomass / k
 # The analysis assessment function
+# Called by get_hcr_ip()
 assessment <- function(stock, mp_params, stock_params, yr){
+  #browser()
   # Return observed biomass
   true_ip <- stock$biomass[,yr] / stock_params$k
   est_ip <- estimation_error(input =  true_ip, sigma = stock_params$biol_est_sigma, bias = stock_params$biol_est_bias)
