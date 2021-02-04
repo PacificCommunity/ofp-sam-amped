@@ -502,18 +502,21 @@ server <- function(input, output,session) {
       stock$hcr_op<- rbind(stock$hcr_op,stock$hcr_op[1,])
       stock$catch <- rbind(stock$catch,stock$catch[1,])
       stock$effort <- rbind(stock$effort,stock$effort[1,])
+      stock$estimated_cpue <- rbind(stock$estimated_cpue, stock$estimated_cpue[1,])
       # Empty out future years
       stock$biomass[iter(),(app_params$last_historical_timestep+2):dim(stock$biomass)[2]] <- NA
       stock$hcr_ip[iter(),(app_params$last_historical_timestep+2):dim(stock$hcr_ip)[2]] <- NA
       stock$hcr_op[iter(),(app_params$last_historical_timestep+2):dim(stock$hcr_op)[2]] <- NA
       stock$catch[iter(),(app_params$last_historical_timestep+1):dim(stock$catch)[2]] <- NA
       stock$effort[iter(),(app_params$last_historical_timestep+1):dim(stock$effort)[2]] <- NA
+      stock$estimated_cpue[iter(),(app_params$last_historical_timestep+1):dim(stock$estimated_cpue)[2]] <- NA
       # Bit hacky but rbind is dropping the dimnames names - annoying
       names(dimnames(stock$biomass)) <- dnames 
       names(dimnames(stock$effort)) <- dnames 
       names(dimnames(stock$hcr_ip)) <- dnames 
       names(dimnames(stock$hcr_op)) <- dnames 
       names(dimnames(stock$catch)) <- dnames 
+      names(dimnames(stock$estimated_cpue)) <- dnames 
     }
   })
 

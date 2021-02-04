@@ -1,7 +1,8 @@
 # Copyright 2018 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 
-library(AMPLE)
+devtools::load_all("../AMPLE")
+#library(AMPLE)
 
 # User interface ----
 ui <- navbarPage(title="Introducing Performance Indicators", id="main",
@@ -186,12 +187,14 @@ server <- function(input, output,session) {
       stock$hcr_op<- rbind(stock$hcr_op,stock$hcr_op[1,])
       stock$catch <- rbind(stock$catch,stock$catch[1,])
       stock$effort <- rbind(stock$effort,stock$effort[1,])
+      stock$estimated_cpue <- rbind(stock$estimated_cpue, stock$estimated_cpue[1,])
       # Bit hacky but rbind is dropping the dimnames names
       names(dimnames(stock$biomass)) <- dnames 
       names(dimnames(stock$effort)) <- dnames 
       names(dimnames(stock$hcr_ip)) <- dnames 
       names(dimnames(stock$hcr_op)) <- dnames 
       names(dimnames(stock$catch)) <- dnames 
+      names(dimnames(stock$estimated_cpue)) <- dnames 
     }
 
     # Pass in current iter
