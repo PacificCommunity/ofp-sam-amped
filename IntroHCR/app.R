@@ -2,6 +2,9 @@
 # Maintainer: Finlay Scott, OFP SPC
 
 # Load packages ----
+# Note: get AMPLE this from github - then comment out before uploading to server
+# Make sure that the branch is correct
+#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="devbranch")
 library(AMPLE)
 
 #------------------------------------------------------------

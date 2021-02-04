@@ -1,8 +1,10 @@
 # Copyright 2018 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 
-devtools::load_all("../AMPLE")
-#library(AMPLE)
+# Note: get AMPLE this from github - then comment out before uploading to server
+# Make sure that the branch is correct
+#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="devbranch")
+library(AMPLE)
 
 # User interface ----
 ui <- navbarPage(title="Introducing Performance Indicators", id="main",

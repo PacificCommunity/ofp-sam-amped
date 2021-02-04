@@ -1,6 +1,9 @@
 # Copyright 2018 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 
+# Note: get AMPLE this from github - then comment out before uploading to server
+# Make sure that the branch is correct
+#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="devbranch")
 library(AMPLE)
 library(ggplot2)
 library(shinyjs)
