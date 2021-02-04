@@ -239,23 +239,37 @@ server <- function(input, output,session) {
   output$plotrelcpue <- renderPlot({
     # Plot own CPUE plot with gradient line on it
     years <- as.numeric(dimnames(stock$biomass)$year)
-    cpue <- stock$catch / stock$effort
+    true_cpue <- stock$catch / stock$effort
     #rel_cpue <- sweep(cpue, 1, cpue[,app_params$last_historical_timestep], "/")
     # Make the relative year same as used for the gradient
-    rel_cpue <- sweep(cpue, 1, cpue[,10], "/")
-    ymax <- max(c(rel_cpue * 1.1, 1.0), na.rm=TRUE)
-    ymin <- min(c(rel_cpue * 0.9, 1.0), na.rm=TRUE)
+    rel_true_cpue <- sweep(true_cpue, 1, true_cpue[,10], "/")
+    est_cpue <- stock$estimated_cpue
+    rel_est_cpue <- sweep(est_cpue, 1, est_cpue[,10], "/")
+    
+    # Plot both - add legend if noisy
+    ymax <- max(c(rel_est_cpue * 1.1, rel_true_cpue * 1.1, 1.0), na.rm=TRUE)
+    ymin <- min(c(rel_est_cpue * 0.9, rel_true_cpue * 0.9, 1.0), na.rm=TRUE)
     yrange <- c(ymin, ymax)
+    
     # Plot it
     mp_params <- get_mp_params()
     stock_params <- get_stock_params()
-    plot_indiv_timeseries_base(data=rel_cpue, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, yrange=yrange, ylab="Relative CPUE", add_grid=TRUE, main = 'Relative CPUE')
+    #plot_indiv_timeseries_base(data=rel_true_cpue, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, yrange=yrange, ylab="Relative CPUE", add_grid=TRUE, main = 'Relative CPUE')
+    plot(x=years, y= rel_true_cpue[1,], type="n", ylab="Relative CPUE", xlab="Year", ylim=yrange, xaxs="i", yaxs="i",main = 'Relative CPUE')
+    # Add grid
+    grid()
+    last_iter <- 1
+    # Add true
+    lines(x=years, y=rel_true_cpue[last_iter,], col="black", lwd=2, lty=1)
+    # Add estimated
+    lines(x=years, y=rel_est_cpue[last_iter,], col="blue", lty=1, lwd=2)
+    # And if we have obs error
+    if ((stock_params$biol_est_sigma != 0) | (stock_params$biol_est_bias != 0)){
+      legend(x="bottomleft", legend=c("True","Estimated"), lwd=2,col=c(true_col, last_col))
+    }
+    
     # Add 1 line
     lines(x=years,y=rep(1,length(years)), lty=2)
-    
-    # Add estimated CPUE on top
-    if ((stock_params$biol_est_sigma != 0) | (stock_params$biol_est_bias != 0)){
-    }
     
     # If room add gradient text and line
     # Want the final one to be fixed?
@@ -266,7 +280,7 @@ server <- function(input, output,session) {
     # Add line
     xgrad <- years[c(current_timestep - mp_params$params["slope_years"]+1, current_timestep)]
     # Get ys of the grad line a bit tricky
-    ygradinter <- rel_cpue[current_timestep]
+    ygradinter <- rel_est_cpue[current_timestep]
     ygrad <- (c(-1*(mp_params$params["slope_years"]-1),0) * current_grad) + ygradinter
     lines(xgrad, ygrad, lty=1, lwd=3, col="red")
     
