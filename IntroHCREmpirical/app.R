@@ -4,11 +4,13 @@
 # Notes
 # The relative CPUE year is hard wired at 10
 
+# Uses empirical HCR branch
+#devtools::load_all("../AMPLE")
 
+#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="empirical_hcr")
 # Load packages ----
-#library(AMPLE)
+library(AMPLE)
 
-devtools::load_all("../AMPLE")
 
 #------------------------------------------------------------
 # Plot stuff
