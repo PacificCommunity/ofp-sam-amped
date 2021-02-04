@@ -256,7 +256,7 @@ server <- function(input, output,session) {
     lines(x=years, y=rel_est_cpue[last_iter,], col="blue", lty=1, lwd=2)
     # And if we have obs error
     if ((stock_params$biol_est_sigma != 0) | (stock_params$biol_est_bias != 0)){
-      legend(x="bottomleft", legend=c("True","Estimated"), lwd=2,col=c(true_col, last_col))
+      legend(x="bottomleft", legend=c("True","Estimated"), lwd=2,col=c("black", "blue"))
     }
     
     # Add 1 line
