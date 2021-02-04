@@ -397,7 +397,14 @@ plot_catch <- function(stock, stock_params, mp_params, app_params=NULL, timestep
       # Also plot the proposed catch from the HCR
       # Careful with the timelag here? Should be OK
       if (timestep < dim(stock$hcr_op)[2]){
-        lines(x=c(years[1], years[length(years)]), y=rep(stock$hcr_op[last_iter, timestep+1],2),lty=guide_lty, col=guide_col, lwd=guide_lwd) 
+        # If HCR OP is total catch
+        next_catch <- stock$hcr_op[last_iter, timestep+1]
+        # If HCR OP is catch multiplier
+        if (mp_params$output_type == "catch multiplier"){
+          next_catch <- stock$catch[last_iter,timestep] * stock$hcr_op[,timestep+1]
+          next_catch[next_catch < 10] <- 10 # A minimum catch
+        }
+        lines(x=c(years[1], years[length(years)]), y=rep(next_catch,2),lty=guide_lty, col=guide_col, lwd=guide_lwd) 
       }
     }
     # Plot all iters as ghosts

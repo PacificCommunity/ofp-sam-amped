@@ -75,9 +75,6 @@ ui <- navbarPage(
           column(6, tags$span(title="The current relative CPUE.",
             plotOutput("plotrelcpue", width="auto"))
           )
-          #column(6, tags$span(title="The current estimated biomass is used as the input to the HCR.",
-          #  plotOutput("plotarrow", width="auto"))
-          #)
         )
       )
     )
@@ -223,15 +220,8 @@ server <- function(input, output,session) {
     plot_catch(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, timestep=timestep(), main="Catch", add_grid=TRUE, cex.axis=1.1, cex.lab=1.3)
   })
 
-  #output$plothcr <- renderPlot({
-  #  plot_hcr(stock=stock, stock_params=get_stock_params(), mp_params=get_mp_params(), app_params=app_params, timestep=timestep()+1, cex.axis=1.1, cex.lab=1.3)
-  #})
-
   output$plotbiomass <- renderPlot({
     stock_params <- get_stock_params()
-    # We don't want to plot the 'estimated' stock (because it's never estimated here) so turn them off
-    #stock_params$biol_est_bias <- 0
-    #stock_params$biol_est_sigma <- 0
     plot_biomass(stock=stock, stock_params=stock_params, mp_params=get_mp_params(), timestep=timestep()+1, main="SB / SBF=0", add_grid=TRUE, cex.axis=1.1, cex.lab=1.3)
   })
   
@@ -255,8 +245,7 @@ server <- function(input, output,session) {
     mp_params <- get_mp_params()
     stock_params <- get_stock_params()
     #plot_indiv_timeseries_base(data=rel_true_cpue, stock=stock, stock_params=stock_params, mp_params=mp_params, app_params=app_params, yrange=yrange, ylab="Relative CPUE", add_grid=TRUE, main = 'Relative CPUE')
-    plot(x=years, y= rel_true_cpue[1,], type="n", ylab="Relative CPUE", xlab="Year", ylim=yrange, xaxs="i", yaxs="i",main = 'Relative CPUE')
-    # Add grid
+    plot(x=years, y= rel_true_cpue[1,], type="n", ylab="Relative CPUE", xlab="Year", ylim=yrange, xaxs="i", yaxs="i",main = 'Relative CPUE', cex.axis=1.1, cex.lab=1.3)
     grid()
     last_iter <- 1
     # Add true
@@ -282,7 +271,7 @@ server <- function(input, output,session) {
     # Get ys of the grad line a bit tricky
     ygradinter <- rel_est_cpue[current_timestep]
     ygrad <- (c(-1*(mp_params$params["slope_years"]-1),0) * current_grad) + ygradinter
-    lines(xgrad, ygrad, lty=1, lwd=3, col="red")
+    lines(xgrad, ygrad, lty=1, lwd=4, col="red")
     
   })
   
@@ -295,7 +284,8 @@ server <- function(input, output,session) {
     yrange <- max(1.2, max(stock$hcr_op, na.rm=TRUE))
     yrange <- c(2-yrange, yrange)
     # Plot outline
-    plot(x=xrange, y=yrange, type="n", xlab="Slope of relative CPUE", ylab = "Catch multiplier")
+    plot(x=xrange, y=yrange, type="n", xlab="Slope of relative CPUE", ylab = "Catch multiplier", cex.axis=1.1, cex.lab=1.3)
+    grid()
     # Add the guide lines
     lines(x=c(0,0), y=c(0,100), lty=2) 
     lines(x=c(-100,100), y=c(1,1), lty=2) 
@@ -308,11 +298,9 @@ server <- function(input, output,session) {
     # Add current slope onto the gain line
     ts <- min(timestep(), dim(stock$hcr_ip)[2]-1)
     points(x=stock$hcr_ip[,ts+1], y=stock$hcr_op[,ts+1], cex=2, pch=19)
-    
-    
-    
-    
-    
+    # Add the slope and scalar lines
+    lines(x=rep(stock$hcr_ip[,ts+1],2), y=c(yrange[1],stock$hcr_op[,ts+1]),lty=2, col="blue", lwd=2)
+    lines(x=c(xrange[1],stock$hcr_ip[,ts+1]), y=rep(stock$hcr_op[,ts+1],2),lty=2, col="blue", lwd=2)
   })
 
 
