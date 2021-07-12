@@ -2,17 +2,18 @@
 # PIMPLE
 # Performance Indicators and Management Procedures Explorer
 # Main app
-# Updated for SC16 and the eight region model
+# Updated for SC17 (July 2021)
 
 # Copyright 2020 OFP SPC MSE Team. Distributed under the GPL 3
 # Maintainer: Finlay Scott, OFP SPC
 #--------------------------------------------------------------
+
 #rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
 # Load packages
 
 # Note: get AMPLE this from github - then comment out before uploading to server
 # Make sure that the branch is correct
-#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="devbranch")
+# devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="SC17dev")
 
 library(AMPLE)
 library(ggplot2)
@@ -20,7 +21,7 @@ library(RColorBrewer)
 library(markdown)
 
 # Load the indicator data - including Kobe and Majuro data
-load("data/postSC16_results.Rdata")
+load("data/SC17_results.Rdata")
 
 #----------------------------------------------------------------------------------------------------
 # Edit the data set
