@@ -48,9 +48,9 @@ Their numbers relate to their position in the original table of indicators. Thes
 
 The average values of the PIs are calculated over three time periods:
 
-* Short-term: 2019-2027
-* Medium-term: 2028-2036
-* Long-term: 2037-2045
+* Short-term: 2022-230
+* Medium-term: 2031-2039
+* Long-term: 2040-2048
 
 With the exception of SB/SBF=0, all of the indicators have been scaled so that 'bigger is better', i.e. the larger the value, the better the MP is thought to be performing for that PI.
 

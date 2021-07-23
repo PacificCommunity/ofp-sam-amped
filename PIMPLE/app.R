@@ -179,7 +179,7 @@ ui <- fluidPage(id="top",
       ),
       # In Management Procedures tab, show the points and trajectories
       # Change false to true to show performance options (can hide from users)
-      conditionalPanel(condition="((input.nvp == 'mps') && true)",
+      conditionalPanel(condition="((input.nvp == 'mps') && false)",
         p("Secret HCR performance options"),
         # If this is checked the other ones should show
         checkboxInput("showpoints", "Show points", value=FALSE),
@@ -594,18 +594,25 @@ server <- function(input, output, session) {
   }, height=function(){max(height_per_pi*1.5, (height_per_pi * length(input$pichoice[input$pichoice %in% pinames_ts])))})
 
   get_pi_table <- function(period_choice="Short"){
+    
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
     catch_area_choice <- input$catchareachoice
-    other_area_choice <- c(as.character(NA), "all")
-    catch_rel_choice <- "relative catch"
-    metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
+    #other_area_choice <- c(as.character(NA), "all")
+    #catch_rel_choice <- "relative catch"
+    #metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
 
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
     }
+    
+    
+      catch_area_choice <- input$catchareachoice
+      dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & area %in% c("all", catch_area_choice, "ps678x") & piname %in% pi_choices & metric != "catch stability")
+    
+    
     # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
-    dat <- subset(periodqs, hcrref %in% hcr_choices & ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == period_choice & piname %in% pi_choices & metric %in% metric_choices)
+    #dat <- subset(periodqs, hcrref %in% hcr_choices & ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == period_choice & piname %in% pi_choices & metric %in% metric_choices)
     tabdat <- pitable(dat, percentile_range = pi_percentiles)
     return(tabdat)
   }
