@@ -7,6 +7,8 @@ PIMPLE reference sheets are available (right-click to open in a new tab or save-
 
 ## What is PIMPLE?
 
+(Last update: 09/08/2021)
+
 PIMPLE is a tool for exploring and comparing the performance of alternative candidate Management Procedures (MPs).
 
 A Management Procedure has three components:
@@ -107,7 +109,7 @@ It is also possible to investigate the variability, as well as the stability.
 
 As with PI 4 (Relative CPUE), this indicator is only calculated for the purse seines in areas 6, 7 and 8 (excluding the associated purse seines in area 6).
 
-### 82. Proximity of SB/SBF=0 to the average SB/SBF=0 in 2012
+### 8. Proximity of SB/SBF=0 to the average SB/SBF=0 in 2012
 
 (Note that as the TRP for skipjack is under discussion, this indicator has been updated to reflect how close the SB/SBF=0 is to SB/SBF=0 in the reference year of 2012)
 

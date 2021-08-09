@@ -13,7 +13,7 @@
 
 # Note: get AMPLE this from github - then comment out before uploading to server
 # Make sure that the branch is correct
-# devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="SC17dev")
+#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="SC17dev")
 
 library(AMPLE)
 library(ggplot2)
@@ -90,7 +90,7 @@ pis_list <- unique(periodqs[,"piname"])
 # Drop the variability ones (they point the wrong way and are alternatives to the stability indicators)
 pis_list <- pis_list[!grepl("variability", pis_list)]
 # Also drop SB the Proximity 0.5 one until we fix the TRP selector, only look at relative catches
-pis_list <- pis_list[!(pis_list %in% c("SB", "PI 8: Proximity to SB/SBF=0 0.5", "PI 3: Catch"))] 
+pis_list <- pis_list[!(pis_list %in% c("SB", "PI 8: Proximity to SB/SBF=0 (0.5)", "PI 3: Catch"))] 
 piselector <- as.list(pis_list)
 pis_text <- unlist(lapply(strsplit(pis_list,"\n"),'[',1))
 names(piselector) <- pis_text
@@ -138,7 +138,7 @@ ui <- fluidPage(id="top",
           tags$h1("PIMPLE"),
           tags$p("Performance Indicators and Management Procedures expLorEr"),
           tags$footer(
-            tags$p("version 0.5.0 Mprk n Mindy"),
+            tags$p("version 0.5.0 Mork n Mindy"),
             tags$p("Copyright 2021 OFP SPC MSE Team."),
             tags$p("Distributed under the GPL 3")
           )
@@ -887,11 +887,14 @@ server <- function(input, output, session) {
   
   # Plot histogram of effort multipliers
   output$plot_hcrhistograms <- renderPlot({
+    
     hcr_choices <- input$hcrchoice
     if(length(hcr_choices) < 1){
       return()
     }
-    p <- hcr_histo_plot(hcr_choices, histodat)
+    # Don't show historical
+    pdat <- subset(histodat, period != "Rest")
+    p <- hcr_histo_plot(hcr_choices, pdat)
     return(p)
   })
 
