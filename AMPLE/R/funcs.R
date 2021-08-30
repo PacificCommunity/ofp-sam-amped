@@ -876,6 +876,7 @@ get_summaries <- function(stock, stock_params, app_params, quantiles){
       data.frame(period = "Short", year=short_term),
       data.frame(period = "Medium", year=medium_term),
       data.frame(period = "Long", year=long_term))
+  periods$period <- factor(periods$period, levels=c("Short", "Medium", "Long", "Rest"))
   
   # Add period
   dat <- merge(dat, periods)
