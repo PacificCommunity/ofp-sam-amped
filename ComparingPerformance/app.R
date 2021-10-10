@@ -3,8 +3,9 @@
 
 # Note: get AMPLE this from github - then comment out before uploading to server
 # Make sure that the branch is correct
-#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="devbranch")
+#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="SC17dev")
 library(AMPLE)
+#devtools::load_all("../AMPLE")
 library(ggplot2)
 library(shinyjs)
 library(shinyWidgets)
