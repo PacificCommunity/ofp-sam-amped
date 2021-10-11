@@ -12,7 +12,7 @@ make_dummy_stock_params <- function(r = 0.5, stock_history="fully", nyears = 30,
   return(out)
 }
 
-make_dummy_mp_params <- function(hcr_shape = "threshold", mp_analysis = "assessment", mp_type="model", output_type="catch", name = "Dummy", params = c(lim = 0.2, elbow = 0.5, min = 10, max = 100), est_bias = 0.0, est_sigma = 0.0, timelag = 0){
+make_dummy_mp_params <- function(hcr_shape = "threshold", mp_analysis = "assessment", mp_type="model", output_type="catch", name = "Dummy", params = c(lim = 0.2, elbow = 0.5, min = 10, max = 140), est_bias = 0.0, est_sigma = 0.0, timelag = 0){
   out <- list(hcr_shape = hcr_shape,
               mp_analysis = mp_analysis,
               mp_type = mp_type,

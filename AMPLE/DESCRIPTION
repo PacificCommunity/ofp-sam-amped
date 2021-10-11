@@ -1,24 +1,25 @@
 Package: AMPLE
-Title: Compilation of common code for the 'AMPED' and 'PIMPLE' 'shiny' Apps for Stakeholder Engagement and Harvest Strategies
-Version: 1.0.1
-Maintainer: Finlay Scott <finlays@spc.int>
+Title: Shiny Apps To Support Capacity Building On Harvest Control Rules
+Version: 0.9.0.0000
 Authors@R: 
-    person(given = "Finlay",
-           family = "Scott",
-           role = c("aut", "cre"),
-           email = "finlays@spc.int")
-Description: Compilation of common code for the 'AMPED' and 'PIMPLE' 'shiny' applications for stakeholder engagement in developing fisheries harvest strategies. The package is not that useful on its own but provides common functionality including plots, stochasticity options, life history options and a simple surplus production model.
-License: GPL-3
-Depends:
-  shiny (>= 1.3.2)
-Imports:
-  ggplot2 (>= 3.2.1),
-  dplyr (>= 0.8.3),
-  tidyr (>= 1.0.0),
-  shinyjs (>= 1.0),
-  magrittr (>= 1.5)
+    person("Finlay", "Scott", , "finlays@spc.int", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-9950-9023"))
+Description: AMPLE provides three Shiny based apps that introduce Harvest Control Rules (HCR).
+    'Introduction to HCRs' provides a simple overview to how HCRs work. Users are able to select their own HCR and
+    step through its performance, year by year. Biological variability and estimation uncertainty are introduced.
+    'Introduction to indicators' builds on the previous app and introduces the idea of using performance indicators
+    to evaluate HCR performance.
+    'Comparing performance' allows multiple HCRs to be created and tested, and their performance compared so that the
+    preferred HCR can be selected,
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
 Suggests: 
-    testthat (>= 2.1.0)
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Depends: 
+    shiny
+Imports: 
+    R6
