@@ -23,6 +23,7 @@
 #' @param stock The stock object
 #' @param mp_params The HCR / management procedure parameters used to evaluate the HCR (as a list).
 #' @param yr The time step of the true stock status used to generate the HCR IP .
+#' @export
 get_hcr_ip <- function(stock, mp_params, yr){
   # Check for NA in mp_analysis, if so return NA
   if (is.na(mp_params$mp_analysis)){
@@ -55,6 +56,7 @@ get_hcr_ip <- function(stock, mp_params, yr){
 #' @param stock The stock object
 #' @param mp_params A named list of MP parameters (with est_sigma and est_bias elements)
 #' @param yr The timestep that the biomass is taken from.
+#' @export
 assessment <- function(stock, mp_params, yr){
   # Return observed depletion
   true_ip <- stock$biomass[,yr] / stock$k
@@ -72,6 +74,7 @@ assessment <- function(stock, mp_params, yr){
 #' @param input A vector of the 'true' stock status
 #' @param sigma Observation error standard deviation
 #' @param bias Observation error bias
+#' @export
 estimation_error <- function(input, sigma, bias){
   # Transform sigma - it means we can set the parameter as a similar scale to the biol var sigma
   sigma <- sigma / 5
@@ -86,12 +89,11 @@ estimation_error <- function(input, sigma, bias){
 
 #' Evaluates the harvest control rule.
 #'
-#'
 #' Evaluates the harvest control rule in a single year (timestep).
-#'
+#' @param stock The stock object
+#' @param mp_params The HCR / management procedure parameters used to evaluate the HCR (as a list).
 #' @param yr The timestep.
 #' @return A vector of outputs from the HCR.
-#' @rdname project_functions
 #' @export
 get_hcr_op <- function(stock, mp_params, yr){
   # Shape is not NA
@@ -104,6 +106,17 @@ get_hcr_op <- function(stock, mp_params, yr){
 
 # HCR shape functions
 # Called by get_hcr_op()
+
+#' Evaluates a threshold harvest control rule
+#' 
+#' Evaluates a threshold (i.e. hockey stick) harvest control rule.
+#' Used by the \code{hcr_op} function.
+#' @param input A vector of the 'true' stock status
+#' @param stock The stock object
+#' @param mp_params The HCR / management procedure parameters used to evaluate the HCR (as a list).
+#' @param ... Unused
+#' @return A vector of the same dimension as the input.
+#' @export
 threshold <- function(input, mp_params, ...){
   output <- array(NA, dim=dim(input))
   # Below lim
@@ -117,6 +130,16 @@ threshold <- function(input, mp_params, ...){
   return(output)
 }
 
+
+#' Evaluates a constant harvest control rule
+#' 
+#' Evaluates a constant harvest control rule, i.e. one that ignores the stock status and just returns the constant level (catch or effort).
+#' Used by the \code{hcr_op} function.
+#' @param input A vector of the 'true' stock status
+#' @param stock The stock object
+#' @param mp_params The HCR / management procedure parameters used to evaluate the HCR (as a list).
+#' @param ... Unused
+#' @export
 constant <- function(mp_params, ...){
   return(mp_params$params["constant_level"])
 }

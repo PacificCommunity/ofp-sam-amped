@@ -1,17 +1,14 @@
 # Put together the Introduction to HCR app
-#library(shiny)
-
-#source("stock_class.R")
-#source("intro_hcr_ui_funcs.R")
-#source("mp_module.R")
-#source("stochasticity_module.R")
-#source("stock_module.R")
-#source("hcr_funcs.R")
 
 # Each Panel has it's sidebar and mainPanel
 # Annoying - extra boilerplate but looks better
 
-introHCR2 <- function(...){
+#' Introduction to HCRs app launcher
+#' 
+#' Launches the introduction to HCRs Shiny app.
+#' @param ... Not used
+#' @export
+introHCR <- function(...){
 
   # User interface ----
   # Use navbarPage (fluidPage has a problem with title argument and tabs)
@@ -26,10 +23,10 @@ introHCR2 <- function(...){
             # MP selector
             # HCR options
             mpParamsSetterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort")),
-            br(), # Could add br() automatically to side bar set up
+            br(), # Could add br() automatically to side bar set up to separate each component?
 
             # Buttons
-            tags$span(title="Project forward one year",
+            tags$span(title="Go forward one year",
               actionButton("advance", "Advance")),
             tags$span(title="Reset current projection",
               actionButton("reset", "Reset")),
@@ -45,6 +42,7 @@ introHCR2 <- function(...){
           mainPanel(
             textOutput("testtext"),
             #textOutput(renderText({"arse"}))
+            textOutput("printtimestep"),
             tableOutput("printstock")
 
 
@@ -94,24 +92,73 @@ introHCR2 <- function(...){
     #  stock <- Stock$new(stock_params=stock_params, mp_params=mp_params)
     #  x <- 5
     #})
+    
+    # To keep track of current timestep
+    # This should be reactive because we want to print to the screen the current value.
+    timestep <- reactiveVal(0)
+    # What if we just make it normal?
+    #observe({
+    #  lhts <- get_stock_params()$last_historical_timestep # Works
+    #  #lhts <- stock()$last_historical_timestep # Only works if stock is reactiveExpression - called before stock is set up
+    #  timestep(lhts) 
+    #})
 
+    # Which approach is better - reactiveExpr (like this one) or reactiveVal()?
     # Make the stock - has to be in a reactive environment to be able to get the stock and mp params
-    # returns a reactive stock
-    stock <- reactive({
-      x <- 5
+    # returns a reactiveExpr, not a reactive value
+    #stock <- reactive({
+    #  stock_params <- get_stock_params()
+    #  mp_params <- get_mp_params()
+    #  new_stock <- Stock$new(stock_params=stock_params, mp_params=mp_params)
+    #  return(new_stock)
+    #})
+    
+    # Can we make it work as a reactiveVal?
+    # But still doesn't trigger table update
+    stock <- reactiveVal(NA)
+    observe({
       stock_params <- get_stock_params()
       mp_params <- get_mp_params()
-      stock <- Stock$new(stock_params=stock_params, mp_params=mp_params)
-    #  x <- 5
-      return(stock)
-      #return(5)
+      new_stock <- Stock$new(stock_params=stock_params, mp_params=mp_params)
+      stock(new_stock)
+      # Update timestep too
+      timestep(stock_params$last_historical_timestep) 
     })
 
+    
+    # What happens when we press Advance
+    # Need to track current timestep
+    
+    
+    
+    observeEvent(input$advance, {
+      browser()
+      # Advance the timestep if able
+      if(timestep() < get_stock_params()$nyears){
+        timestep(timestep()+1)
+      }
+      # And project
+      stock()$project(timesteps = timestep(), mp_params = get_mp_params())
+      x <- 5
+    })
+    
+
+    #---------------------------------------------------------------
+    # Output stuff
     output$printstock <- renderTable({
-      stock()$as_data_frame()
+      # Include timestep() here to trigger the renderTable.
+      # Otherwise it is not triggered even though stock() is changing.
+      # Or rather, the contents of stock are changing, stock() is just a call to stock and not changing?
+      timestep()
+      # Why does this not trigger after project() is called?
+      # Triggers when lhts changes though
+      stock_temp <- stock()
+      stock_temp$as_data_frame()
     })
-
-
+    
+    output$printtimestep <- renderText({
+      return(paste("Time step: ", timestep(), sep=""))
+    })
 
     #browser()
     #stock$biomass
@@ -144,7 +191,7 @@ introHCR2 <- function(...){
     #})
 
     # App parameters, year range etc
-    app_params <- list(initial_year = 2009, last_historical_timestep = 10)
+    #app_params <- list(initial_year = 2009, last_historical_timestep = 10)
     # Make the reactive stock object and fill it up with initial values
     # stock <- create_stock()
   } # End of server function

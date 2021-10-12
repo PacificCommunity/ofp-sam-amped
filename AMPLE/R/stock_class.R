@@ -235,11 +235,12 @@ Stock <- R6::R6Class("Stock",
     as_data_frame = function(){
       out <- data.frame(
         iter = rep(1:dim(self$biomass)[1], each=dim(self$biomass)[2]),
+        year = rep(1:dim(self$biomass)[2], times=dim(self$biomass)[1]),
         biomass = c(t(self$biomass)),
         catch = c(t(self$catch)),
         effort = c(t(self$effort)),
         hcr_ip = c(t(self$hcr_ip)),
-        hcr_op = c(t(self$hcr_op)),
+        hcr_op = c(t(self$hcr_op))
         )
       return(out)
     },

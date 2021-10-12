@@ -1,6 +1,6 @@
 Package: AMPLE
 Title: Shiny Apps To Support Capacity Building On Harvest Control Rules
-Version: 0.9.0.0000
+Version: 0.9.0
 Authors@R: 
     person("Finlay", "Scott", , "finlays@spc.int", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-9950-9023"))
@@ -20,6 +20,6 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Depends: 
-    shiny
+    shiny (>= 1.7.1)
 Imports: 
-    R6
+    R6 (>= 2.5.1)

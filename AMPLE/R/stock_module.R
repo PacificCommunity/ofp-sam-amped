@@ -74,6 +74,10 @@ get_stock_params <- function(input, biol_sigma=0){
               "fast" = 1.0)
   # Could add check year to ensure that nyears and last_historical_timestep don't clash
   # Input selectors should ensure it is OK, but additional check here to make sure.
+  
+  # Trying to prevent NAs in the numericInputs
+  req(input$initial_year, input$last_historical_timestep, input$nyears) 
+  
   out <- list(
     r = r,
     stock_history = input$stock_history, # to set up the initial trajectory
