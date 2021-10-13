@@ -47,6 +47,28 @@ next_corrnoise <- function(x, b, sd=0.1){
 #' The population dynamics are a simple biomass dynamic model.
 #' The Stock class is used for the Shiny apps in the AMPLE package.
 Stock <- R6::R6Class("Stock",
+  # R6 classes are not reactive, so even in you make a reactiveVal() of an instance of an R6 class
+  # changing that object will not invalidate the shiny magic and nothing reacts.
+  # Solution 1 is to use S3 class but they are horrible
+  # Solution 2 is this workaround from Winston Change: 
+  # https://community.rstudio.com/t/good-way-to-create-a-reactive-aware-r6-class/84890/8 
+  # I will try this here. It involves adding an 'invalidate' function which triggers if certain methods are
+  # called. I want this class only to invalidate when the project method is called, because that means that
+  # something happened and the plots should update.
+                     
+  # Keeps track of whether object has been invalidated.
+  private = list(
+    name = "",
+    reactiveDep = NULL,
+    reactiveExpr = NULL,
+    invalidate = function() {
+      private$count <- private$count + 1
+      private$reactiveDep(private$count)
+      invisible()
+    },
+    count = 0
+  ), 
+                     
   public = list(
     #' @field biomass Array of biomass
     biomass = NULL,
@@ -92,7 +114,7 @@ Stock <- R6::R6Class("Stock",
     #' @param mp_params A list of the MP parameters. Used to fill HCR ip and op.
     #' @param niters The number of iters in the stock (default = 1).
     #' @return A new Stock object.
-    initialize = function(stock_params = list(r = 0.6, stock_history = "fully", nyears = 30, initial_year = 2000, last_historical_timestep=10, biol_sigma = 0), mp_params = NULL, niters = 1){
+    initialize = function(stock_params = list(r = 0.6, stock_history = "fully", nyears = 30, initial_year = 2000, last_historical_timestep=10, biol_sigma = 0), mp_params = NULL, niters = 1, make_reactive = TRUE, name="Balls"){
       #print("Initialising stock with NAs")
       # nyears must be greater than stock_params$last_historical_timestep
       nyears <- max(stock_params$last_historical_timestep+1, round(stock_params$nyears))
@@ -126,8 +148,37 @@ Stock <- R6::R6Class("Stock",
         self$hcr_op[,hcr_ts] <- get_hcr_op(stock = self, mp_params = mp_params, yr = hcr_ts)
       }
 
+      # Until someone calls $reactive(), private$reactiveDep() is a no-op. Need
+      # to set it here because if it's set in the definition of private above, it will
+      # be locked and can't be changed.
+      private$reactiveDep <- function(x) NULL 
+      private$name <- name
+      
+      #if(make_reactive == TRUE){
+      #  self$reactive()
+      #}
 
-      invisible(self)
+      #invisible(self)
+    },
+    
+    # Add option to initialiser to call this
+    reactive = function() {
+      # Ensure the reactive stuff is initialized.
+      if (is.null(private$reactiveExpr)) {
+        private$reactiveDep <- reactiveVal(0)
+        private$reactiveExpr <- reactive({
+          private$reactiveDep()
+          self
+        })
+      }
+      private$reactiveExpr
+    }, 
+    changeName = function(newName) {
+      private$name <- newName
+      private$invalidate()
+    },
+    getName = function() {
+      private$name
     },
 
     #' @description
@@ -321,7 +372,13 @@ Stock <- R6::R6Class("Stock",
           self$hcr_ip[,yr+1] <- get_hcr_ip(stock = self, mp_params = mp_params, yr = yr+1)
           self$hcr_op[,yr+1] <- get_hcr_op(stock = self, mp_params = mp_params, yr = yr+1)
         }
-      } # End of main timestep for loop
+      } # End of main project timestep for loop
+      
+      
+      # Invalidate the object so Shiny gets triggered
+      private$invalidate() 
+      
+      invisible(self)
     } # End of project()
   ) # End of public fields
 )

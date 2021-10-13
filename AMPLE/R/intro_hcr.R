@@ -43,7 +43,10 @@ introHCR <- function(...){
             textOutput("testtext"),
             #textOutput(renderText({"arse"}))
             textOutput("printtimestep"),
-            tableOutput("printstock")
+            #tableOutput("printstock"),
+            tableOutput("printstock2"),
+            #textOutput("printr6test"),
+            textOutput("printstr6test")
 
 
 
@@ -113,43 +116,65 @@ introHCR <- function(...){
     #  return(new_stock)
     #})
     
+    
+    
     # Can we make it work as a reactiveVal?
     # But still doesn't trigger table update
     stock <- reactiveVal(NA)
+    stock2 <- reactiveVal(NA)
     observe({
       stock_params <- get_stock_params()
       mp_params <- get_mp_params()
-      new_stock <- Stock$new(stock_params=stock_params, mp_params=mp_params)
+      
+      
+      new_stock <- Stock$new(stock_params=stock_params, mp_params=mp_params, make_reactive = TRUE)
+      # stock is a reactiveVal
       stock(new_stock)
+      
+      # stock2 here is a relativeExpr
+      new_stock2 <- Stock$new(stock_params=stock_params, mp_params=mp_params, make_reactive = TRUE)$reactive()
+      stock2(new_stock2)
+      
       # Update timestep too
       timestep(stock_params$last_historical_timestep) 
     })
-
+    
+    # Cannot get this to work at all
+    # stock2() is just that reactive function
+    #Browse[2]> stock2()
+    #reactive({
+    #  private$reactiveDep()
+    #  self
+    #}) 
+    # Which I can't seem to evaluate
+    
+    #stock2 <- reactive({Stock$new(stock_params=get_stock_params(), mp_params=get_mp_params(), make_reactive = TRUE)$reactive()})
     
     # What happens when we press Advance
     # Need to track current timestep
     
     
     
-    observeEvent(input$advance, {
-      browser()
-      # Advance the timestep if able
-      if(timestep() < get_stock_params()$nyears){
-        timestep(timestep()+1)
-      }
-      # And project
-      stock()$project(timesteps = timestep(), mp_params = get_mp_params())
-      x <- 5
-    })
+    #observeEvent(input$advance, {
+    #  # Advance the timestep if able
+    #  if(timestep() < get_stock_params()$nyears){
+    #    timestep(timestep()+1)
+    #  }
+    #  x <- 5
+    #  
+    #  # And project
+    #  stock()$project(timesteps = timestep(), mp_params = get_mp_params())
+    #  x <- 5
+    #})
     
 
     #---------------------------------------------------------------
     # Output stuff
-    output$printstock <- renderTable({
+    output$printstock_ <- renderTable({
       # Include timestep() here to trigger the renderTable.
       # Otherwise it is not triggered even though stock() is changing.
       # Or rather, the contents of stock are changing, stock() is just a call to stock and not changing?
-      timestep()
+      #timestep()
       # Why does this not trigger after project() is called?
       # Triggers when lhts changes though
       stock_temp <- stock()
@@ -178,22 +203,85 @@ introHCR <- function(...){
     #  x <- 5
     #})
 
-    # Modules for the stochasticity and MP parameters!
-    #get_mp_params <- callModule(mp_params_setter, "mpparams")
-    #get_stoch_params <- callModule(stoch_params_setter, "stoch")
-    #get_lh_params <- callModule(stock_params_setter, "stock")
-    ## Join these together into a single object to be passed to the funcs - bit clumsy as I will have to do this in all the servers
-    #get_stock_params <- reactive({
-    #  sp <- get_stoch_params()
-    #  lh <- get_lh_params()
-    #  out <- c(sp, lh)
-    #  return(out)
+    
+    #-----------------------------------------------------------
+    # Reactive stock name test 2
+    
+    st2 <- Stock$new(stock_params = isolate(get_stock_params()), mp_params = isolate(get_mp_params()))$reactive()
+    
+    # When advance pressed change the name
+    # This is picked up by the observe above and stuff happens
+    observeEvent(input$advance, {
+      # Advance the timestep if able
+      if(timestep() < get_stock_params()$nyears){
+        timestep(timestep()+1)
+      }
+      
+      # st2 is a reactiveExpr
+      # stock is a reactiveVal
+      # both st2() and stock() are Stock
+      bst2 <- st2()$biomass
+      #bstock <- stock()$biomass
+      
+      st2()$project(timesteps=timestep(), mp_params=get_mp_params())
+      #stock()$project(timesteps = timestep(), mp_params = get_mp_params())
+      
+      # Why less?
+      bst22 <- st2()$biomass
+      #bstock2 <- stock()$biomass
+      # Projects but stock not invalidated?
+      
+      x <- 5
+    })
+    
+    output$printstock2 <- renderTable({
+      stock_temp <- st2()
+      stock_temp$as_data_frame()
+    })
+    
+    ## This gets triggered by changes to changeName?
+    #output$printstr6test2 <- renderText({
+    #  paste("In renderText. Stock changed. Name: ", st()$getName(), sep="")
+    #  
     #})
+    
+    #-----------------------------------------------------------
+    # Reactive stock name test
+    # This works
+    st <- Stock$new(name = "Balls")$reactive()
+    # The observer accesses the reactive expression
+    #sto <- observe({
+    #  message("Stock changed. Name: ", st()$getName())  
+    #})
+    # When advance pressed change the name
+    # This is picked up by the observe above and stuff happens
+    observeEvent(input$advance, {
+      st()$changeName("Fuck")
+    })
+    
+    # This gets triggered by changes to changeName?
+    output$printstr6test <- renderText({
+      paste("In renderText. Stock changed. Name: ", st()$getName(), sep="")
+      
+    })
+    
+    #-----------------------------------------------------------
+    # Reactive R6 Person class test
+    # Uses code in reactive_r6_test.T (not in repository)
+    #pr <- Person$new("Dean")$reactive()
+    
+    # When advance pressed change the name
+    # This is picked up by the observe above and stuff happens
+    #observeEvent(input$advance, {
+    #  pr()$changeName("Newname")
+    #})
+    
+    # This gets triggered by changes to changeName?
+    #output$printr6test <- renderText({
+    #  paste("In renderText. Person changed. Name: ", pr()$getName(), sep="")
+    #})
+    
 
-    # App parameters, year range etc
-    #app_params <- list(initial_year = 2009, last_historical_timestep = 10)
-    # Make the reactive stock object and fill it up with initial values
-    # stock <- create_stock()
   } # End of server function
 
   # Run the app
