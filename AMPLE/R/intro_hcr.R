@@ -60,7 +60,7 @@ introHCR <- function(...){
             ), # End of fluid Row
             fluidRow(
               column(6,
-                tags$span(title="The biomass of the stock (scaled by the unfished biomass). When the variability options are switched on, the black line is the 'true' biomass and the blue line is the 'estimated' biomass. The HCR uses the estimated biomass for the input.",
+                tags$span(title="The biomass of the stock (scaled by the unfished biomass). When the estimation variability options are switched on, the black line is the 'true' biomass and the blue line is the 'estimated' biomass. The HCR uses the estimated biomass for the input.",
                 plotOutput("plotbiomass", width="auto"))
               ),
               column(6,

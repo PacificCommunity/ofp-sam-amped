@@ -97,6 +97,21 @@ Stock <- R6::R6Class("Stock",
     last_historical_timestep = NULL,
     
     #' @description
+    #' Create a new stock object, with fields of the right dimension and NA values (by calling the \code{reset()} method.
+    #' See the \code{reset()} method for more details.
+    #' @param stock_params A list of stock parameters with essential elements: r (growth rate, numeric), stock_history (string: "fully", "over", "under") initial_year (integer), last_historical_timestep (integer), nyears (integer), biol_sigma (numeric).
+    #' @param mp_params A list of the MP parameters. Used to fill HCR ip and op.
+    #' @param niters The number of iters in the stock (default = 1).
+    #' @return A new Stock object.
+    initialize = function(stock_params, mp_params, niters = 1){
+      print("Initialising stock with NAs")
+      # Set up the reactive dependency - has to be done in the main constructor.
+      private$reactiveDep <- function(x) NULL 
+      # Make the fields and fill up the history
+      self$reset(stock_params = stock_params, mp_params = mp_params, niters = niters)
+    },
+    
+    #' @description
     #' Resets an existing stock object, by remaking all fields (possibly with different dimensions for the array fields) .
     #' Fills up the catch, effort and biomass fields in the historical period based on the stock history and
     #' life history parameters in the \code{stock_params} argument.
@@ -124,38 +139,13 @@ Stock <- R6::R6Class("Stock",
       self$biol_sigma = stock_params$biol_sigma
       self$last_historical_timestep <- stock_params$last_historical_timestep
       # Fill up the historical period
-      self$fill_history(stock_params)
-      
-      # If mp_params passed in, also get HCR ip and op in the last historical time step + 1
-      # This is so we plot the upcoming decision before it happens
-      if (!is.null(mp_params)){
-        hcr_ts <- self$last_historical_timestep + 1
-        self$hcr_ip[,hcr_ts] <- get_hcr_ip(stock = self, mp_params = mp_params, yr = hcr_ts)
-        self$hcr_op[,hcr_ts] <- get_hcr_op(stock = self, mp_params = mp_params, yr = hcr_ts)
-      }
+      self$fill_history(stock_params = stock_params, mp_params = mp_params)
       
       # Invalidate the object so Shiny gets triggered
       private$invalidate() 
       invisible(self)
     },
 
-    # new() method will call this
-    #' @description
-    #' Create a new stock object, with fields of the right dimension and NA values (by calling the \code{reset()} method.
-    #' See the \code{reset()} method for more details.
-    #' @param stock_params A list with essential elements: r (growth rate, numeric, default=6), stock_history (string: "fully", "over", "under", default="fully") initial_year (integer, default=2000), last_historical_timestep (integer, default=10), nyears (integer, default=30), biol_sigma (numeric, default = 0).
-    #' @param mp_params A list of the MP parameters. Used to fill HCR ip and op.
-    #' @param niters The number of iters in the stock (default = 1).
-    #' @return A new Stock object.
-    initialize = function(stock_params = list(r = 0.6, stock_history = "fully", nyears = 30, initial_year = 2000, last_historical_timestep=10, biol_sigma = 0), mp_params = NULL, niters = 1){
-      print("Initialising stock with NAs")
-      # Set up the reactive dependency - has to be done in the main constructor.
-      private$reactiveDep <- function(x) NULL 
-      # Make the fields and fill up the history
-      self$reset(stock_params = stock_params, mp_params = mp_params, niters = niters)
-      
-    },
-    
     # Add option to initialiser to call this
     #' @description
     #' Method to create a reactive instance of a Stock.
@@ -175,18 +165,27 @@ Stock <- R6::R6Class("Stock",
     #' @description
     #' Fills the historical period of the stock
     #' @param stock_params Named list with last_historical_timestep and stock_history elements.
-    #' @param ... Other arguments
-    fill_history = function(...){
+    #' @param mp_params A list of the MP parameters. Used to fill HCR ip and op.
+    fill_history = function(stock_params, mp_params){
       #print("Filling the historical period")
       self$biomass[,1] <- self$b0
-      self$fill_catch_history(...)
+      self$fill_catch_history(stock_params)
       #print("Filling biomass history")
       # Fill up biomass in the historical period - including the biomass at the start of projection period
+      # Also get the historical HCR ip and op over the time series
+      # This is so we plot the upcoming decision before it happens, and also show observed vs true stock status
       for (ts in 2:(self$last_historical_timestep + 1)){
         self$fill_biomass(ts)
+        self$hcr_ip[,ts] <- get_hcr_ip(stock = self, mp_params = mp_params, yr = ts)
+        self$hcr_op[,ts] <- get_hcr_op(stock = self, mp_params = mp_params, yr = ts)
       }
+      # HCR ip and op also need the first time step
+      self$hcr_ip[,1] <- get_hcr_ip(stock = self, mp_params = mp_params, yr = 1)
+      self$hcr_op[,1] <- get_hcr_op(stock = self, mp_params = mp_params, yr = 1)
+      
       # Other members
       self$effort <- self$catch / (self$biomass * self$q)
+      
       invisible(self)
     },
 
