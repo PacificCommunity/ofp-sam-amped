@@ -125,6 +125,7 @@ Stock <- R6::R6Class("Stock",
       self$last_historical_timestep <- stock_params$last_historical_timestep
       # Fill up the historical period
       self$fill_history(stock_params)
+      
       # If mp_params passed in, also get HCR ip and op in the last historical time step + 1
       # This is so we plot the upcoming decision before it happens
       if (!is.null(mp_params)){
@@ -132,6 +133,7 @@ Stock <- R6::R6Class("Stock",
         self$hcr_ip[,hcr_ts] <- get_hcr_ip(stock = self, mp_params = mp_params, yr = hcr_ts)
         self$hcr_op[,hcr_ts] <- get_hcr_op(stock = self, mp_params = mp_params, yr = hcr_ts)
       }
+      
       # Invalidate the object so Shiny gets triggered
       private$invalidate() 
       invisible(self)
@@ -145,7 +147,7 @@ Stock <- R6::R6Class("Stock",
     #' @param mp_params A list of the MP parameters. Used to fill HCR ip and op.
     #' @param niters The number of iters in the stock (default = 1).
     #' @return A new Stock object.
-    initialize = function(stock_params = list(r = 0.6, stock_history = "fully", nyears = 30, initial_year = 2000, last_historical_timestep=10, biol_sigma = 0), mp_params = NULL, niters = 1, make_reactive = TRUE, name="Balls"){
+    initialize = function(stock_params = list(r = 0.6, stock_history = "fully", nyears = 30, initial_year = 2000, last_historical_timestep=10, biol_sigma = 0), mp_params = NULL, niters = 1){
       print("Initialising stock with NAs")
       # Set up the reactive dependency - has to be done in the main constructor.
       private$reactiveDep <- function(x) NULL 
@@ -155,6 +157,9 @@ Stock <- R6::R6Class("Stock",
     },
     
     # Add option to initialiser to call this
+    #' @description
+    #' Method to create a reactive instance of a Stock.
+    #' @return a reactiveExpr.
     reactive = function() {
       # Ensure the reactive stuff is initialized.
       if (is.null(private$reactiveExpr)) {

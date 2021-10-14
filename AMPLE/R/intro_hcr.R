@@ -31,16 +31,45 @@ introHCR <- function(...){
             tags$span(title="Reset current projection",
               actionButton("reset", "Reset")),
             br(),
-            stockParamsSetterUI("stock"),
-            br(),
             # Stochasticity module
             stochParamsSetterUI("stoch", init_biol_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=FALSE),
+            br(),
+            # Life history parameters projection options
+            stockParamsSetterUI("stock"),
             br()
           ),
 
 
           mainPanel(
             textOutput("printtimestep"),
+            # Set up the main panel as before
+            # Main plot for the Intro to HCR app
+            # 2 x 2 panel
+            # Catch  |  HCR
+            # ----------------
+            # B/K    |  connecting arrow
+            fluidRow(
+              column(6,
+                tags$span(title="Plot of the total catch. The blue, dashed horizontal line is next years catch limit that has been set by the HCR. The grey, dashed horizontal lines are the catch limits that were set by the HCR in the past.",
+                plotOutput("plotcatch", width="auto"))
+              ),
+              column(6,
+                tags$span(title="The HCR. The blue, dashed vertical line shows the current estimated biomass that is used as the input. The blue, dashed horizontal line shows the resulting catch limit that will be set for the following year",
+                plotOutput("plothcr", width="auto"))
+              )
+            ), # End of fluid Row
+            fluidRow(
+              column(6,
+                tags$span(title="The biomass of the stock (scaled by the unfished biomass). When the variability options are switched on, the black line is the 'true' biomass and the blue line is the 'estimated' biomass. The HCR uses the estimated biomass for the input.",
+                plotOutput("plotbiomass", width="auto"))
+              ),
+              column(6,
+                tags$span(title="The current estimated biomass is used as the input to the HCR.",
+                plotOutput("plotarrow", width="auto"))
+              )
+            ),
+            
+            # Just put here for testing right now
             tableOutput("printstock")
 
 
@@ -153,6 +182,21 @@ introHCR <- function(...){
     output$printtimestep <- renderText({
       return(paste("Time step: ", timestep(), sep=""))
     })
+    
+    #output$plotcatch
+    #output$plotarrow
+    output$plotbiomass <- renderPlot({
+      plot_biomass(stock=stock(), mp_params=get_mp_params(), main="SB / SBF=0", cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
+    })
+    
+    
+    
+    #output$plothcr
+    
+    output$plotarrow <- renderPlot({
+      plot_hcr_intro_arrow(stock=stock(), timestep=timestep()+1-get_mp_params()$timelag)
+    })
+    
 
   } # End of server function
 
