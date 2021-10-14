@@ -183,10 +183,15 @@ introHCR <- function(...){
       return(paste("Time step: ", timestep(), sep=""))
     })
     
-    #output$plotcatch
+    output$plotcatch <- renderPlot({
+      plot_catch(stock=stock(), mp_params=get_mp_params(), timestep=timestep(), cex.axis=1.1, cex.lab=1.3)
+    })
+    
+    
+    
     #output$plotarrow
     output$plotbiomass <- renderPlot({
-      plot_biomass(stock=stock(), mp_params=get_mp_params(), main="SB / SBF=0", cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
+      plot_biomass(stock=stock(), mp_params=get_mp_params(), cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
     })
     
     

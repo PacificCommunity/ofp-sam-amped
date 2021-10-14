@@ -46,7 +46,7 @@ plot_biomass <- function(stock, mp_params, show_last=TRUE, max_spaghetti_iters=5
   bk_true <- stock$biomass / stock$k
   # Set up empty plot 
   ylim <- c(0,1) #max(1, max(bk_true, na.rm=TRUE), na.rm=TRUE)
-  plot(x=years, y= bk_true[1,], type="n", ylab="SB/SBF=0", xlab="Year", ylim=ylim, xaxs="i", yaxs="i", ...)
+  plot(x=years, y= bk_true[1,], type="n", ylab="SB/SBF=0", xlab="Year", ylim=ylim, xaxs="i", yaxs="i", main="SB / SBF=0", ...)
   # Add LRP and TRP
   lines(x=c(years[1], years[length(years)]),y=rep(stock$lrp, 2), lty=3, lwd=2, col="black")
   lines(x=c(years[1], years[length(years)]),y=rep(stock$trp, 2), lty=3, lwd=2, col="black")
@@ -93,4 +93,75 @@ plot_biomass <- function(stock, mp_params, show_last=TRUE, max_spaghetti_iters=5
   }
 }
 
+# Called by a couple of plotting functions
+# Better than maintaining same code in multiple places
+# So the HCR and catch plot in the Intro to HCR app have the same scale
+get_catch_ymax <- function(catch, mp_params){
+  # Sort out dimensions and labels
+  # Bit annoying that we have a switch
+  ymax <- switch(mp_params$hcr_shape,
+                 constant = mp_params$params["constant_level"],
+                 threshold = mp_params$params["max"])
+  ymax <- max(c(ymax, c(catch)), na.rm=TRUE) * 1.1
+  return(ymax)
+}
+
+
+
+plot_catch <- function(stock, mp_params, timestep, plot_ghost_hcr_ops = TRUE, ...){
+  years <- as.numeric(dimnames(stock$biomass)$year)
+  # Set Ylim - use same as HCR plot
+  ymax <- get_catch_ymax(stock$catch, mp_params)
+  yrange <- c(0, ymax)
+  # Empty axis
+  plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Catch", xlab="Year", main="Catch", xaxs="i", yaxs="i", ...)
+  grid()
+  
+  # Get last iteration 
+  last_iter <- dim(stock$catch)[1]
+  
+  # If we have more than X iters, draw envelope of iters
+  #if(last_iter > max_spaghetti_iters){
+  #  # Draw ribbon
+  #  draw_ribbon(x=years, y=stock$catch, quantiles=quantiles)
+  #  # Add spaghetti
+  #  for (iter in 1:nspaghetti){
+  #    lines(x=years, y=stock$catch[iter,], lty=spaghetti_lty, lwd=spaghetti_lwd, col=spaghetti_col)
+  #  }
+  #} else {
+  
+  # Plot the historical HCR OPs (current timestep is considered as historical as that has already been fished)
+  if (plot_ghost_hcr_ops == TRUE){
+    if (timestep > stock$last_historical_timestep){
+      for (yr in (stock$last_historical_timestep+1):timestep){
+        lines(x=c(years[1], years[length(years)]), y=rep(stock$catch[last_iter, yr],2), lty=2, col="grey", lwd=2)
+      }
+    }
+  }
+  # Plot the proposed catch from the HCR - i.e. the catch in the next time step
+  if (timestep < dim(stock$hcr_op)[2]){ 
+    # If HCR OP is total catch
+    next_catch <- stock$hcr_op[last_iter, timestep+1]
+    # If HCR OP is catch multiplier - not implemented yet - used for empirical
+    # if (mp_params$output_type == "catch multiplier"){
+    #   next_catch <- stock$catch[last_iter,timestep] * stock$hcr_op[,timestep+1]
+    #   next_catch[next_catch < 10] <- 10 # A minimum catch
+    # }
+    lines(x=c(years[1], years[length(years)]), y=rep(next_catch,2), lty=2, col="blue", lwd=2) 
+  }
+  #  }
+  #  # Plot all iters as ghosts
+  #  if (last_iter > 1){
+  #    for (i in 1:last_iter){
+  #      lines(x=years, y=stock$catch[i,], col=ghost_col, lwd=ghost_lwd, lty=ghost_lty)
+  #    }
+  #  }
+  #}
+  
+  # Current iteration
+  lines(x=years, y=stock$catch[last_iter,], col="blue", lwd=2, lty=1)
+  
+  
+  
+}
 
