@@ -22,7 +22,7 @@ introHCR <- function(...){
           intro_hcr_sidebar_setup(
             # MP selector
             # HCR options
-            mpParamsSetterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch", "Threshold effort", "Constant effort")),
+            mpParamsSetterUI("mpparams", mp_visible=c("Threshold catch")),#, "Constant catch", "Threshold effort", "Constant effort")),
             br(), # Could add br() automatically to side bar set up to separate each component?
 
             # Buttons
@@ -40,13 +40,8 @@ introHCR <- function(...){
 
 
           mainPanel(
-            textOutput("testtext"),
-            #textOutput(renderText({"arse"}))
             textOutput("printtimestep"),
-            #tableOutput("printstock"),
-            tableOutput("printstock2"),
-            #textOutput("printr6test"),
-            textOutput("printstr6test")
+            tableOutput("printstock")
 
 
 
@@ -69,114 +64,88 @@ introHCR <- function(...){
 
     #) # End of tabsetPanel1
   ) # End of navbarPage
+  
+  #--------------------------------------------------------------------------
 
   # Start of server function
   server <- function(input, output,session) {
 
     # Notes for myself:
     # get_mp_params is a "reactiveExpr"
-    # Use: get_mp_params() which evaluates it (evaluates the switcheroo function and returns the parameters)
-    # This can only be done inside a reactive consumer
+    # Use: get_mp_params() to evaluates the reactiveExpr (evaluates the switcheroo function and returns the parameters)
+    # Evaluating reactiveExpr can only be done inside a reactive consumer (like an observer or reactive)
     get_stoch_params <- stochParamsSetterServer("stoch")
     get_mp_params <- mpParamsSetterServer("mpparams", get_stoch_params)
     #get_mp_params <- mpParamsSetterServer("mpparams") # Test without get_stoch_params - doesn't update mp_params as stochasticity parameters change
     get_stock_params <- stockParamsSetterServer("stock", get_stoch_params)
+    niters <- 1 # Always 1 for this app
 
-    # Make a stock object using the get_stock_params()
-    # If the stock params inputs change, get_stock_params() gets triggered, triggering this observe event and
-    # making the stock object.
-    # This event gets triggered when the app opens to make the new stock.
-    #reactive(stock <- Stock$new(stock_params=get_stock_params())) # Calls initialize method
-    #observe({
-    #  x <- 5
-    #  # We need biol sigma from the stochasticity parameters as part of the stock
-    #  stock_params <- get_stock_params()
-    #  mp_params <- get_mp_params()
-    #  stock <- Stock$new(stock_params=stock_params, mp_params=mp_params)
-    #  x <- 5
-    #})
+    # Notes on the reactive stock
     
-    # To keep track of current timestep
-    # This should be reactive because we want to print to the screen the current value.
-    timestep <- reactiveVal(0)
-    # What if we just make it normal?
-    #observe({
-    #  lhts <- get_stock_params()$last_historical_timestep # Works
-    #  #lhts <- stock()$last_historical_timestep # Only works if stock is reactiveExpression - called before stock is set up
-    #  timestep(lhts) 
-    #})
-
-    # Which approach is better - reactiveExpr (like this one) or reactiveVal()?
-    # Make the stock - has to be in a reactive environment to be able to get the stock and mp params
-    # returns a reactiveExpr, not a reactive value
-    #stock <- reactive({
-    #  stock_params <- get_stock_params()
-    #  mp_params <- get_mp_params()
-    #  new_stock <- Stock$new(stock_params=stock_params, mp_params=mp_params)
-    #  return(new_stock)
-    #})
+    # stock is a reactiveExpr. Evaluating stock() calls the Stock$reactive() method.
+    # This method accesses a reactiveVal (called reactiveDep) inside Stock and then returns self.
+    # This effectively makes stock a reactive version of a Stock as each call to it accesses reactiveDep.
+    # When reactiveDep changes, the stock object invalidates.
+    # Changing reativeDep is added to what method you want to invalidate the stock.
+    # Here we only add it to project(). When project() is called, the last thing the method does is change the
+    # value of reactiveDep. stock() therefore becomes invalid and can triggers things in the Shiny app.
     
+    # As stock is a reactiveExpr, you cannot create it insides a reactive environment.
+    # This means you have to isolate() get_stock_params() and get_mp_params() when you create stock.
+    # A Srock$reset() method is used to reset the stock if the params change.
+    # Construction split into two parts
+    # 1.  Make an instance of the stock with new()
+    # 2.  Include a reset method that changes / resets the members of that instance
     
+    # Make instance of the stock
+    # (could this be improved - make reactive a boolean option? Not sure, the reactive stock() has to be a 
+    # reactiveExpr that has the reactiveDep and returns self - could set up a maker function?)
+    # This is just a normal stock that can be used outside of shiny purposes
+    stock_noreactive <- Stock$new(stock_params = isolate(get_stock_params()), mp_params = isolate(get_mp_params()), niters = niters)
+    # Make a reactive version by calling the reactive() method (or do it all at once)
+    stock <- stock_noreactive$reactive()
+    #stock <- Stock$new(stock_params = isolate(get_stock_params()), mp_params = isolate(get_mp_params()), niters = niters)$reactive()
     
-    # Can we make it work as a reactiveVal?
-    # But still doesn't trigger table update
-    stock <- reactiveVal(NA)
-    stock2 <- reactiveVal(NA)
+    # Set up the timestep - initial value is last historical timestep
+    timestep <- reactiveVal(isolate(get_stock_params()$last_historical_timestep))
+    
+    # Reset observer - clears out the stock information
+    # Any invalid reactive objects in this observer will trigger this, including an invalid stock.
+    # For example, when stock() becomes invalid because project() method has been called.
+    # To avoid resetting the stock when stock becomes invalid, wrap the reset() method in isolate.
+    # This gets called straight away - bit wasteful - possible delay it? Observe are 'eager', reactive are 'lazy'
+    # What can trigger the reset:
+    # - changing stock and MP params
+    # - pressing the reset button
     observe({
+      message("In reset observer")
+      input$reset
       stock_params <- get_stock_params()
       mp_params <- get_mp_params()
-      
-      
-      new_stock <- Stock$new(stock_params=stock_params, mp_params=mp_params, make_reactive = TRUE)
-      # stock is a reactiveVal
-      stock(new_stock)
-      
-      # stock2 here is a relativeExpr
-      new_stock2 <- Stock$new(stock_params=stock_params, mp_params=mp_params, make_reactive = TRUE)$reactive()
-      stock2(new_stock2)
-      
-      # Update timestep too
-      timestep(stock_params$last_historical_timestep) 
+      # Reset the timestep
+      timestep(get_stock_params()$last_historical_timestep)
+      # Use isolate else this is triggered when stock becomes invalid (i.e. after project) 
+      isolate(stock()$reset(stock_params = stock_params, mp_params = mp_params, niters=niters))
+    }, label="resetter")
+    
+    
+    # Apparently bindEvent is now recommende over observeEvent but there are no clear examples of how to use it
+    observeEvent(input$advance, {
+      # Advance the timestep if able
+      if(timestep() < get_stock_params()$nyears){
+        timestep(timestep()+1)
+      }
+      # Call the project() method. This invalidates the stock() object
+      # (by internally changing the reactiveDep field).
+      # The invalidated stock can then trigger other stuff
+      stock()$project(timesteps=timestep(), mp_params=get_mp_params())
     })
     
-    # Cannot get this to work at all
-    # stock2() is just that reactive function
-    #Browse[2]> stock2()
-    #reactive({
-    #  private$reactiveDep()
-    #  self
-    #}) 
-    # Which I can't seem to evaluate
-    
-    #stock2 <- reactive({Stock$new(stock_params=get_stock_params(), mp_params=get_mp_params(), make_reactive = TRUE)$reactive()})
-    
-    # What happens when we press Advance
-    # Need to track current timestep
-    
-    
-    
-    #observeEvent(input$advance, {
-    #  # Advance the timestep if able
-    #  if(timestep() < get_stock_params()$nyears){
-    #    timestep(timestep()+1)
-    #  }
-    #  x <- 5
-    #  
-    #  # And project
-    #  stock()$project(timesteps = timestep(), mp_params = get_mp_params())
-    #  x <- 5
-    #})
-    
-
     #---------------------------------------------------------------
     # Output stuff
-    output$printstock_ <- renderTable({
-      # Include timestep() here to trigger the renderTable.
-      # Otherwise it is not triggered even though stock() is changing.
-      # Or rather, the contents of stock are changing, stock() is just a call to stock and not changing?
-      #timestep()
-      # Why does this not trigger after project() is called?
-      # Triggers when lhts changes though
+    
+    output$printstock <- renderTable({
+      # This output is triggered if stock is invalidated, i.e. through the project() method
       stock_temp <- stock()
       stock_temp$as_data_frame()
     })
@@ -184,103 +153,6 @@ introHCR <- function(...){
     output$printtimestep <- renderText({
       return(paste("Time step: ", timestep(), sep=""))
     })
-
-    #browser()
-    #stock$biomass
-    #x <- 5
-
-
-
-    # Test how it works
-    # First time the app opens up and everytime the MP inputs are changed, get_mp_params() changes and this observe() gets triggered. mpp is just a normal list
-    # Anytime the parameters change, a reactive environment, like observe() will also trigger.
-    #observe({
-    #  browser()
-    #  #mpp <- get_mp_params()
-    #  #sp <- get_stoch_params()
-    #  x <- 5
-    #  sp <- get_stock_params()
-    #  x <- 5
-    #})
-
-    
-    #-----------------------------------------------------------
-    # Reactive stock name test 2
-    
-    st2 <- Stock$new(stock_params = isolate(get_stock_params()), mp_params = isolate(get_mp_params()))$reactive()
-    
-    # When advance pressed change the name
-    # This is picked up by the observe above and stuff happens
-    observeEvent(input$advance, {
-      # Advance the timestep if able
-      if(timestep() < get_stock_params()$nyears){
-        timestep(timestep()+1)
-      }
-      
-      # st2 is a reactiveExpr
-      # stock is a reactiveVal
-      # both st2() and stock() are Stock
-      bst2 <- st2()$biomass
-      #bstock <- stock()$biomass
-      
-      st2()$project(timesteps=timestep(), mp_params=get_mp_params())
-      #stock()$project(timesteps = timestep(), mp_params = get_mp_params())
-      
-      # Why less?
-      bst22 <- st2()$biomass
-      #bstock2 <- stock()$biomass
-      # Projects but stock not invalidated?
-      
-      x <- 5
-    })
-    
-    output$printstock2 <- renderTable({
-      stock_temp <- st2()
-      stock_temp$as_data_frame()
-    })
-    
-    ## This gets triggered by changes to changeName?
-    #output$printstr6test2 <- renderText({
-    #  paste("In renderText. Stock changed. Name: ", st()$getName(), sep="")
-    #  
-    #})
-    
-    #-----------------------------------------------------------
-    # Reactive stock name test
-    # This works
-    st <- Stock$new(name = "Balls")$reactive()
-    # The observer accesses the reactive expression
-    #sto <- observe({
-    #  message("Stock changed. Name: ", st()$getName())  
-    #})
-    # When advance pressed change the name
-    # This is picked up by the observe above and stuff happens
-    observeEvent(input$advance, {
-      st()$changeName("Fuck")
-    })
-    
-    # This gets triggered by changes to changeName?
-    output$printstr6test <- renderText({
-      paste("In renderText. Stock changed. Name: ", st()$getName(), sep="")
-      
-    })
-    
-    #-----------------------------------------------------------
-    # Reactive R6 Person class test
-    # Uses code in reactive_r6_test.T (not in repository)
-    #pr <- Person$new("Dean")$reactive()
-    
-    # When advance pressed change the name
-    # This is picked up by the observe above and stuff happens
-    #observeEvent(input$advance, {
-    #  pr()$changeName("Newname")
-    #})
-    
-    # This gets triggered by changes to changeName?
-    #output$printr6test <- renderText({
-    #  paste("In renderText. Person changed. Name: ", pr()$getName(), sep="")
-    #})
-    
 
   } # End of server function
 

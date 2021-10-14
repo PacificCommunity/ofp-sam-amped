@@ -29,14 +29,6 @@ next_corrnoise <- function(x, b, sd=0.1){
 #  n[i] <- next_corrnoise(n[i-1], 0.5, 0.2)
 #}
 
-
-# Continue with fill initial method - HCR ip and op
-# project
-# Figure out modules and put it all together
-
-
-# Make all of this public
-
 #' R6 Class representing a stock
 #' 
 #' @description
@@ -58,7 +50,6 @@ Stock <- R6::R6Class("Stock",
                      
   # Keeps track of whether object has been invalidated.
   private = list(
-    name = "",
     reactiveDep = NULL,
     reactiveExpr = NULL,
     invalidate = function() {
@@ -104,19 +95,18 @@ Stock <- R6::R6Class("Stock",
     biol_sigma = NULL,
     #' @field last_historical_timestep The last historical timestep of catch and effort data.
     last_historical_timestep = NULL,
-
-
-    # new() method will call this
+    
     #' @description
-    #' Create a new stock object, with fields of the right dimension and NA values.
-    #' Equivalent to the old 'clear_stock' function.
+    #' Resets an existing stock object, by remaking all fields (possibly with different dimensions for the array fields) .
+    #' Fills up the catch, effort and biomass fields in the historical period based on the stock history and
+    #' life history parameters in the \code{stock_params} argument.
+    #' This is a reactive method which invalidates a reactive instance of this class after it is called.
     #' @param stock_params A list with essential elements: r (growth rate, numeric, default=6), stock_history (string: "fully", "over", "under", default="fully") initial_year (integer, default=2000), last_historical_timestep (integer, default=10), nyears (integer, default=30), biol_sigma (numeric, default = 0).
     #' @param mp_params A list of the MP parameters. Used to fill HCR ip and op.
     #' @param niters The number of iters in the stock (default = 1).
     #' @return A new Stock object.
-    initialize = function(stock_params = list(r = 0.6, stock_history = "fully", nyears = 30, initial_year = 2000, last_historical_timestep=10, biol_sigma = 0), mp_params = NULL, niters = 1, make_reactive = TRUE, name="Balls"){
-      #print("Initialising stock with NAs")
-      # nyears must be greater than stock_params$last_historical_timestep
+    reset = function(stock_params, mp_params, niters){
+      print("Resetting existing stock")
       nyears <- max(stock_params$last_historical_timestep+1, round(stock_params$nyears))
       initial_array <- array(NA, dim=c(niters, nyears), dimnames=list(iter=1:niters, year=stock_params$initial_year:(stock_params$initial_year+nyears-1)))
       self$biomass <- initial_array
@@ -133,13 +123,8 @@ Stock <- R6::R6Class("Stock",
       self$current_corrnoise <-  rep(0, niters)
       self$biol_sigma = stock_params$biol_sigma
       self$last_historical_timestep <- stock_params$last_historical_timestep
-
-      # Could fill up the history here too?
-      # And then remove the reset function - does the same thing as initialise
-      # fill_history also needs the mp_params for the hcrip and hcrop, pass into initialise
-      # ... why are we filling up HCR IP and HCR OP here?
+      # Fill up the historical period
       self$fill_history(stock_params)
-
       # If mp_params passed in, also get HCR ip and op in the last historical time step + 1
       # This is so we plot the upcoming decision before it happens
       if (!is.null(mp_params)){
@@ -147,18 +132,26 @@ Stock <- R6::R6Class("Stock",
         self$hcr_ip[,hcr_ts] <- get_hcr_ip(stock = self, mp_params = mp_params, yr = hcr_ts)
         self$hcr_op[,hcr_ts] <- get_hcr_op(stock = self, mp_params = mp_params, yr = hcr_ts)
       }
+      # Invalidate the object so Shiny gets triggered
+      private$invalidate() 
+      invisible(self)
+    },
 
-      # Until someone calls $reactive(), private$reactiveDep() is a no-op. Need
-      # to set it here because if it's set in the definition of private above, it will
-      # be locked and can't be changed.
+    # new() method will call this
+    #' @description
+    #' Create a new stock object, with fields of the right dimension and NA values (by calling the \code{reset()} method.
+    #' See the \code{reset()} method for more details.
+    #' @param stock_params A list with essential elements: r (growth rate, numeric, default=6), stock_history (string: "fully", "over", "under", default="fully") initial_year (integer, default=2000), last_historical_timestep (integer, default=10), nyears (integer, default=30), biol_sigma (numeric, default = 0).
+    #' @param mp_params A list of the MP parameters. Used to fill HCR ip and op.
+    #' @param niters The number of iters in the stock (default = 1).
+    #' @return A new Stock object.
+    initialize = function(stock_params = list(r = 0.6, stock_history = "fully", nyears = 30, initial_year = 2000, last_historical_timestep=10, biol_sigma = 0), mp_params = NULL, niters = 1, make_reactive = TRUE, name="Balls"){
+      print("Initialising stock with NAs")
+      # Set up the reactive dependency - has to be done in the main constructor.
       private$reactiveDep <- function(x) NULL 
-      private$name <- name
+      # Make the fields and fill up the history
+      self$reset(stock_params = stock_params, mp_params = mp_params, niters = niters)
       
-      #if(make_reactive == TRUE){
-      #  self$reactive()
-      #}
-
-      #invisible(self)
     },
     
     # Add option to initialiser to call this
@@ -173,13 +166,6 @@ Stock <- R6::R6Class("Stock",
       }
       private$reactiveExpr
     }, 
-    changeName = function(newName) {
-      private$name <- newName
-      private$invalidate()
-    },
-    getName = function() {
-      private$name
-    },
 
     #' @description
     #' Fills the historical period of the stock
@@ -259,24 +245,6 @@ Stock <- R6::R6Class("Stock",
       self$biomass[,ts] <- self$biomass[,ts-1] + fB - self$catch[,ts-1]
       # Biomass cannot be less than 1e-6
       self$biomass[,ts] <- pmax(self$biomass[,ts],1e-6)
-      invisible(self)
-    },
-
-    #' @description
-    #' Resets the stock by emptying out array slots, and refilling the historical period.
-    #' The existing life history parameters and dimensions are unchanged.
-    #' This is so the same stock can be used with a different MP.
-    #' @param ... Arguments passed to 'Stock$initialize' and 'Stock$fill_historical'
-    reset = function(...){
-      # Empty the array members
-      self$biomass[] <- NA
-      self$hcr_ip[] <- NA
-      self$hcr_op[] <- NA
-      self$catch[] <- NA
-      self$effort[] <- NA
-      #self$estimated_cpue[] <- NA
-      # Then refill up the history
-      self$fill_history(...)
       invisible(self)
     },
 
@@ -373,7 +341,6 @@ Stock <- R6::R6Class("Stock",
           self$hcr_op[,yr+1] <- get_hcr_op(stock = self, mp_params = mp_params, yr = yr+1)
         }
       } # End of main project timestep for loop
-      
       
       # Invalidate the object so Shiny gets triggered
       private$invalidate() 
