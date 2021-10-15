@@ -138,16 +138,22 @@ plot_catch <- function(stock, mp_params, timestep, plot_ghost_hcr_ops = TRUE, ..
       }
     }
   }
-  # Plot the proposed catch from the HCR - i.e. the catch in the next time step
-  if (timestep < dim(stock$hcr_op)[2]){ 
-    # If HCR OP is total catch
-    next_catch <- stock$hcr_op[last_iter, timestep+1]
-    # If HCR OP is catch multiplier - not implemented yet - used for empirical
-    # if (mp_params$output_type == "catch multiplier"){
-    #   next_catch <- stock$catch[last_iter,timestep] * stock$hcr_op[,timestep+1]
-    #   next_catch[next_catch < 10] <- 10 # A minimum catch
-    # }
-    lines(x=c(years[1], years[length(years)]), y=rep(next_catch,2), lty=2, col="blue", lwd=2) 
+  
+  # If HCR OP is total catch, plot the proposed catch from the HCR - i.e. the catch in the next time step
+  # This is only used in the 'Introduction to HCRs' app.
+  # Could add something similar for relative effort based HCRs but I don't they should be included in the
+  # 'Introduction to HCRs' app,
+  # Would need an additional step of converting that relative effort to actual catch (done in the project() method)
+  if(mp_params$output_type == "catch"){
+    if (timestep < dim(stock$hcr_op)[2]){ 
+      next_catch <- stock$hcr_op[last_iter, timestep+1]
+      # If HCR OP is catch multiplier - not implemented yet - used for empirical
+      # if (mp_params$output_type == "catch multiplier"){
+      #   next_catch <- stock$catch[last_iter,timestep] * stock$hcr_op[,timestep+1]
+      #   next_catch[next_catch < 10] <- 10 # A minimum catch
+      # }
+      lines(x=c(years[1], years[length(years)]), y=rep(next_catch,2), lty=2, col="blue", lwd=2) 
+    }
   }
   #  }
   #  # Plot all iters as ghosts
@@ -160,8 +166,80 @@ plot_catch <- function(stock, mp_params, timestep, plot_ghost_hcr_ops = TRUE, ..
   
   # Current iteration
   lines(x=years, y=stock$catch[last_iter,], col="blue", lwd=2, lty=1)
+}
+
+#' Plot the HCR
+#' 
+#' Plot the HCR, including current stock status and current HCR OP.
+plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, show_ref_pts=FALSE, ...){
   
+  if (mp_params$output_type=="catch"){
+    ymax <- get_catch_ymax(stock$catch, mp_params)
+  }
+  if (mp_params$output_type=="relative effort"){
+    rel_effort <- sweep(stock$effort, 1, stock$effort[,stock$last_historical_timestep], "/")
+    ymax <- max(c(rel_effort, mp_params$params["max"], mp_params$params["constant_level"]), na.rm=TRUE) * 1.1
+  }
+  ylab <- paste("Next ", mp_params$output_type, sep="")
+  yrange <- c(0, ymax)
   
+  # Need to set these depending on the HCR somehow
+  # From MP analysis type? Leave as B/K for now. Could set additional argument in mp_params like xlab?
+  xrange <- c(0, 1)
+  xlab <- "Estimated SB/SBF=0"
+  # Plot empty axes 
+  plot(x=xrange,y=yrange,type="n",xlab=xlab, ylab=ylab, xaxs="i", yaxs="i", main="The HCR", ...) 
+  grid()
+  
+  # If model based MP (or NA) add the B/K based reference points
+  if (show_ref_pts){
+    if (mp_params$mp_type %in% c(as.character(NA), "model")){
+      lines(x=rep(stock$lrp,2), y=c(0, ymax),lty=3, lwd=2, col="black")
+      lines(x=rep(stock$trp,2), y=c(0, ymax),lty=3, lwd=2, col="black")
+    }
+  }
+  
+  # Add all HCR inputs and outputs so far
+  # Only show the HCR years (from last historical timestep)
+  # The years that the HCR has been active
+  hcr_ip_yrs <- ((stock$last_historical_timestep+1):dim(stock$hcr_ip)[2]) - mp_params$timelag
+  hcr_op_yrs <- (stock$last_historical_timestep+1):dim(stock$hcr_ip)[2]
+  # Show all iters and timesteps as ghosts
+  points(x=c(stock$hcr_ip[,hcr_ip_yrs]), y=c(stock$hcr_op[,hcr_op_yrs]), col="grey", pch=16, cex=2)
+  
+  # Plot HCR outline - depends on the HCR shape
+  # Constant catch
+  hcr_lwd <- 3
+  if (mp_params$hcr_shape == "constant"){
+    lines(x=xrange, y=c(mp_params$params["constant_level"], mp_params$params["constant_level"]), lwd=hcr_lwd, lty=1, col="red")
+  }
+  # Threshold
+  else if (mp_params$hcr_shape == "threshold"){
+    lines(x = c(0, mp_params$params["lim"], mp_params$params["elbow"], 1),
+          y = c(rep(mp_params$params["min"], 2), rep(mp_params$params["max"], 2)), lwd=hcr_lwd, lty=1, col="red")
+  }
+  else {
+    stop("In plot_model_based_hcr(). Trying to plot the HCR shape but hcr_shape is not recognised.")
+  }
+  
+  # Show the IP and OP for the current iter and timestep
+  if (!is.null(timestep)){
+    # Stop timestep going beyond bounds
+    if (timestep > dim(stock$hcr_ip)[2]){
+      timestep <- dim(stock$hcr_ip)[2]
+    }
+    last_iter <- dim(stock$hcr_ip)[1]
+    # timestep is the catch to be
+    last_ip <- c(stock$hcr_ip[last_iter,timestep-mp_params$timelag]) 
+    last_op <- c(stock$hcr_op[last_iter,timestep])  
+    lines(x = c(last_ip, last_ip), y=c(0, last_op), lty=2, lwd=2, col="blue")
+    lines(x = c(0, last_ip), y=c(last_op, last_op), lty=2, lwd=2, col="blue")
+    # Plot the last points
+    #points(x=lastx, y=lasty, col=last_col, pch=last_pch, cex=last_cex)
+  }
   
 }
+
+
+
 

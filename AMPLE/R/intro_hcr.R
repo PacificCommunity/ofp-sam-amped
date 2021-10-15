@@ -22,7 +22,7 @@ introHCR <- function(...){
           intro_hcr_sidebar_setup(
             # MP selector
             # HCR options
-            mpParamsSetterUI("mpparams", mp_visible=c("Threshold catch")),#, "Constant catch", "Threshold effort", "Constant effort")),
+            mpParamsSetterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch")),# "Threshold effort", "Constant effort")),
             br(), # Could add br() automatically to side bar set up to separate each component?
 
             # Buttons
@@ -51,21 +51,21 @@ introHCR <- function(...){
             fluidRow(
               column(6,
                 tags$span(title="Plot of the total catch. The blue, dashed horizontal line is next years catch limit that has been set by the HCR. The grey, dashed horizontal lines are the catch limits that were set by the HCR in the past.",
-                plotOutput("plotcatch", width="auto"))
+                plotOutput("plot_catch", width="auto"))
               ),
               column(6,
                 tags$span(title="The HCR. The blue, dashed vertical line shows the current estimated biomass that is used as the input. The blue, dashed horizontal line shows the resulting catch limit that will be set for the following year",
-                plotOutput("plothcr", width="auto"))
+                plotOutput("plot_hcr", width="auto"))
               )
             ), # End of fluid Row
             fluidRow(
               column(6,
                 tags$span(title="The biomass of the stock (scaled by the unfished biomass). When the estimation variability options are switched on, the black line is the 'true' biomass and the blue line is the 'estimated' biomass. The HCR uses the estimated biomass for the input.",
-                plotOutput("plotbiomass", width="auto"))
+                plotOutput("plot_biomass", width="auto"))
               ),
               column(6,
                 tags$span(title="The current estimated biomass is used as the input to the HCR.",
-                plotOutput("plotarrow", width="auto"))
+                plotOutput("plot_arrow", width="auto"))
               )
             ),
             
@@ -183,23 +183,20 @@ introHCR <- function(...){
       return(paste("Time step: ", timestep(), sep=""))
     })
     
-    output$plotcatch <- renderPlot({
+    output$plot_catch <- renderPlot({
       plot_catch(stock=stock(), mp_params=get_mp_params(), timestep=timestep(), cex.axis=1.1, cex.lab=1.3)
     })
     
-    
-    
-    #output$plotarrow
-    output$plotbiomass <- renderPlot({
+    output$plot_biomass <- renderPlot({
       plot_biomass(stock=stock(), mp_params=get_mp_params(), cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
     })
     
+    output$plot_hcr <- renderPlot({
+      plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), timestep=timestep()+1, cex.axis=1.1, cex.lab=1.3)
+    })
     
-    
-    #output$plothcr
-    
-    output$plotarrow <- renderPlot({
-      plot_hcr_intro_arrow(stock=stock(), timestep=timestep()+1-get_mp_params()$timelag)
+    output$plot_arrow <- renderPlot({
+      plot_hcr_intro_arrow(stock=stock(), timestep=timestep()+1-get_mp_params()$timelag) # Watch the timelag here
     })
     
 
