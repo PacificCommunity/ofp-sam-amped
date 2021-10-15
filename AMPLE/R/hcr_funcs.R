@@ -23,8 +23,9 @@
 #' @param stock The stock object
 #' @param mp_params The HCR / management procedure parameters used to evaluate the HCR (as a list).
 #' @param yr The time step of the true stock status used to generate the HCR IP .
+#' @param ... Other arguments, including iters
 #' @export
-get_hcr_ip <- function(stock, mp_params, yr){
+get_hcr_ip <- function(stock, mp_params, yr, ...){
   # Check for NA in mp_analysis, if so return NA
   if (is.na(mp_params$mp_analysis)){
     hcr_ip <- NA
@@ -33,7 +34,7 @@ get_hcr_ip <- function(stock, mp_params, yr){
   else {
     # Call HCR with correct inputs:
     # What are stock_params here?
-    hcr_ip <- do.call(mp_params$mp_analysis, args=list(stock=stock, mp_params=mp_params, yr=yr))
+    hcr_ip <- do.call(mp_params$mp_analysis, args=list(stock=stock, mp_params=mp_params, yr=yr, ...))
   }
   return(hcr_ip)
 }
@@ -56,10 +57,11 @@ get_hcr_ip <- function(stock, mp_params, yr){
 #' @param stock The stock object
 #' @param mp_params A named list of MP parameters (with est_sigma and est_bias elements)
 #' @param yr The timestep that the biomass is taken from.
+#' @param iters Numeric vector of iters. Default is all of them.
 #' @export
-assessment <- function(stock, mp_params, yr){
+assessment <- function(stock, mp_params, yr, iters = 1:dim(stock$biomass)[1]){
   # Return observed depletion
-  true_ip <- stock$biomass[,yr] / stock$k
+  true_ip <- stock$biomass[iters,yr] / stock$k
   est_ip <- estimation_error(input =  true_ip, sigma = mp_params$est_sigma, bias = mp_params$est_bias)
   # Max depletion is 1.0
   est_ip <- pmin(est_ip, 1.0)
@@ -93,13 +95,14 @@ estimation_error <- function(input, sigma, bias){
 #' @param stock The stock object
 #' @param mp_params The HCR / management procedure parameters used to evaluate the HCR (as a list).
 #' @param yr The timestep.
+#' @param iters A numeric vector of iters.
 #' @return A vector of outputs from the HCR.
 #' @export
-get_hcr_op <- function(stock, mp_params, yr){
+get_hcr_op <- function(stock, mp_params, yr, iters=1:dim(stock$biomass)[1]){
   # Shape is not NA
   # Call HCR with the lagged input
   #hcr_op <- do.call(mp_params$hcr_shape, args=list(stock=stock, mp_params=mp_params, stock_params=stock_params, yr=yr))
-  hcr_op <- do.call(mp_params$hcr_shape, args=list(input=stock$hcr_ip[,yr,drop=FALSE], mp_params=mp_params, yr=yr))
+  hcr_op <- do.call(mp_params$hcr_shape, args=list(input=stock$hcr_ip[iters,yr,drop=FALSE], mp_params=mp_params, yr=yr))
   return(hcr_op)
 }
 

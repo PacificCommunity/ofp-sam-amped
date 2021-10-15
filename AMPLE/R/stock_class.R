@@ -229,13 +229,13 @@ Stock <- R6::R6Class("Stock",
     #' \code{cpue = Ct / Et = qBt}
     #' @param ts The biomass time step to be filled (required catch etc in ts - 1)
     #' @param biol_prod_sigma The biological productivity variability (default = 0).
-    fill_biomass = function(ts){
+    fill_biomass = function(ts, iters = 1:dim(self$biomass)[1]){
       # Check that ts > 1
       if(ts < 2){
         stop("Cannot get biomass in ts = 1 (as you need an initial biomass)")
       }
       # Get fB in previous timestep
-      fB <- (self$r / self$p) * self$biomass[,ts-1] * (1 - (self$biomass[,ts-1] / self$k) ^ self$p)
+      fB <- (self$r / self$p) * self$biomass[iters,ts-1] * (1 - (self$biomass[iters,ts-1] / self$k) ^ self$p)
       # Apply correlated noise to r
       # fB <- fB * process_variability
       # A value of b = 0.5 is red noise, make redder by increasing (< 1)
@@ -243,12 +243,12 @@ Stock <- R6::R6Class("Stock",
       b <- 0.5
       # How do we deal with biol_prod_sigma and other stochasticity parameters
       # Update current_corrnoise
-      self$current_corrnoise <- next_corrnoise(self$current_corrnoise, b=b, sd=self$biol_sigma)
-      fB <- fB * (self$current_corrnoise + 1)
+      self$current_corrnoise[iters] <- next_corrnoise(self$current_corrnoise[iters], b=b, sd=self$biol_sigma)
+      fB <- fB * (self$current_corrnoise[iters] + 1)
       # Update biomass
-      self$biomass[,ts] <- self$biomass[,ts-1] + fB - self$catch[,ts-1]
+      self$biomass[iters,ts] <- self$biomass[iters,ts-1] + fB - self$catch[iters,ts-1]
       # Biomass cannot be less than 1e-6
-      self$biomass[,ts] <- pmax(self$biomass[,ts],1e-6)
+      self$biomass[iters,ts] <- pmax(self$biomass[iters,ts],1e-6)
       invisible(self)
     },
 
@@ -274,8 +274,9 @@ Stock <- R6::R6Class("Stock",
     #'
     #' @param timesteps The timesteps to project over. A vector of length 2 (start and end).
     #' @param mp_params A vector of management procedure parameters.
+    #' @param iters A vector of iterations to be projected. Default is all the iterations in the stock
     #' @return A stock object (a reactiveValues object with bits for the stock)
-    project = function(timesteps, mp_params){
+    project = function(timesteps, mp_params, iters=1:dim(self$biomass)[1]){
       # Check timesteps - should be a range of two values
       if (length(timesteps) == 1){
         timesteps <- rep(timesteps,2)
@@ -284,7 +285,11 @@ Stock <- R6::R6Class("Stock",
         stop("In project(). timesteps argument should be of length 2.")
       }
       if((timesteps[1] - mp_params$timelag) < 1){
-        stop("In project(). Trying to access element in yr less than 1")
+        stop("In project(). Trying to access element in yr less than 1.")
+      }
+      # Check iters
+      if(!all(iters %in% 1:dim(self$biomass)[1])){
+        stop("In project(). Iterations outside of range.")
       }
 
       # Loop over the timesteps and update catch and biomass
@@ -299,16 +304,16 @@ Stock <- R6::R6Class("Stock",
         
         # Catch based HCRs - like the typical catch threshold HCR
         if (mp_params$output_type == "catch"){
-          self$catch[,yr] <- self$hcr_op[,yr]
-          self$effort[,yr] <- self$catch[,yr] / (self$q * self$biomass[,yr])
+          self$catch[iters,yr] <- self$hcr_op[iters,yr]
+          self$effort[iters,yr] <- self$catch[iters,yr] / (self$q * self$biomass[iters,yr])
         }
 
         # base_effort used by relative effort HCRs
-        base_effort <- self$effort[,self$last_historical_timestep]
+        base_effort <- self$effort[iters,self$last_historical_timestep]
         if (mp_params$output_type == "relative effort"){
           # HCR OP is relative to last historical effort
-          self$effort[,yr] <- base_effort * self$hcr_op[,yr]
-          self$catch[,yr] <- self$effort[,yr] * self$q * self$biomass[,yr]
+          self$effort[iters,yr] <- base_effort * self$hcr_op[iters,yr]
+          self$catch[iters,yr] <- self$effort[iters,yr] * self$q * self$biomass[iters,yr]
         }
 
         # Only used with empirical HCR - not yet added
@@ -323,11 +328,11 @@ Stock <- R6::R6Class("Stock",
         # Sometimes you get crazy high efforts (when biomass is low)
         # So we limit the maximum effort relative to the last historical year
         # After applying effort limit you need to recalculate catch to reflect what really happened
-        rel_effort <- self$effort[,yr] / base_effort
+        rel_effort <- self$effort[iters,yr] / base_effort
         max_rel_effort <- pmin(rel_effort, 10) # Max relative effort capped at 10 - could be lower
-        self$effort[,yr] <- max_rel_effort * base_effort
+        self$effort[iters,yr] <- max_rel_effort * base_effort
         # Update catch based on the updated effort
-        self$catch[,yr] <- self$effort[,yr] * self$q * self$biomass[,yr] #
+        self$catch[iters,yr] <- self$effort[iters,yr] * self$q * self$biomass[iters,yr] #
         
         # What was estimated CPUE used for? Empirical HCR?
         # Update estimated cpue too
@@ -339,10 +344,10 @@ Stock <- R6::R6Class("Stock",
         # f(Bt) = r/p Bt * (1 - (Bt/k)^p)
         if (yr < dim(self$biomass)[2]){
           # Update biomass
-          self$fill_biomass(ts = yr+1)
+          self$fill_biomass(ts = yr+1, iters=iters)
           # Evaluate HCR in the next (yr argument to get_hcr_ip and get_hcr_op is current or next?)
-          self$hcr_ip[,yr+1] <- get_hcr_ip(stock = self, mp_params = mp_params, yr = yr+1)
-          self$hcr_op[,yr+1] <- get_hcr_op(stock = self, mp_params = mp_params, yr = yr+1)
+          self$hcr_ip[iters,yr+1] <- get_hcr_ip(stock = self, mp_params = mp_params, yr = yr+1, iters=iters)
+          self$hcr_op[iters,yr+1] <- get_hcr_op(stock = self, mp_params = mp_params, yr = yr+1, iters=iters)
         }
       } # End of main project timestep for loop
       
