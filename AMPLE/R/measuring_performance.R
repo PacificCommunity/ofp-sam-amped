@@ -125,7 +125,7 @@ measuring_performance <- function(...){
     
     output$plot_biomass <- renderPlot({
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
-      plot_biomass_iters(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", iters=iter_range, max_spaghetti_iters=10, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
+      plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", iters=iter_range, max_spaghetti_iters=10, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
     })
     
     

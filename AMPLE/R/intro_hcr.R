@@ -188,7 +188,7 @@ intro_hcr <- function(...){
     })
     
     output$plot_biomass <- renderPlot({
-      plot_biomass_hcr(stock=stock(), mp_params=get_mp_params(), cex.axis=1.1, cex.lab=1.3, main="SB/SBF=0")
+      plot_biomass(stock=stock(), mp_params=get_mp_params(), cex.axis=1.1, cex.lab=1.3, main="SB/SBF=0")
     })
     
     output$plot_hcr <- renderPlot({

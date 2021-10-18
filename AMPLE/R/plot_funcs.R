@@ -39,42 +39,10 @@ plot_hcr_intro_arrow <- function(stock, timestep){
 #' @param ylim Y limits
 #' @param ... Other arguments to pass to the plot() function.
 #' @return A plot
-plot_biomass_hcr <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stock$biomass)[1], ...){
-  years <- as.numeric(dimnames(stock$biomass)$year)
-  # True bk
-  bk_true <- stock$biomass / stock$k
-  # Set up empty plot 
-  ylim <- c(0,1) #max(1, max(bk_true, na.rm=TRUE), na.rm=TRUE)
-  plot(x=years, y= bk_true[1,], type="n", ylab=ylab, xlab="Year", ylim=ylim, xaxs="i", yaxs="i", ...)
-  # Add LRP and TRP
-  lines(x=c(years[1], years[length(years)]),y=rep(stock$lrp, 2), lty=3, lwd=2, col="black")
-  lines(x=c(years[1], years[length(years)]),y=rep(stock$trp, 2), lty=3, lwd=2, col="black")
-  # Add a grid
-  grid()
-  
-  # Draw the iterations in grey
-  true_col <- "black"
-  est_col <- "blue"
-  
-  # This will only work for model based for now
-  # If we have a model based MP, show the HCR IP as it is the estimated biomass too
-  #if (mp_params$mp_type == "model"){
-  # With no estimation error, the true biomass is the same as the observed biomass
-  lines(x=years, y=stock$hcr_ip[1,], col=est_col, lty=1, lwd=2)
-  if ((mp_params$est_sigma != 0) | (mp_params$est_bias != 0)){
-    # Plot the estimated B/K  - plotted first so that the Intro to HCR shows it
-    lines(x=years, y=bk_true[1,], col=true_col, lwd=2, lty=1)
-    # Only show legend if not already showing a legend
-    legend(x="bottomleft", legend=c("True","Estimated"), lwd=2, col=c(true_col, est_col))
-  }
-}
-
 #' Plot biomass with iterations
 #'
 #' Similar to plot_biomass_hcr but making sure that estimated biomass is only shown of estimation variability is shown.
-#' 
-
-plot_biomass_iters <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), ...){
+plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # True bk
   bk_true <- stock$biomass / stock$k
@@ -112,6 +80,10 @@ plot_biomass_iters <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:di
   }
   # Plot the last true iteration in black
   lines(x=years, y=bk_true[last_iter,], col=true_col, lwd=2, lty=1)
+  # Hack to show the estimated biomass on the Introduction to HCR app
+  if(dim(stock$biomass)[1]==1){
+    lines(x=years, y=stock$hcr_ip[last_iter,], col=est_col, lty=1, lwd=2)
+  }
   
 }
 
