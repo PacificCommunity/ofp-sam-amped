@@ -104,7 +104,7 @@ Stock <- R6::R6Class("Stock",
     #' @param niters The number of iters in the stock (default = 1).
     #' @return A new Stock object.
     initialize = function(stock_params, mp_params, niters = 1){
-      print("Initialising stock with NAs")
+      #print("Initialising stock with NAs")
       # Set up the reactive dependency - has to be done in the main constructor.
       private$reactiveDep <- function(x) NULL 
       # Make the fields and fill up the history
@@ -121,7 +121,7 @@ Stock <- R6::R6Class("Stock",
     #' @param niters The number of iters in the stock (default = 1).
     #' @return A new Stock object.
     reset = function(stock_params, mp_params, niters){
-      print("Resetting existing stock")
+      #print("Resetting existing stock")
       nyears <- max(stock_params$last_historical_timestep+1, round(stock_params$nyears))
       initial_array <- array(NA, dim=c(niters, nyears), dimnames=list(iter=1:niters, year=stock_params$initial_year:(stock_params$initial_year+nyears-1)))
       self$biomass <- initial_array
@@ -210,8 +210,9 @@ Stock <- R6::R6Class("Stock",
       catch_history_iters[] <- rep(catch_history, each=niters)
       # Sling a load of noise on it
       # Set seed so that the initial noise is always the same
+      # And that the catch history for each iteration is the same
       set.seed(666)
-      catch_history_iters <- catch_history_iters * rlnorm(prod(dim(catch_history_iters)),meanlog=0,sdlog=0.1)
+      catch_history_iters <- catch_history_iters * rep(rlnorm(dim(catch_history_iters)[2],meanlog=0,sdlog=0.1), each=niters)
       # Set a proper random seed
       set.seed(as.numeric(Sys.time()))
       # Or don't include noise in initial period
@@ -236,15 +237,16 @@ Stock <- R6::R6Class("Stock",
       }
       # Get fB in previous timestep
       fB <- (self$r / self$p) * self$biomass[iters,ts-1] * (1 - (self$biomass[iters,ts-1] / self$k) ^ self$p)
-      # Apply correlated noise to r
+      # Apply correlated noise to r if not in the historical period
       # fB <- fB * process_variability
       # A value of b = 0.5 is red noise, make redder by increasing (< 1)
       # Currently not an input but could be
-      b <- 0.5
-      # How do we deal with biol_prod_sigma and other stochasticity parameters
-      # Update current_corrnoise
-      self$current_corrnoise[iters] <- next_corrnoise(self$current_corrnoise[iters], b=b, sd=self$biol_sigma)
-      fB <- fB * (self$current_corrnoise[iters] + 1)
+      if (ts > self$last_historical_timestep){
+        b <- 0.5
+        # Update current_corrnoise
+        self$current_corrnoise[iters] <- next_corrnoise(self$current_corrnoise[iters], b=b, sd=self$biol_sigma)
+        fB <- fB * (self$current_corrnoise[iters] + 1)
+      }
       # Update biomass
       self$biomass[iters,ts] <- self$biomass[iters,ts-1] + fB - self$catch[iters,ts-1]
       # Biomass cannot be less than 1e-6

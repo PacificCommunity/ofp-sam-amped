@@ -8,7 +8,7 @@
 #' Launches the introduction to HCRs Shiny app.
 #' @param ... Not used
 #' @export
-introHCR <- function(...){
+intro_hcr <- function(...){
 
   # User interface ----
   # Use navbarPage (fluidPage has a problem with title argument and tabs)
@@ -184,11 +184,11 @@ introHCR <- function(...){
     })
     
     output$plot_catch <- renderPlot({
-      plot_catch(stock=stock(), mp_params=get_mp_params(), timestep=timestep(), cex.axis=1.1, cex.lab=1.3)
+      plot_catch_hcr(stock=stock(), mp_params=get_mp_params(), timestep=timestep(), cex.axis=1.1, cex.lab=1.3, main="Catch")
     })
     
     output$plot_biomass <- renderPlot({
-      plot_biomass(stock=stock(), mp_params=get_mp_params(), cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
+      plot_biomass_hcr(stock=stock(), mp_params=get_mp_params(), cex.axis=1.1, cex.lab=1.3, main="SB/SBF=0")
     })
     
     output$plot_hcr <- renderPlot({

@@ -1,11 +1,11 @@
-# Put together the Introduction to Indicators app
+# Put together the Measuring Performance app
 
 #' Introduction to indicators app launcher
 #' 
 #' Launches the introduction to indicators Shiny app.
 #' @param ... Not used
 #' @export
-introHCR <- function(...){
+measuring_performance <- function(...){
 
   # User interface ----
   ui <- navbarPage(
@@ -28,8 +28,19 @@ introHCR <- function(...){
         ),
 
         mainPanel(
+          column(6,
+            fluidRow(
+              plotOutput("plot_catch")
+            ), 
+            fluidRow(
+              plotOutput("plot_biomass")
+            ) 
+          ),
           # Just put here for testing right now
-          tableOutput("printstock")
+          column(6,
+            fluidRow(textOutput("print_iter"))#,     
+            #fluidRow(tableOutput("print_stock"))
+          )
         ) # End of mainPanel
       ) # End of sidebarLayout
     ), # End of tabPanel 1
@@ -57,7 +68,7 @@ introHCR <- function(...){
     get_stoch_params <- stochParamsSetterServer("stoch")
     get_mp_params <- mpParamsSetterServer("mpparams", get_stoch_params)
     get_stock_params <- stockParamsSetterServer("stock", get_stoch_params)
-    max_iters <- 3#200 # If you click more than this I'd be surprised... This could be an app option?
+    max_iters <- 100 # If you click more than this I'd be surprised... This could be an app option?
 
     # Make instance of the stock
     stock_noreactive <- Stock$new(stock_params = isolate(get_stock_params()), mp_params = isolate(get_mp_params()), niters = max_iters)
@@ -69,7 +80,7 @@ introHCR <- function(...){
     
     # Reset observer - clears out the stock information
     observe({
-      message("In reset observer")
+      #message("In reset observer")
       input$reset
       stock_params <- get_stock_params()
       mp_params <- get_mp_params()
@@ -81,45 +92,42 @@ introHCR <- function(...){
     
     
     observeEvent(input$project, {
-      # Advance the iter 
+      # If space advance the iter and project
       if(iter() < max_iters){
         iter(iter()+1)
+        # If max out the number of iters - the stock for the last iter keeps changing as it keeps being projected
+        timesteps <- c(stock()$last_historical_timestep+1,dim(stock()$biomass)[2])
+        # Call the project() method. This invalidates the stock() object
+        # (by internally changing the reactiveDep field).
+        # The invalidated stock can then trigger other stuff
+        stock()$project(timesteps=timesteps, mp_params=get_mp_params(), iters=iter())
       }
-      timesteps <- c(stock()$last_historical_timestep+1,dim(stock()$biomass)[2])
-      # Call the project() method. This invalidates the stock() object
-      # (by internally changing the reactiveDep field).
-      # The invalidated stock can then trigger other stuff
-      stock()$project(timesteps=timesteps, mp_params=get_mp_params(), iters=iter())
     })
     
     #---------------------------------------------------------------
     # Output stuff
     
-    output$printstock <- renderTable({
+    output$print_stock <- renderTable({
       # This output is triggered if stock is invalidated, i.e. through the project() method
       stock_temp <- stock()
       stock_temp$as_data_frame()
     })
     
-    output$printtimestep <- renderText({
-      return(paste("Time step: ", timestep(), sep=""))
+    output$print_iter <- renderText({
+      return(paste("Iteration: ", iter(), sep=""))
     })
     
     output$plot_catch <- renderPlot({
-      plot_catch(stock=stock(), mp_params=get_mp_params(), timestep=timestep(), cex.axis=1.1, cex.lab=1.3)
+      iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
+      plot_catch_iters(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters = 10, cex.axis=1.1, cex.lab=1.3)
+      
     })
     
     output$plot_biomass <- renderPlot({
-      plot_biomass(stock=stock(), mp_params=get_mp_params(), cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
+      iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
+      plot_biomass_iters(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", iters=iter_range, max_spaghetti_iters=10, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
     })
     
-    output$plot_hcr <- renderPlot({
-      plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), timestep=timestep()+1, cex.axis=1.1, cex.lab=1.3)
-    })
-    
-    output$plot_arrow <- renderPlot({
-      plot_hcr_intro_arrow(stock=stock(), timestep=timestep()+1-get_mp_params()$timelag) # Watch the timelag here
-    })
     
 
   } # End of server function
