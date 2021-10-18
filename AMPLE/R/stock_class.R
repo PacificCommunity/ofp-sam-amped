@@ -357,7 +357,18 @@ Stock <- R6::R6Class("Stock",
       private$invalidate() 
       
       invisible(self)
-    } # End of project()
+    }, # End of project()
+
+    #' @description
+    #' The catch per unit effort (CPUE, or catch rate) relative to the CPUE in the last historical period.
+    #' @return An array of same dims as the catch and effort fields.
+    relative_cpue = function(){
+      browser()
+      cpue <- self$catch / self$effort
+      base_cpue<- cpue[,self$last_historical_timestep]
+      rel_cpue <- sweep(cpue, 1, base_cpue, "/")
+      return(rel_cpue)
+    }
   ) # End of public fields
 )
 
