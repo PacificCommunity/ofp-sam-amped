@@ -29,17 +29,21 @@ measuring_performance <- function(...){
 
         mainPanel(
           column(6,
-            fluidRow(
-              plotOutput("plot_catch")
-            ), 
-            fluidRow(
-              plotOutput("plot_biomass")
-            ) 
+            #fluidRow(
+              #plotOutput("plot_catch"),
+            #), 
+            #fluidRow(
+              #plotOutput("plot_biomass"),
+            #), 
+            #fluidRow(
+              #plotOutput("plot_cpue")
+              plotOutput("plot_test")
+            #) 
           ),
           # Just put here for testing right now
           column(6,
-            fluidRow(textOutput("print_iter"))#,     
-            #fluidRow(tableOutput("print_stock"))
+            fluidRow(textOutput("print_iter")),     
+            fluidRow(plotOutput("plot_hcr"))
           )
         ) # End of mainPanel
       ) # End of sidebarLayout
@@ -114,13 +118,12 @@ measuring_performance <- function(...){
     })
     
     output$print_iter <- renderText({
-      return(paste("Iteration: ", iter(), sep=""))
+      return(paste("Replicate: ", iter(), sep=""))
     })
     
     output$plot_catch <- renderPlot({
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
       plot_catch_iters(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters = 10, cex.axis=1.1, cex.lab=1.3)
-      
     })
     
     output$plot_biomass <- renderPlot({
@@ -128,6 +131,22 @@ measuring_performance <- function(...){
       plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", iters=iter_range, max_spaghetti_iters=10, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
     })
     
+    output$plot_cpue <- renderPlot({
+      iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
+      plot_cpue(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters = 10, cex.axis=1.1, cex.lab=1.3)
+    })
+    
+    output$plot_test <- renderPlot({
+      iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
+      par(mfrow = c(3,1))
+      plot_catch_iters(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters = 10, cex.axis=1.1, cex.lab=1.3)
+      plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", iters=iter_range, max_spaghetti_iters=10, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
+      plot_cpue(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters = 10, cex.axis=1.1, cex.lab=1.3)
+    }, height= 750)
+    
+    output$plot_hcr <- renderPlot({
+      plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), iter=iter(), cex.axis=1.1, cex.lab=1.3)
+    })
     
 
   } # End of server function

@@ -167,6 +167,33 @@ plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], 
   lines(x=years, y=stock$catch[max(iters),], lty=1, lwd=2, col="black")
 } 
 
+#' Plot the relative CPUE with iterations
+plot_cpue <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95),  ...){
+  cpue <- stock$relative_cpue()
+  years <- as.numeric(dimnames(cpue)$year)
+  # Set ylim - use same as HCR plot
+  ymax <- max(1, cpue, na.rm=TRUE)
+  yrange <- c(0, ymax)
+  # Empty axis
+  plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Relative CPUE (catch rate)", xlab="Year", xaxs="i", yaxs="i", ...)
+  grid()
+  # Draw a ribbon if more than X iters
+  if (length(iters) >= max_spaghetti_iters){
+    draw_ribbon(x=years, y=cpue[iters,], quantiles=quantiles)
+    legend(x="bottomleft", legend=c("Average CPUE","Last replicate"), lty=c(2,1), lwd=2, col="black")
+  } else {
+  # Otherwise plot all iters in grey
+    for(i in iters){
+      lines(x=years, y=cpue[i,], lty=1, lwd=2, col="grey")
+    }
+  }
+  # Plot the most recent catch in black
+  lines(x=years, y=cpue[max(iters),], lty=1, lwd=2, col="black")
+} 
+
+
+
+
 # Draw ribbon based on quantiles and add median
 draw_ribbon <- function(x, y, quantiles){
   # Get quantiles
@@ -192,7 +219,14 @@ draw_ribbon <- function(x, y, quantiles){
 #' Plot the HCR
 #' 
 #' Plot the HCR, including current stock status and current HCR OP.
-plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, show_ref_pts=FALSE, ...){
+plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, iter=NULL, show_ref_pts=FALSE, ...){
+  
+  # Stop timestep going beyond bounds
+  if (!is.null(timestep)){
+    if (timestep > dim(stock$hcr_ip)[2]){
+      timestep <- dim(stock$hcr_ip)[2]
+    }
+  }
   
   if (mp_params$output_type=="catch"){
     ymax <- get_catch_ymax(stock$catch, mp_params)
@@ -227,6 +261,16 @@ plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, show_ref_pts=F
   hcr_op_yrs <- (stock$last_historical_timestep+1):dim(stock$hcr_ip)[2]
   # Show all iters and timesteps as ghosts
   points(x=c(stock$hcr_ip[,hcr_ip_yrs]), y=c(stock$hcr_op[,hcr_op_yrs]), col="grey", pch=16, cex=2)
+  # Plot current timestep of first iter in a different shade
+  # Used in Introduction to HCR app
+  if (!is.null(timestep)){
+    points(x=c(stock$hcr_ip[1,timestep - mp_params$timelag]),
+           y=c(stock$hcr_op[1,timestep]), col="blue", pch=16, cex=2)
+  } else if (!is.null(iter)) {
+  # If iter is not null, plot all timesteps of that iter in blue
+    points(x=c(stock$hcr_ip[iter,hcr_ip_yrs]), y=c(stock$hcr_op[iter,hcr_op_yrs]), col="blue", pch=16, cex=2)
+  }
+  
   
   # Plot HCR outline - depends on the HCR shape
   # Constant catch
@@ -243,21 +287,16 @@ plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, show_ref_pts=F
     stop("In plot_model_based_hcr(). Trying to plot the HCR shape but hcr_shape is not recognised.")
   }
   
-  # Show the IP and OP for the current iter and timestep
+  # If timestep is present, show the IP and OP as lines for the 1st iter and timestep
+  # Used in Introduction to HCRs app
+  # Plotted last so they lie on top of everything else
   if (!is.null(timestep)){
-    # Stop timestep going beyond bounds
-    if (timestep > dim(stock$hcr_ip)[2]){
-      timestep <- dim(stock$hcr_ip)[2]
-    }
-    last_iter <- dim(stock$hcr_ip)[1]
     # timestep is the catch to be
-    last_ip <- c(stock$hcr_ip[last_iter,timestep-mp_params$timelag]) 
-    last_op <- c(stock$hcr_op[last_iter,timestep])  
+    last_ip <- c(stock$hcr_ip[1,timestep-mp_params$timelag]) 
+    last_op <- c(stock$hcr_op[1,timestep])  
     lines(x = c(last_ip, last_ip), y=c(0, last_op), lty=2, lwd=2, col="blue")
     lines(x = c(0, last_ip), y=c(last_op, last_op), lty=2, lwd=2, col="blue")
-    # Plot the last points
-    #points(x=lastx, y=lasty, col=last_col, pch=last_pch, cex=last_cex)
-  }
+  } 
   
 }
 
