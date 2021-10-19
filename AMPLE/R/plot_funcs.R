@@ -243,7 +243,7 @@ plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, iter=NULL, sho
   xrange <- c(0, 1)
   xlab <- "Estimated SB/SBF=0"
   # Plot empty axes 
-  plot(x=xrange,y=yrange,type="n",xlab=xlab, ylab=ylab, xaxs="i", yaxs="i", main="The HCR", ...) 
+  plot(x=xrange,y=yrange,type="n",xlab=xlab, ylab=ylab, xaxs="i", yaxs="i", ...) 
   grid()
   
   # If model based MP (or NA) add the B/K based reference points

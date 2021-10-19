@@ -192,7 +192,7 @@ intro_hcr <- function(...){
     })
     
     output$plot_hcr <- renderPlot({
-      plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), timestep=timestep()+1, cex.axis=1.1, cex.lab=1.3)
+      plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), timestep=timestep()+1, cex.axis=1.1, cex.lab=1.3, main="The HCR")
     })
     
     output$plot_arrow <- renderPlot({

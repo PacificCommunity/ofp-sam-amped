@@ -367,7 +367,34 @@ Stock <- R6::R6Class("Stock",
       base_cpue<- cpue[,self$last_historical_timestep]
       rel_cpue <- sweep(cpue, 1, base_cpue, "/")
       return(rel_cpue)
+    },
+
+    #' @description
+    #' Summarises the final year of each iteration. Used for the Measuring Performance app.
+    replicate_table = function(iters = 1, quantile_range = c(0.05, 0.95)){
+      # How to deal with iters being empty
+      final_ts <- dim(self$biomass)[2]
+      sbsbf0 <- self$biomass[iters,final_ts] / self$k
+      catch <- self$catch[iters,final_ts]
+      rel_cpue <- self$relative_cpue()[iters, final_ts]
+      # Get median and percentiles
+      signif <- 2 # Could make option but no point
+      sbsbf0_qs <- signif(quantile(sbsbf0, probs=c(quantile_range[1], 0.5, quantile_range[2])),signif)
+      sbsbf0_summary <- paste(sbsbf0_qs[2], " (", sbsbf0_qs[1], ",", sbsbf0_qs[3], ")", sep="")
+      catch_qs <- signif(quantile(catch, probs=c(quantile_range[1], 0.5, quantile_range[2])), signif)
+      catch_summary <- paste(catch_qs[2], " (", catch_qs[1], ",", catch_qs[3], ")", sep="")
+      rel_cpue_qs <- signif(quantile(rel_cpue, probs=c(quantile_range[1], 0.5, quantile_range[2])), signif)
+      rel_cpue_summary <- paste(rel_cpue_qs[2], " (", rel_cpue_qs[1], ",", rel_cpue_qs[3], ")", sep="")
+      out <- data.frame(Replicate= c(1:length(sbsbf0),"Average and range"),
+                        sbsbf0=c(signif(sbsbf0, signif), sbsbf0_summary),
+                        Catch=c(signif(catch, signif), catch_summary),
+                        rel_cpue=c(signif(rel_cpue, signif), rel_cpue_summary))
+      colnames(out)[2] <- "Final SB/SBF=0"
+      colnames(out)[3] <- "Final catch"
+      colnames(out)[4] <- "Final relative CPUE"
+      return(out)
     }
+
   ) # End of public fields
 )
 
