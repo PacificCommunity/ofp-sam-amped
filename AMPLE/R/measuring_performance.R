@@ -50,7 +50,7 @@ measuring_performance <- function(...){
                 tableOutput("rep_table"))),#, style = "font-size:100%")),
               conditionalPanel(condition="input.table_choice == 'pis'",
                 tags$span(title="A table of various performance indicators calculated over the short-, medium- and long- term. The value is the median. The values in the brackets are the 10-90 percentiles respectively. See the information tab for more details",
-                tableOutput("hcr_pis")))#, style = "font-size:100%"))
+                tableOutput("pi_table")))#, style = "font-size:100%"))
             )
           )
         ) # End of mainPanel
@@ -162,6 +162,18 @@ measuring_performance <- function(...){
     bordered = TRUE,
     rownames = FALSE,
     caption= "Performance of each replicate",
+    auto=TRUE)
+    
+    output$pi_table<- renderTable({
+      if(iter() < 1){
+        return(NULL)
+      }
+      iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
+      stock()$pi_table(iters=iter_range, quantile_range=c(0.05, 0.95))
+    },
+    bordered = TRUE,
+    rownames = TRUE,
+    caption= "Performance indicators",
     auto=TRUE)
     
     

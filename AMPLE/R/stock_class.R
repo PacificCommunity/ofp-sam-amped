@@ -370,6 +370,15 @@ Stock <- R6::R6Class("Stock",
     },
 
     #' @description
+    #' The effort relative to the effort in the last historical period.
+    #' @return An array of same dims as the effort field.
+    relative_effort = function(){
+      base_effort <- self$effort[,self$last_historical_timestep]
+      rel_effort <- sweep(self$effort, 1, base_effort, "/")
+      return(rel_effort)
+    },
+
+    #' @description
     #' Summarises the final year of each iteration. Used for the Measuring Performance app.
     replicate_table = function(iters = 1, quantile_range = c(0.05, 0.95)){
       # How to deal with iters being empty
@@ -392,6 +401,81 @@ Stock <- R6::R6Class("Stock",
       colnames(out)[2] <- "Final SB/SBF=0"
       colnames(out)[3] <- "Final catch"
       colnames(out)[4] <- "Final relative CPUE"
+      return(out)
+    }, 
+
+    time_periods = function(){
+      nprojyears <- dim(self$catch)[2] - self$last_historical_timestep + 1
+      period_length <- floor(nprojyears / 3)
+      short_term <- (self$last_historical_timestep + 1):(self$last_historical_timestep + period_length)
+      medium_term <- short_term + period_length
+      long_term <- max(medium_term):dim(self$catch)[2]
+      all_years <- dimnames(self$catch)$year
+      short_term <- all_years[short_term]
+      medium_term <- all_years[medium_term]
+      long_term <- all_years[long_term]
+      short_name <- paste("Short (", short_term[1], "-", short_term[length(short_term)],")", sep="")
+      medium_name <- paste("Medium (", medium_term[1], "-", medium_term[length(medium_term)],")", sep="")
+      long_name <- paste("Long (", long_term[1], "-", long_term[length(long_term)],")", sep="")
+      out <- list(short = short_term, medium = medium_term, long = long_term)
+      names(out) <- c(short_name, medium_name, long_name)
+      return(out)
+    },
+
+    #' @description 
+    #' Gets the performance indicators across all indicators, for three time periods.
+    #' Used in the Measuring Performance and Comparing Performance apps.
+    #' @return A data.frame
+    performance_indicators = function(iters = 1:dim(self$biomass)[1], quantile_range=c(0.05, 0.95)){
+      niters <- length(iters)
+      sbsbf0 <- self$biomass[iters,,drop=FALSE] / self$k
+      catch <- self$catch[iters,,drop=FALSE]
+      rel_cpue <- self$relative_cpue()[iters,,drop=FALSE]
+      rel_effort <- self$relative_effort()[iters,,drop=FALSE]
+      
+      # Probability above LRP
+      # Apply drops the dimensions which is annoying
+      prob_lrp <- apply(sbsbf0 > self$lrp, 2, sum, na.rm=TRUE) / niters
+      prob_lrp <- test <- array(prob_lrp, dim=c(1, length(prob_lrp)), dimnames=list(iter = 1, year=names(prob_lrp)))
+      
+      # Catch stability
+      catch_diff <- abs(catch[,2:ncol(catch), drop=FALSE] - catch[,1:(ncol(catch)-1), drop=FALSE])
+      max_catch_diff <- self$k / 10 # For rescale - Has to be same for all stocks - arbitrary
+      catch_stab <- (max_catch_diff - catch_diff) / max_catch_diff # rescale
+      catch_stab[catch_stab < 0] <- 0
+      
+      # Proximity to TRP
+      max_distance_from_trp <- max(self$trp, 1 - self$trp)
+      prox_trp <- pmax(1.0 - (abs(sbsbf0 - self$trp) / max_distance_from_trp), 0.0)
+      
+      # Get the averages over the time periods
+      # This all gets a bit gnarly
+      time_periods <- self$time_periods()
+      #data <- list(sbsbf0 = sbsbf0, prob_lrp = prob_lrp, catch = catch, rel_cpue = rel_cpue, rel_effort = rel_effort, catch_stab = catch_stab, prox_trp = prox_trp)
+      # Give them proper names
+      data <- list("SB/SBF0" = sbsbf0, "Prob. > LRP" = prob_lrp, "Catch" = catch, "Relative CPUE" = rel_cpue, "Relative effort" = rel_effort, "Catch stability"= catch_stab, "Proximity to TRP" = prox_trp)
+      
+      t2 <- lapply(data, function(x) {
+        lapply(time_periods, function(y) {
+          iter_means <- apply(x[,y,drop=FALSE], 1, mean, na.rm=TRUE)
+          quants <- quantile(iter_means, probs = c(quantile_range[1], 0.5, quantile_range[2]))
+        })
+      })
+      
+      out <- data.frame(pi = rep(names(data), each = length(time_periods) * 3),
+               time_period = rep(rep(names(time_periods), length(data)), each=3),
+               quantiles = rep(c(quantile_range[1], 0.5, quantile_range[2]),length(time_periods) * length(data)),
+               value = unlist(t2), row.names = NULL)
+      return(out)
+    },
+
+    #' @description
+    #' Makes a table of the performance indicators.
+    pi_table = function(...){
+      # Need to order things by factor
+      pis <- self$performance_indicators(...)
+      out <- tapply(signif(pis$value,2), INDEX = list(pis$pi, pis$time_period), FUN = function(x) paste0(x[2], "(",x[1], ",", x[3], ")"))
+      out <- as.data.frame(out)
       return(out)
     }
 
