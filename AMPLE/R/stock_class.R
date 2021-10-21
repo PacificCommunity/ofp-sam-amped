@@ -462,8 +462,12 @@ Stock <- R6::R6Class("Stock",
         })
       })
       
-      out <- data.frame(pi = rep(names(data), each = length(time_periods) * 3),
-               time_period = rep(rep(names(time_periods), length(data)), each=3),
+      # Force the order of the time period and metrics
+      time_period_names <- factor(names(time_periods), levels=names(time_periods))
+      data_names <- factor(names(data), levels=names(data))
+      
+      out <- data.frame(pi = rep(data_names, each = length(time_periods) * 3),
+               time_period = rep(rep(time_period_names, length(data)), each=3),
                quantiles = rep(c(quantile_range[1], 0.5, quantile_range[2]),length(time_periods) * length(data)),
                value = unlist(t2), row.names = NULL)
       return(out)
