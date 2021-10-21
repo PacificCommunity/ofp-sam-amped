@@ -280,16 +280,21 @@ plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, iter=NULL, sho
   # The years that the HCR has been active
   hcr_ip_yrs <- ((stock$last_historical_timestep+1):dim(stock$hcr_ip)[2]) - mp_params$timelag
   hcr_op_yrs <- (stock$last_historical_timestep+1):dim(stock$hcr_ip)[2]
-  # Show all iters and timesteps as ghosts
-  points(x=c(stock$hcr_ip[,hcr_ip_yrs]), y=c(stock$hcr_op[,hcr_op_yrs]), col="grey", pch=16, cex=2)
   # Plot current timestep of first iter in a different shade
   # Used in Introduction to HCR app
   if (!is.null(timestep)){
+    # Show ghosts
+    points(x=c(stock$hcr_ip[1,hcr_ip_yrs]), y=c(stock$hcr_op[1,hcr_op_yrs]), col="grey", pch=16, cex=2)
+    # Show current
     points(x=c(stock$hcr_ip[1,timestep - mp_params$timelag]),
            y=c(stock$hcr_op[1,timestep]), col="blue", pch=16, cex=2)
   } else if (!is.null(iter)) {
   # If iter is not null, plot all timesteps of that iter in blue
+    if(iter >= 1){
+      points(x=c(stock$hcr_ip[1:iter,hcr_ip_yrs]), y=c(stock$hcr_op[1:iter,hcr_op_yrs]), col="grey", pch=16, cex=2)
+    }
     points(x=c(stock$hcr_ip[iter,hcr_ip_yrs]), y=c(stock$hcr_op[iter,hcr_op_yrs]), col="blue", pch=16, cex=2)
+    # Only show ghosts if we've run at least projection
   }
   
   
