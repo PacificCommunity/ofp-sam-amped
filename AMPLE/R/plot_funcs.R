@@ -1,14 +1,19 @@
-# Plotting functions
+# Plotting functions for the Shiny apps.
+# Note that none of these are exported and no man pages are written.
+# They are documented for internal purposes only.
+# plot_funcs.R
 
-# Plot stuff
+# Author: Finlay Scott (SPC) <finlays@spc.int>
+# Sountrack: Waterfall Cities by Ozric Tentacles
+# Distributed under the terms of the GNU General Public License GPL (>= 3)
 
-
-# The connecting arrow
 #' Plot biomass to HCR arrow
 #' 
 #' Plots the connecting arrow between the biomass plot and the HCR plot in the 'Introduction to HCRs' app.
 #' @param stock An R6 class Stock object.
 #' @param timestep The time step of the HCR input.
+#' @noRd
+#' @keywords internal 
 plot_hcr_intro_arrow <- function(stock, timestep){
   # Arrow from B/K to HCR
   btimestep <- min(timestep, dim(stock$hcr_ip)[2])
@@ -24,6 +29,12 @@ plot_hcr_intro_arrow <- function(stock, timestep){
   arrows(x0=x[length(x)-1], y0=y[length(y)-1], x1=x[length(x)], y1=y[length(y)],col="blue", lwd=3)
 }
 
+#' Plot time periods
+#' 
+#' Adds the time periods to the current stock as vertical lines.
+#' @param stock An R6 class Stock object.
+#' @noRd
+#' @keywords internal 
 plot_time_periods <- function(stock){
     time_periods <- stock$time_periods()
     tp1 <- as.numeric(time_periods[[1]][1])# - 1 # So it looks better with catch
@@ -38,21 +49,19 @@ plot_time_periods <- function(stock){
 #' plot_biomass
 #'
 #' plot_biomass() plots time series of 'true' and observed depletion (SB/SBF=0).
-#' Used in the Introduction to HCR app.
+#' Used in all of the Shiny apps in this package.
 #'
 #' @param stock An R6 class Stock object.
 #' @param mp_params The management procedure parameters (a list including mp_type).
-#' @param max_spaghetti_iters The number of iterations to show as spaghetti before ribbons are shown.
+#' @param ylab The x-label.
+#' @param iters The iters to plot. Default is all of them.
+#' @param max_spaghetti_iters The number of iterations to show as spaghetti before ribbons are shown. Default is 50.
 #' @param quantiles Quantiles of the ribbons.
-#' @param nspaghetti The number of spaghetti iterations to plot on top of the ribbons.
-#' @param add_grid Add a grid.
-#' @param xlab The x-label.
-#' @param ylim Y limits
+#' @param show_time_periods Boolean. Show the time period lines on the plot.
 #' @param ... Other arguments to pass to the plot() function.
 #' @return A plot
-#' Plot biomass with iterations
-#'
-#' Similar to plot_biomass_hcr but making sure that estimated biomass is only shown of estimation variability is shown.
+#' @noRd
+#' @keywords internal 
 plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), show_time_periods = FALSE, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # True bk
@@ -105,6 +114,14 @@ plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stoc
 # Called by a couple of plotting functions
 # Better than maintaining same code in multiple places
 # So the HCR and catch plot in the Intro to HCR app have the same scale
+
+#' Get ymax for catch plots
+#' 
+#' Useful function to calculate the ymax for catch plots
+#' @param catch Catch data.
+#' @param mp_params The MP parameters.
+#' @noRd
+#' @keywords internal 
 get_catch_ymax <- function(catch, mp_params){
   # Sort out dimensions and labels
   # Bit annoying that we have a switch
@@ -120,7 +137,17 @@ get_catch_ymax <- function(catch, mp_params){
 
 # Plot a single iteration (the first one) with options for historical HCR OPs (used in Intro to HCR)
   # The is only used in the 'Introduction to HCRs' app.
-plot_catch_hcr <- function(stock, mp_params, timestep, plot_ghost_hcr_ops = TRUE, ...){
+
+#' Catch plot for Intro to HCR app
+#' 
+#' Plots a time series of the catches with the addition of the HCR output.
+#' Only deals with a single iteration and is only used in the Introduction to HCRs app.
+#' @param stock An R6 Stock class object.
+#' @param mp_params The MP parameters.
+#' @param timestep Current time timestep.
+#' @noRd
+#' @keywords internal 
+plot_catch_hcr <- function(stock, mp_params, timestep, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Set ylim - use same as HCR plot
   ymax <- get_catch_ymax(stock$catch, mp_params)
@@ -129,12 +156,11 @@ plot_catch_hcr <- function(stock, mp_params, timestep, plot_ghost_hcr_ops = TRUE
   plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Catch", xlab="Year", xaxs="i", yaxs="i", ...)
   grid()
   
-  # Plot the historical HCR OPs (current timestep is considered as historical as that has already been fished)
-  if (plot_ghost_hcr_ops == TRUE){
-    if (timestep > stock$last_historical_timestep){
-      for (yr in (stock$last_historical_timestep+1):timestep){
-        lines(x=c(years[1], years[length(years)]), y=rep(stock$catch[1, yr],2), lty=2, col="grey", lwd=2)
-      }
+  # Plot the historical catches as horizontal dashed lines
+  # (current timestep is considered as historical as that has already been fished)
+  if (timestep > stock$last_historical_timestep){
+    for (yr in (stock$last_historical_timestep+1):timestep){
+      lines(x=c(years[1], years[length(years)]), y=rep(stock$catch[1, yr],2), lty=2, col="grey", lwd=2)
     }
   }
   
@@ -160,6 +186,18 @@ plot_catch_hcr <- function(stock, mp_params, timestep, plot_ghost_hcr_ops = TRUE
 }
 
 #' Plot the catch with iterations
+#' 
+#' Plot the catch time series when there are potentially multiple iterations.
+#' Used in the Measuring Performance and Comparing Performance apps.
+#' @param stock An R6 class Stock object.
+#' @param mp_params The management procedure parameters (a list including mp_type).
+#' @param iters The iters to plot. Default is all of them.
+#' @param max_spaghetti_iters The number of iterations to show as spaghetti before ribbons are shown. Default is 50.
+#' @param quantiles Quantiles of the ribbons.
+#' @param show_time_periods Boolean. Show the time period lines on the plot.
+#' @param ... Other arguments to pass to the plot() function.
+#' @noRd
+#' @keywords internal 
 plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), show_time_periods=FALSE, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Set ylim - use same as HCR plot
@@ -185,7 +223,19 @@ plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], 
   lines(x=years, y=stock$catch[max(iters),], lty=1, lwd=2, col="black")
 } 
 
-#' Plot the relative CPUE with iterations
+#' Plot relative CPUE
+#' 
+#' Plot time series of the CPUE relative to the CPUE in the last historical time step.
+#' Used in the Measuring Performance and Comparing Performance apps.
+#' @param stock An R6 class Stock object.
+#' @param mp_params The management procedure parameters (a list including mp_type).
+#' @param iters The iters to plot. Default is all of them.
+#' @param max_spaghetti_iters The number of iterations to show as spaghetti before ribbons are shown. Default is 50.
+#' @param quantiles Quantiles of the ribbons.
+#' @param show_time_periods Boolean. Show the time period lines on the plot.
+#' @param ... Other arguments to pass to the plot() function.
+#' @noRd
+#' @keywords internal 
 plot_cpue <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), show_time_periods = FALSE,  ...){
   cpue <- stock$relative_cpue()
   years <- as.numeric(dimnames(cpue)$year)
@@ -214,8 +264,14 @@ plot_cpue <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spa
 
 
 
-
-# Draw ribbon based on quantiles and add median
+#' Draw uncertainty ribbon.
+#' 
+#' Add ribbon based on quantiles and add median to the current plot.
+#' @param x Year range
+#' @param y The data
+#' @param quantiles A vector of quantiles (length 2)
+#' @noRd
+#' @keywords internal 
 draw_ribbon <- function(x, y, quantiles){
   # Get quantiles
   qs <- apply(y, 2, function(x){quantile(x, probs=c(quantiles[1], 0.5, quantiles[2]), na.rm=TRUE)})
@@ -237,9 +293,17 @@ draw_ribbon <- function(x, y, quantiles){
 
 
   
-#' Plot the HCR
+#' Plot a model based HCR
 #' 
-#' Plot the HCR, including current stock status and current HCR OP.
+#' Plot a model based HCR, including current stock status and current HCR OP.
+#' Can also show the current and historical input and output values depending on the \code(timestep) and \code{iter} arguments.
+#' @param stock An R6 class Stock object.
+#' @param mp_params The management procedure parameters (a list including mp_type).
+#' @param timestep The current timestep (optional)
+#' @param iter The current iter (optional).
+#' @param show_ref_pts Boolean. Plot the LRP and TRP lines. Default is false.
+#' @noRd
+#' @keywords internal 
 plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, iter=NULL, show_ref_pts=FALSE, ...){
   
   # Stop timestep going beyond bounds
@@ -296,7 +360,6 @@ plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, iter=NULL, sho
     points(x=c(stock$hcr_ip[iter,hcr_ip_yrs]), y=c(stock$hcr_op[iter,hcr_op_yrs]), col="blue", pch=16, cex=2)
     # Only show ghosts if we've run at least projection
   }
-  
   
   # Plot HCR outline - depends on the HCR shape
   # Constant catch

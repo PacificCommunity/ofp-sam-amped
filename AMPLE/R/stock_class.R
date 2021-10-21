@@ -228,8 +228,8 @@ Stock <- R6::R6Class("Stock",
     #' \code{f(Bt) = r/p Bt * (1 - (Bt/k)^p)}
     #' Here p is fixed at 1 to give a Schaefer model
     #' \code{cpue = Ct / Et = qBt}
-    #' @param ts The biomass time step to be filled (required catch etc in ts - 1)
-    #' @param biol_prod_sigma The biological productivity variability (default = 0).
+    #' @param ts The biomass time step to be filled (required catch etc in ts - 1).
+    #' @param iters The iterations to calculate the biomass for (optional - default is all of them).
     fill_biomass = function(ts, iters = 1:dim(self$biomass)[1]){
       # Check that ts > 1
       if(ts < 2){
@@ -380,6 +380,8 @@ Stock <- R6::R6Class("Stock",
 
     #' @description
     #' Summarises the final year of each iteration. Used for the Measuring Performance app.
+    #' @param iters The iterations to calculate the table values for (default is iteration 1).
+    #' @param quantile_range Numeric vector of the quantile range. Default values are 0.05 and 0.95.
     replicate_table = function(iters = 1, quantile_range = c(0.05, 0.95)){
       # How to deal with iters being empty
       final_ts <- dim(self$biomass)[2]
@@ -404,6 +406,9 @@ Stock <- R6::R6Class("Stock",
       return(out)
     }, 
 
+    #' @description 
+    #' Calculates the short, medium and long term periods to calculate the performance indicators over,
+    #' based on the last historic year of data and the number of years in the projection.
     time_periods = function(){
       nprojyears <- dim(self$catch)[2] - self$last_historical_timestep
       period_length <- round(nprojyears / 3)
@@ -425,6 +430,8 @@ Stock <- R6::R6Class("Stock",
     #' @description 
     #' Gets the performance indicators across all indicators, for three time periods.
     #' Used in the Measuring Performance and Comparing Performance apps.
+    #' @param iters The iterations to calculate the table values for (default is all of them).
+    #' @param quantile_range Numeric vector of the quantile range. Default values are 0.05 and 0.95.
     #' @return A data.frame
     performance_indicators = function(iters = 1:dim(self$biomass)[1], quantile_range=c(0.05, 0.95)){
       niters <- length(iters)
@@ -475,6 +482,7 @@ Stock <- R6::R6Class("Stock",
 
     #' @description
     #' Makes a table of the performance indicators.
+    #' @param ... Arguments passed to the \code{performance_indicators()} method, including iters and quantile_range.
     pi_table = function(...){
       # Need to order things by factor
       pis <- self$performance_indicators(...)
