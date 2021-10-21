@@ -120,7 +120,7 @@ measuring_performance <- function(...){
     # Output stuff
     
     quantiles <- c(0.05, 0.95)
-    max_spaghetti_iters <- 10
+    max_spaghetti_iters <- 50
     
     output$print_stock <- renderTable({
       # This output is triggered if stock is invalidated, i.e. through the project() method
@@ -134,17 +134,17 @@ measuring_performance <- function(...){
     
     output$plot_catch <- renderPlot({
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
-      plot_catch_iters(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters = max_spaghetti_iters, quantiles=quantiles, cex.axis=1.1, cex.lab=1.3)
+      plot_catch_iters(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters = max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3)
     })
     
     output$plot_biomass <- renderPlot({
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
-      plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", iters=iter_range, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
+      plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", iters=iter_range, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
     })
     
     output$plot_cpue <- renderPlot({
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
-      plot_cpue(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, cex.axis=1.1, cex.lab=1.3)
+      plot_cpue(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3)
     })
     
     output$plot_hcr <- renderPlot({

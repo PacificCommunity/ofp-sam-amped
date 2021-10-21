@@ -24,6 +24,17 @@ plot_hcr_intro_arrow <- function(stock, timestep){
   arrows(x0=x[length(x)-1], y0=y[length(y)-1], x1=x[length(x)], y1=y[length(y)],col="blue", lwd=3)
 }
 
+plot_time_periods <- function(stock){
+    time_periods <- stock$time_periods()
+    tp1 <- as.numeric(time_periods[[1]][1])# - 1 # So it looks better with catch
+    tp2 <- as.numeric(time_periods[[2]][1])# - 1 
+    tp3 <- as.numeric(time_periods[[3]][1])# - 1
+    lines(x=c(tp1, tp1), y=c(-1e9, 1e9), lty=2, lwd=1, col="black")
+    lines(x=c(tp2, tp2), y=c(-1e9, 1e9), lty=2, lwd=1, col="black")
+    lines(x=c(tp3, tp3), y=c(-1e9, 1e9), lty=2, lwd=1, col="black")
+    return(NULL)
+}
+
 #' plot_biomass
 #'
 #' plot_biomass() plots time series of 'true' and observed depletion (SB/SBF=0).
@@ -42,7 +53,7 @@ plot_hcr_intro_arrow <- function(stock, timestep){
 #' Plot biomass with iterations
 #'
 #' Similar to plot_biomass_hcr but making sure that estimated biomass is only shown of estimation variability is shown.
-plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), ...){
+plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), show_time_periods = FALSE, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # True bk
   bk_true <- stock$biomass / stock$k
@@ -52,6 +63,10 @@ plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stoc
   # Add LRP and TRP
   lines(x=c(years[1], years[length(years)]),y=rep(stock$lrp, 2), lty=3, lwd=2, col="black")
   lines(x=c(years[1], years[length(years)]),y=rep(stock$trp, 2), lty=3, lwd=2, col="black")
+  # Show time periods
+  if(show_time_periods){
+    plot_time_periods(stock)
+  }
   # Add a grid
   grid()
   # Draw the iterations in grey
@@ -65,7 +80,7 @@ plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stoc
     legend(x="bottomleft", legend=c("Average true SB/SBF=0","Last replicate"), lty=c(2,1), lwd=2, col=true_col)
   } else {
     for(i in iters){
-      lines(x=years, y=bk_true[i,], col="grey", lwd=2, lty=1)
+      lines(x=years, y=bk_true[i,], col=scales::alpha("black", 0.25), lwd=2, lty=1)
     }
     # This will only work for model based for now
     # If we have a model based MP, show the HCR IP as it is the estimated biomass too
@@ -145,13 +160,16 @@ plot_catch_hcr <- function(stock, mp_params, timestep, plot_ghost_hcr_ops = TRUE
 }
 
 #' Plot the catch with iterations
-plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95),  ...){
+plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), show_time_periods=FALSE, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Set ylim - use same as HCR plot
   ymax <- get_catch_ymax(stock$catch, mp_params)
   yrange <- c(0, ymax)
   # Empty axis
   plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Catch", xlab="Year", xaxs="i", yaxs="i", ...)
+  if(show_time_periods){
+    plot_time_periods(stock)
+  }
   grid()
   # Draw a ribbon if more than X iters
   if (length(iters) >= max_spaghetti_iters){
@@ -160,7 +178,7 @@ plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], 
   } else {
   # Otherwise plot all iters in grey
     for(i in iters){
-      lines(x=years, y=stock$catch[i,], lty=1, lwd=2, col="grey")
+      lines(x=years, y=stock$catch[i,], lty=1, lwd=2, col=scales::alpha("black", 0.25))
     }
   }
   # Plot the most recent catch in black
@@ -168,7 +186,7 @@ plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], 
 } 
 
 #' Plot the relative CPUE with iterations
-plot_cpue <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95),  ...){
+plot_cpue <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), show_time_periods = FALSE,  ...){
   cpue <- stock$relative_cpue()
   years <- as.numeric(dimnames(cpue)$year)
   # Set ylim - use same as HCR plot
@@ -176,6 +194,9 @@ plot_cpue <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spa
   yrange <- c(0, ymax)
   # Empty axis
   plot(x=years, y=years, type="n", ylim=c(0, ymax), ylab="Relative CPUE (catch rate)", xlab="Year", xaxs="i", yaxs="i", ...)
+  if(show_time_periods){
+    plot_time_periods(stock)
+  }
   grid()
   # Draw a ribbon if more than X iters
   if (length(iters) >= max_spaghetti_iters){
@@ -184,7 +205,7 @@ plot_cpue <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spa
   } else {
   # Otherwise plot all iters in grey
     for(i in iters){
-      lines(x=years, y=cpue[i,], lty=1, lwd=2, col="grey")
+      lines(x=years, y=cpue[i,], lty=1, lwd=2, col=scales::alpha("black", 0.25))
     }
   }
   # Plot the most recent catch in black

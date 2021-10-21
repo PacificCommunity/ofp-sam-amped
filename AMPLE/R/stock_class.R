@@ -405,11 +405,11 @@ Stock <- R6::R6Class("Stock",
     }, 
 
     time_periods = function(){
-      nprojyears <- dim(self$catch)[2] - self$last_historical_timestep + 1
-      period_length <- floor(nprojyears / 3)
+      nprojyears <- dim(self$catch)[2] - self$last_historical_timestep
+      period_length <- round(nprojyears / 3)
       short_term <- (self$last_historical_timestep + 1):(self$last_historical_timestep + period_length)
       medium_term <- short_term + period_length
-      long_term <- max(medium_term):dim(self$catch)[2]
+      long_term <- (max(medium_term) + 1):dim(self$catch)[2]
       all_years <- dimnames(self$catch)$year
       short_term <- all_years[short_term]
       medium_term <- all_years[medium_term]
