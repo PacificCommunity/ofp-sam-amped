@@ -379,7 +379,7 @@ Stock <- R6::R6Class("Stock",
     },
 
     #' @description
-    #' Summarises the final year of each iteration. Used for the Measuring Performance app.
+    #' Summarises the final year of each iteration. Only used for the Measuring Performance app.
     #' @param iters The iterations to calculate the table values for (default is iteration 1).
     #' @param quantile_range Numeric vector of the quantile range. Default values are 0.05 and 0.95.
     replicate_table = function(iters = 1, quantile_range = c(0.05, 0.95)){
@@ -439,6 +439,12 @@ Stock <- R6::R6Class("Stock",
       catch <- self$catch[iters,,drop=FALSE]
       rel_cpue <- self$relative_cpue()[iters,,drop=FALSE]
       rel_effort <- self$relative_effort()[iters,,drop=FALSE]
+      # Add median to quantile range
+      if (!(0.5 %in% quantile_range)){
+        quantile_range <- c(quantile_range, 0.5)
+      }
+      # Reorder so pi_table knows() what order the quantiles are coming in
+      quantile_range <- sort(quantile_range)
       
       # Probability above LRP
       # Apply drops the dimensions which is annoying
@@ -465,7 +471,7 @@ Stock <- R6::R6Class("Stock",
       t2 <- lapply(data, function(x) {
         lapply(time_periods, function(y) {
           iter_means <- apply(x[,y,drop=FALSE], 1, mean, na.rm=TRUE)
-          quants <- quantile(iter_means, probs = c(quantile_range[1], 0.5, quantile_range[2]))
+          quants <- quantile(iter_means, probs = quantile_range)
         })
       })
       
@@ -473,19 +479,24 @@ Stock <- R6::R6Class("Stock",
       time_period_names <- factor(names(time_periods), levels=names(time_periods))
       data_names <- factor(names(data), levels=names(data))
       
-      out <- data.frame(pi = rep(data_names, each = length(time_periods) * 3),
-               time_period = rep(rep(time_period_names, length(data)), each=3),
-               quantiles = rep(c(quantile_range[1], 0.5, quantile_range[2]),length(time_periods) * length(data)),
+      out <- data.frame(pi = rep(data_names, each = length(time_periods) * length(quantile_range)),
+               time_period = rep(rep(time_period_names, length(data)), each=length(quantile_range)),
+               quantiles = rep(quantile_range,length(time_periods) * length(data)),
                value = unlist(t2), row.names = NULL)
       return(out)
     },
 
     #' @description
     #' Makes a table of the performance indicators.
-    #' @param ... Arguments passed to the \code{performance_indicators()} method, including iters and quantile_range.
-    pi_table = function(...){
-      # Need to order things by factor
-      pis <- self$performance_indicators(...)
+    #' Length of quantile_range must be only 2 - low and high
+    #' @param quantile_range Numeric vector, length 2, of the low and high quantiles.
+    #' @param ... Other arguments passed to the \code{performance_indicators()} method, (iters).
+    pi_table = function(quantile_range = c(0.05, 0.95), ...){
+      if(length(quantile_range) != 2){
+        stop("In Stock$pi_table(). quantile_range must be length 2")
+      }
+      pis <- self$performance_indicators(quantile_range=quantile_range, ...)
+      # Order so that 
       out <- tapply(signif(pis$value,2), INDEX = list(pis$pi, pis$time_period), FUN = function(x) paste0(x[2], "(",x[1], ",", x[3], ")"))
       out <- as.data.frame(out)
       return(out)

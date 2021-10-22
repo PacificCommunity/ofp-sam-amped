@@ -13,7 +13,7 @@ measuring_performance <- function(...){
     tabPanel(title = "tabPanel 1 title",
       # Initiate sidebarLayout
       sidebarLayout(
-        intro_hcr_sidebar_setup(
+        sidebar_setup(
           # MP selector
           mpParamsSetterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch")),# "Threshold effort", "Constant effort")),
           br(), # Could add br() automatically to side bar set up to separate each component?
@@ -59,7 +59,7 @@ measuring_performance <- function(...){
 
     tabPanel(title = "Settings",
       sidebarLayout(
-        intro_hcr_sidebar_setup(
+        sidebar_setup(
           br()
         ),
         mainPanel(

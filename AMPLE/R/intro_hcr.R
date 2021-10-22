@@ -1,7 +1,9 @@
-# Put together the Introduction to HCR app
+# The Introduction to HCRs app
+# intro_hcr.R 
 
-# Each Panel has it's sidebar and mainPanel
-# Annoying - extra boilerplate but looks better
+# Author: Finlay Scott (SPC) <finlays@spc.int>
+# Sountrack: Disintegration Dubs by G36 vs JK Flesh
+# Distributed under the terms of the GNU General Public License GPL (>= 3)
 
 #' Introduction to HCRs app launcher
 #' 
@@ -13,13 +15,11 @@ intro_hcr <- function(...){
   # User interface ----
   # Use navbarPage (fluidPage has a problem with title argument and tabs)
   ui <- navbarPage(
-    title="navbarPage title",
-    #title="          ",
-    #tabsetPanel(
+    title="Introduction to HCRs",
       tabPanel(title = "tabPanel 1 title",
         # Initiate sidebarLayout - fixed sidebar for all tabs (but we can turn the interaction options on and off)
         sidebarLayout(
-          intro_hcr_sidebar_setup(
+          sidebar_setup(
             # MP selector
             # HCR options
             mpParamsSetterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch")),# "Threshold effort", "Constant effort")),
