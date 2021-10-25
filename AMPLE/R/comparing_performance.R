@@ -75,13 +75,13 @@ comparing_performance <- function(...){
             tabPanel(title="Performance indicators - medians", value="PImeds",
               column(12, fluidRow( 
                 tags$span(title="Bar plot of the median values of the performance indicators over the three time periods. Note that the lower the PI for relative effort is, the better the HCR is thought to be performing. Also, a high value for SB/SBF=0 may not indicate that the HCR is performing well - it depends on your objectives.",
-                plotOutput("plotpimed", height="600px"))
+                plotOutput("plot_bar_comparison", height="600px"))
               ))
             ), # End of median bar chart tab panel
             tabPanel(title="Performance indicators - boxplots", value="PIbox",
               column(12, fluidRow(
                 tags$span(title="Box plot of the values of the performance indicators over the three time periods. Note that the lower the PI for relative effort is, the better the HCR is thought to be performing. Also, a high value for SB/SBF=0 may not indicate that the HCR is performing well - it depends on your objectives. The box contains the 20-80 percentiles, the tails the 5-95 percentiles.",
-                plotOutput("plotpibox", height="600px"))
+                plotOutput("plot_box_comparison", height="600px"))
               ))
             ), # End of box plot panel
             tabPanel(title="Performance indicators - table", value="PItable"
@@ -125,6 +125,8 @@ comparing_performance <- function(...){
 
   # Start of server function
   server <- function(input, output,session) {
+    
+    pi_quantiles <- c(0.05, 0.10, 0.90, 0.95)
 
     # Evaluating reactiveExpr can only be done inside a reactive consumer (like an observer or reactive)
     get_stoch_params <- stochParamsSetterServer("stoch")
@@ -153,19 +155,6 @@ comparing_performance <- function(...){
                              choices = pi_choices,
                              selected = pi_choices
     )
-    
-    # Get names of pis to include
-    #drop_pis <- c("ffmsy") 
-    #drop_pinames <- unique(subset(periodqs(), pi %in% drop_pis)$piname)
-    #pinames_include <- c("SB/SBF=0", "Prob. SB>LRP", "Catch", "Relative CPUE", "Catch stability", "Relative effort", "Relative effort stability", "Proximity to TRP")
-    #pi_choices <- unique(periodqs()$piname)
-    ##pi_choices <- pi_choices[!(pi_choices %in% drop_pinames)]
-    #pi_choices <- pi_choices[(pi_choices %in% pinames_include)]
-    #updateCheckboxGroupInput(session, "pichoice",
-    #                         choices = pi_choices,
-    #                         selected = pi_choices
-    #)
-    
     
     # Reset observer
     # What can trigger the reset:
@@ -228,7 +217,9 @@ comparing_performance <- function(...){
       hcr_no(hcr_no() + 1)
       # Extract and save results from each model for plots - just PIs? Or time series too?
       # Depends if we want to plot the time series? Maybe not. Look like shite anyway!
-      pis <- stock()$performance_indicators(quantiles=c(0.05, 0.10, 0.90, 0.95))
+      pis <- stock()$performance_indicators(quantiles=pi_quantiles)
+      # Reshape here to make wide - spread out the quantiles
+      pis <- reshape(data = pis, direction = "wide", timevar = "quantiles", idvar = c("pi", "time_period"), v.names = "value", sep="_")
       # Add in column of HCR number
       pis$hcr_no <- hcr_no()
       # Also HCR name and details
@@ -243,6 +234,8 @@ comparing_performance <- function(...){
       }
       pis$hcr_ref <- hcr_ref
       pis$hcr_details <- paste(hcr_ref, ".<br>",get_mp_params()$name,sep="") # Use <br> for html linebreak
+      
+      
       all_pis(rbind(all_pis(), pis))
       # You can't store again until you project again
       shinyjs::disable("add_basket")
@@ -315,7 +308,28 @@ comparing_performance <- function(...){
     output$plot_hcr <- renderPlot({
       plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), cex.axis=1.1, cex.lab=1.3)
     })
+    
+    
+    output$plot_bar_comparison <- renderPlot({
+      dat <- all_pis()
+      # Subset out the PIs
+      dat <- subset(dat, pi %in% input$pi_choice)
+      # Pass all HCRs in, as we we need to keep colours
+      hcr_nos <- input$hcr_choice
+      barboxplot(dat, hcr_nos, plot_type="median_bar")
+    })
+    
+    output$plot_box_comparison <- renderPlot({
+      dat <- all_pis()
+      # Subset out the PIs
+      dat <- subset(dat, pi %in% input$pi_choice)
+      # Pass all HCRs in, as we we need to keep colours
+      hcr_nos <- input$hcr_choice
+      barboxplot(dat, hcr_nos, plot_type="box", quantiles=pi_quantiles)
+    })
+    
   } # End of server function
+  
 
   # Run the app
   shinyApp(ui, server)

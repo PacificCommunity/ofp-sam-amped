@@ -1,33 +1,30 @@
-# Attempting to put together an R6 class for the stock object
-# Some of this might need to be reactive - can't remember why stock is reactive in the originals
+# The Stock class based on R6
+# stock_class.R
 
-#source("hcr_funcs.R")
+# Author: Finlay Scott (SPC) <finlays@spc.int>
+# Soundtrack: The Heavens by Sedibus & The Orb
+# Distributed under the terms of the GNU General Public License GPL (>= 3)
 
-
-# Put this somewhere
-## @references Ranta and Kaitala 2001 Proc. R. Soc.
-## vt = b * vt-1 + s * sqrt(1 - b^2)
-## s is normally distributed random variable with mean = 0
-## b is the autocorrelation parameter > -1 and < 1
-## e.g. -0.8 very blue, 0.8 red
-
-# New package environment for keeping the current value of the autocorrelated noise
-# This is a pretty ugly solution - else have create at start and pass around
-# We create current_corrnoise object in this environment in the reset_stock() function
-# pkg_env <- new.env()
-
+#' Correlated random noise
+#' 
+#' Get the next value of correlated noise.
+#' Not exported. For internal use only. Not a class method.
+#' vt = b * vt-1 + s * sqrt(1 - b^2)
+#' s is normally distributed random variable with mean = 0
+#' b is the autocorrelation parameter > -1 and < 1
+#' e.g. -0.8 very blue, 0.8 red
+#' @param x Current value
+#' @param b Correlation factor: -1 (red) to 1 (blue), 0 (white)
+#' @param sd Standard deviation
+#' @references Ranta and Kaitala 2001 Proc. R. Soc.
+#' @noRd
+#' @keywords internal
 next_corrnoise <- function(x, b, sd=0.1){
   # Each iter needs a separate noise (i.e. not correlated across iters)
   s <- rnorm(length(x),mean=0,sd=sd)
   nextx <- b * x + s * sqrt(1 - b^2)
   return(nextx)
 }
-
-#n <- rep(NA, 100)
-#n[1] <- 1
-#for (i in 2:length(n)){
-#  n[i] <- next_corrnoise(n[i-1], 0.5, 0.2)
-#}
 
 #' R6 Class representing a stock
 #' 
@@ -490,7 +487,7 @@ Stock <- R6::R6Class("Stock",
     #' Makes a table of the performance indicators.
     #' @param quantiles Numeric vector, length 2, of the low and high quantiles.
     #' @param iters The iterations to calculate the table values for (default is all of them).
-    pi_table = function(iters = 1:dim(self$biomass)[1], quantiles = c(0.05, 0.95), ...){
+    pi_table = function(iters = 1:dim(self$biomass)[1], quantiles = c(0.05, 0.95)){
       if(length(quantiles) != 2){
         stop("In Stock$pi_table(). quantiles must be length 2")
       }

@@ -22,4 +22,4 @@ Config/testthat/edition: 3
 Depends: 
     shiny (>= 1.7.1)
 Imports: 
-    R6 (>= 2.5.1), scales (>= 1.1.1), shinyjs (>= 2.0.0)
+    R6 (>= 2.5.1), scales (>= 1.1.1), shinyjs (>= 2.0.0), ggplot2 (>= 3.3.5)

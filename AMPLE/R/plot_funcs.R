@@ -4,7 +4,7 @@
 # plot_funcs.R
 
 # Author: Finlay Scott (SPC) <finlays@spc.int>
-# Sountrack: Waterfall Cities by Ozric Tentacles
+# Soundtrack: Waterfall Cities by Ozric Tentacles
 # Distributed under the terms of the GNU General Public License GPL (>= 3)
 
 #' Plot biomass to HCR arrow
@@ -386,7 +386,6 @@ plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, iter=NULL, sho
     lines(x = c(last_ip, last_ip), y=c(0, last_op), lty=2, lwd=2, col="blue")
     lines(x = c(0, last_ip), y=c(last_op, last_op), lty=2, lwd=2, col="blue")
   } 
-  
 }
 
 

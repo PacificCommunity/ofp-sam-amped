@@ -2,7 +2,7 @@
 # intro_hcr.R 
 
 # Author: Finlay Scott (SPC) <finlays@spc.int>
-# Sountrack: Disintegration Dubs by G36 vs JK Flesh
+# Soundtrack: Disintegration Dubs by G36 vs JK Flesh
 # Distributed under the terms of the GNU General Public License GPL (>= 3)
 
 #' Introduction to HCRs app launcher
