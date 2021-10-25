@@ -39,7 +39,6 @@ measuring_performance <- function(...){
               plotOutput("plot_cpue",height="250px")
             ) 
           ),
-          # Just put here for testing right now
           column(6,
             fluidRow(plotOutput("plot_hcr")),
             fluidRow(  
@@ -157,7 +156,7 @@ measuring_performance <- function(...){
         return(NULL)
       }
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
-      stock()$replicate_table(iters=iter_range, quantile_range=c(0.05, 0.95))
+      stock()$replicate_table(iters=iter_range, quantiles=quantiles)
     },
     bordered = TRUE,
     rownames = FALSE,
@@ -169,7 +168,7 @@ measuring_performance <- function(...){
         return(NULL)
       }
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
-      stock()$pi_table(iters=iter_range, quantile_range=c(0.05, 0.95))
+      stock()$pi_table(iters=iter_range, quantiles=quantiles)
     },
     bordered = TRUE,
     rownames = TRUE,

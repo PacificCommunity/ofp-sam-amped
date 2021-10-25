@@ -381,8 +381,8 @@ Stock <- R6::R6Class("Stock",
     #' @description
     #' Summarises the final year of each iteration. Only used for the Measuring Performance app.
     #' @param iters The iterations to calculate the table values for (default is iteration 1).
-    #' @param quantile_range Numeric vector of the quantile range. Default values are 0.05 and 0.95.
-    replicate_table = function(iters = 1, quantile_range = c(0.05, 0.95)){
+    #' @param quantiles Numeric vector of the quantile range. Default values are 0.05 and 0.95.
+    replicate_table = function(iters = 1, quantiles = c(0.05, 0.95)){
       # How to deal with iters being empty
       final_ts <- dim(self$biomass)[2]
       sbsbf0 <- self$biomass[iters,final_ts] / self$k
@@ -390,11 +390,11 @@ Stock <- R6::R6Class("Stock",
       rel_cpue <- self$relative_cpue()[iters, final_ts]
       # Get median and percentiles
       signif <- 2 # Could make option but no point
-      sbsbf0_qs <- signif(quantile(sbsbf0, probs=c(quantile_range[1], 0.5, quantile_range[2])),signif)
+      sbsbf0_qs <- signif(quantile(sbsbf0, probs=c(quantiles[1], 0.5, quantiles[2])),signif)
       sbsbf0_summary <- paste(sbsbf0_qs[2], " (", sbsbf0_qs[1], ",", sbsbf0_qs[3], ")", sep="")
-      catch_qs <- signif(quantile(catch, probs=c(quantile_range[1], 0.5, quantile_range[2])), signif)
+      catch_qs <- signif(quantile(catch, probs=c(quantiles[1], 0.5, quantiles[2])), signif)
       catch_summary <- paste(catch_qs[2], " (", catch_qs[1], ",", catch_qs[3], ")", sep="")
-      rel_cpue_qs <- signif(quantile(rel_cpue, probs=c(quantile_range[1], 0.5, quantile_range[2])), signif)
+      rel_cpue_qs <- signif(quantile(rel_cpue, probs=c(quantiles[1], 0.5, quantiles[2])), signif)
       rel_cpue_summary <- paste(rel_cpue_qs[2], " (", rel_cpue_qs[1], ",", rel_cpue_qs[3], ")", sep="")
       out <- data.frame(Replicate= c(1:length(sbsbf0),"Average and range"),
                         sbsbf0=c(signif(sbsbf0, signif), sbsbf0_summary),
@@ -431,20 +431,20 @@ Stock <- R6::R6Class("Stock",
     #' Gets the performance indicators across all indicators, for three time periods.
     #' Used in the Measuring Performance and Comparing Performance apps.
     #' @param iters The iterations to calculate the table values for (default is all of them).
-    #' @param quantile_range Numeric vector of the quantile range. Default values are 0.05 and 0.95.
+    #' @param quantiles Numeric vector of the quantile range. Default values are 0.05 and 0.95.
     #' @return A data.frame
-    performance_indicators = function(iters = 1:dim(self$biomass)[1], quantile_range=c(0.05, 0.95)){
+    performance_indicators = function(iters = 1:dim(self$biomass)[1], quantiles=c(0.05, 0.95)){
       niters <- length(iters)
       sbsbf0 <- self$biomass[iters,,drop=FALSE] / self$k
       catch <- self$catch[iters,,drop=FALSE]
       rel_cpue <- self$relative_cpue()[iters,,drop=FALSE]
       rel_effort <- self$relative_effort()[iters,,drop=FALSE]
       # Add median to quantile range
-      if (!(0.5 %in% quantile_range)){
-        quantile_range <- c(quantile_range, 0.5)
+      if (!(0.5 %in% quantiles)){
+        quantiles <- c(quantiles, 0.5)
       }
       # Reorder so pi_table knows() what order the quantiles are coming in
-      quantile_range <- sort(quantile_range)
+      quantiles <- sort(quantiles)
       
       # Probability above LRP
       # Apply drops the dimensions which is annoying
@@ -471,7 +471,7 @@ Stock <- R6::R6Class("Stock",
       t2 <- lapply(data, function(x) {
         lapply(time_periods, function(y) {
           iter_means <- apply(x[,y,drop=FALSE], 1, mean, na.rm=TRUE)
-          quants <- quantile(iter_means, probs = quantile_range)
+          quants <- quantile(iter_means, probs = quantiles, na.rm=TRUE)
         })
       })
       
@@ -479,23 +479,22 @@ Stock <- R6::R6Class("Stock",
       time_period_names <- factor(names(time_periods), levels=names(time_periods))
       data_names <- factor(names(data), levels=names(data))
       
-      out <- data.frame(pi = rep(data_names, each = length(time_periods) * length(quantile_range)),
-               time_period = rep(rep(time_period_names, length(data)), each=length(quantile_range)),
-               quantiles = rep(quantile_range,length(time_periods) * length(data)),
+      out <- data.frame(pi = rep(data_names, each = length(time_periods) * length(quantiles)),
+               time_period = rep(rep(time_period_names, length(data)), each=length(quantiles)),
+               quantiles = rep(quantiles,length(time_periods) * length(data)),
                value = unlist(t2), row.names = NULL)
       return(out)
     },
 
     #' @description
     #' Makes a table of the performance indicators.
-    #' Length of quantile_range must be only 2 - low and high
-    #' @param quantile_range Numeric vector, length 2, of the low and high quantiles.
-    #' @param ... Other arguments passed to the \code{performance_indicators()} method, (iters).
-    pi_table = function(quantile_range = c(0.05, 0.95), ...){
-      if(length(quantile_range) != 2){
-        stop("In Stock$pi_table(). quantile_range must be length 2")
+    #' @param quantiles Numeric vector, length 2, of the low and high quantiles.
+    #' @param iters The iterations to calculate the table values for (default is all of them).
+    pi_table = function(iters = 1:dim(self$biomass)[1], quantiles = c(0.05, 0.95), ...){
+      if(length(quantiles) != 2){
+        stop("In Stock$pi_table(). quantiles must be length 2")
       }
-      pis <- self$performance_indicators(quantile_range=quantile_range, ...)
+      pis <- self$performance_indicators(iters=iters, quantiles=quantiles) 
       # Order so that 
       out <- tapply(signif(pis$value,2), INDEX = list(pis$pi, pis$time_period), FUN = function(x) paste0(x[2], "(",x[1], ",", x[3], ")"))
       out <- as.data.frame(out)
