@@ -2,7 +2,7 @@
 # comparing_performance.R 
 
 # Author: Finlay Scott (SPC) <finlays@spc.int>
-# Sountrack: Fire by The Bug
+# Soundtrack: Fire by The Bug
 # Distributed under the terms of the GNU General Public License GPL (>= 3)
 
 #' 'Comparing HCR Performance' app launcher
@@ -84,13 +84,16 @@ comparing_performance <- function(...){
                 plotOutput("plot_box_comparison", height="600px"))
               ))
             ), # End of box plot panel
-            tabPanel(title="Performance indicators - table", value="PItable"
-          #  column(12, fluidRow(
-          #    "Performance indicators in the short-, medium- and long-term",
-          #     div(tags$span(title="Peformance indicators in the short-term. The value is the median, the values in the parentheses are the 10-90 percentiles.",
-          #     tableOutput("bigpitable_short"), style = "font-size:85%"))
-          #  ))
-            ), # End of table plot panel
+            tabPanel(title="Performance indicators - table", value="PItable",
+              column(12, fluidRow(
+                br(),
+                "Performance indicators in the short-, medium- and long-term. The value is the median, the values in the brackets are the 5 and 95 percentiles (i.e. cover 90% of the range of values).",
+                br(),
+               tags$span(title="Peformance indicators in the short-term.", tableOutput("pi_table_all_hcrs_short")),
+               tags$span(title="Peformance indicators in the medium-term.", tableOutput("pi_table_all_hcrs_medium")),
+               tags$span(title="Peformance indicators in the long-term.", tableOutput("pi_table_all_hcrs_long"))
+              ))
+            ) # End of table plot panel
           ) # End of tabsetPanel
                       
           
@@ -327,6 +330,43 @@ comparing_performance <- function(...){
       hcr_nos <- input$hcr_choice
       barboxplot(dat, hcr_nos, plot_type="box", quantiles=pi_quantiles)
     })
+    
+    # Fix labeling for table captions - use the non-reactive version of the stock
+    time_periods <- stock_noreactive$time_periods()
+    time_period_text <- lapply(strsplit(names(time_periods), " "), function(x) {
+      paste(x[1], "-term ", x[2], sep="")
+    })
+    
+    # Seems inelegant to do this three times - one for each time period
+    output$pi_table_all_hcrs_short <- renderTable({
+      dat <- all_pis()
+      # Which time period
+      tp <- sort(unique(dat$time_period))[1] # Short term is 1, MT = 2 etc
+      # Subset out the PIs
+      dat <- subset(dat, pi %in% input$pi_choice & hcr_no %in% input$hcr_choice & time_period == tp)
+      tab <- pi_table_all_hcrs(pis = dat, quantiles = quantiles)
+      return(tab)
+    }, caption = time_period_text[[1]])
+    
+    output$pi_table_all_hcrs_medium <- renderTable({
+      dat <- all_pis()
+      # Which time period
+      tp <- sort(unique(dat$time_period))[2] # Short term is 1, MT = 2 etc
+      # Subset out the PIs
+      dat <- subset(dat, pi %in% input$pi_choice & hcr_no %in% input$hcr_choice & time_period == tp)
+      tab <- pi_table_all_hcrs(pis = dat, quantiles = quantiles)
+      return(tab)
+    }, caption = time_period_text[[2]])
+    
+    output$pi_table_all_hcrs_long <- renderTable({
+      dat <- all_pis()
+      # Which time period
+      tp <- sort(unique(dat$time_period))[3] # Short term is 1, MT = 2 etc
+      # Subset out the PIs
+      dat <- subset(dat, pi %in% input$pi_choice & hcr_no %in% input$hcr_choice & time_period == tp)
+      tab <- pi_table_all_hcrs(pis = dat, quantiles = quantiles)
+      return(tab)
+    }, caption = time_period_text[[3]])
     
   } # End of server function
   
