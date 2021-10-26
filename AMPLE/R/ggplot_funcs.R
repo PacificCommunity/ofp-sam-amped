@@ -32,12 +32,13 @@ get_hcr_colours <- function(hcr_names, chosen_hcr_names){
 #' @param dat The data frame of performance indicators.
 #' @param hcr_nos The numbers of the HCRs to plot.
 #' @param plot_type Either median_bar or box.
+#' @param no_cols Number of column in each row. Default is 2.
 #' 
 #' @return A ggplot2 plot object.
 #' @importFrom ggplot2 "ggplot" "aes_string" "geom_bar" "theme" "element_blank" "xlab" "facet_wrap" "theme_bw" "geom_boxplot" "scale_fill_manual" "ylab"
 #' @noRd
 #' @keywords internal
-barboxplot <- function(dat, hcr_nos, plot_type="median_bar", quantiles = c(0.05, 0.10, 0.90, 0.95)){
+barboxplot <- function(dat, hcr_nos, plot_type="median_bar", quantiles=c(0.05, 0.10, 0.90, 0.95), no_cols=2){
   #hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
   all_hcr_names <- unique(dat$hcr_ref)
   dat <- subset(dat, hcr_no %in% hcr_nos)
@@ -61,7 +62,7 @@ barboxplot <- function(dat, hcr_nos, plot_type="median_bar", quantiles = c(0.05,
   }
   p <- p + xlab("Time period")
   p <- p + scale_fill_manual(values=hcr_cols)
-  p <- p + facet_wrap(~pi, scales="free", ncol=2)
+  p <- p + facet_wrap(~pi, scales="free", ncol=no_cols)
   p <- p + theme_bw()
   p <- p + theme(legend.position="bottom", legend.title=element_blank())
   

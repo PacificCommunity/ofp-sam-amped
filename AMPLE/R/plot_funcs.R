@@ -331,34 +331,33 @@ plot_model_based_hcr <- function(stock, mp_params, timestep=NULL, iter=NULL, sho
   plot(x=xrange,y=yrange,type="n",xlab=xlab, ylab=ylab, xaxs="i", yaxs="i", ...) 
   grid()
   
-  # If model based MP (or NA) add the B/K based reference points
+  # Add the B/K based reference points
   if (show_ref_pts){
-    if (mp_params$mp_type %in% c(as.character(NA), "model")){
-      lines(x=rep(stock$lrp,2), y=c(0, ymax),lty=3, lwd=2, col="black")
-      lines(x=rep(stock$trp,2), y=c(0, ymax),lty=3, lwd=2, col="black")
-    }
+    lines(x=rep(stock$lrp,2), y=c(0, ymax),lty=3, lwd=2, col="black")
+    lines(x=rep(stock$trp,2), y=c(0, ymax),lty=3, lwd=2, col="black")
   }
   
   # Add all HCR inputs and outputs so far
-  # Only show the HCR years (from last historical timestep)
   # The years that the HCR has been active
   hcr_ip_yrs <- ((stock$last_historical_timestep+1):dim(stock$hcr_ip)[2]) - mp_params$timelag
   hcr_op_yrs <- (stock$last_historical_timestep+1):dim(stock$hcr_ip)[2]
   # Plot current timestep of first iter in a different shade
   # Used in Introduction to HCR app
   if (!is.null(timestep)){
+    # Only show the HCR years (from last historical timestep)
     # Show ghosts
     points(x=c(stock$hcr_ip[1,hcr_ip_yrs]), y=c(stock$hcr_op[1,hcr_op_yrs]), col="grey", pch=16, cex=2)
     # Show current
     points(x=c(stock$hcr_ip[1,timestep - mp_params$timelag]),
            y=c(stock$hcr_op[1,timestep]), col="blue", pch=16, cex=2)
   } else if (!is.null(iter)) {
-  # If iter is not null, plot all timesteps of that iter in blue
-    if(iter >= 1){
-      points(x=c(stock$hcr_ip[1:iter,hcr_ip_yrs]), y=c(stock$hcr_op[1:iter,hcr_op_yrs]), col="grey", pch=16, cex=2)
+    # Used in Measuring and Comparing Performance apps
+    # Only show points if a projection has been run?
+    iters_run <- !is.na(stock$catch[,dim(stock$catch)[2]])
+    points(x=c(stock$hcr_ip[iters_run,hcr_ip_yrs]), y=c(stock$hcr_op[iters_run,hcr_op_yrs]), col=scales::alpha("black", 0.1), pch=16, cex=2)
+    if(length(iter) == 1){
+      points(x=c(stock$hcr_ip[iter,hcr_ip_yrs]), y=c(stock$hcr_op[iter,hcr_op_yrs]), col="blue", pch=16, cex=2)
     }
-    points(x=c(stock$hcr_ip[iter,hcr_ip_yrs]), y=c(stock$hcr_op[iter,hcr_op_yrs]), col="blue", pch=16, cex=2)
-    # Only show ghosts if we've run at least projection
   }
   
   # Plot HCR outline - depends on the HCR shape

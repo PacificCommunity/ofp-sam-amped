@@ -493,7 +493,7 @@ Stock <- R6::R6Class("Stock",
       }
       pis <- self$performance_indicators(iters=iters, quantiles=quantiles) 
       # Order so that 
-      out <- tapply(signif(pis$value,2), INDEX = list(pis$pi, pis$time_period), FUN = function(x) paste0(x[2], "(",x[1], ",", x[3], ")"))
+      out <- tapply(signif(pis$value,2), INDEX = list(pis$pi, pis$time_period), FUN = function(x) paste0(x[2], " (",x[1], ",", x[3], ")"))
       out <- as.data.frame(out)
       return(out)
     }

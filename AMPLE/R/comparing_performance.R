@@ -11,9 +11,7 @@
 #' @param ... Not used
 #' @export
 comparing_performance <- function(...){
-
   # User interface ----
-  # Use navbarPage (fluidPage has a problem with title argument and tabs)
   ui <- navbarPage(
     title="Comparing HCR performance",
     tabPanel(title = "HCR selection",
@@ -24,6 +22,7 @@ comparing_performance <- function(...){
           mpParamsSetterUI("mpparams", mp_visible=c("Threshold catch", "Constant catch")),# "Threshold effort", "Constant effort")),
           br(), # Could add br() automatically to side bar set up to separate each component?
           actionButton("project", "Project", icon=icon("fish")), 
+          br(),
           br(),
           textInput(inputId="user_hcr_name", label="HCR Display Name (optional)", value=as.character(NA), placeholder="Name of HCR", width='50%'), 
           actionButton("add_basket", "Add HCR to basket", icon=icon("shopping-basket")),
@@ -75,13 +74,13 @@ comparing_performance <- function(...){
             tabPanel(title="Performance indicators - medians", value="PImeds",
               column(12, fluidRow( 
                 tags$span(title="Bar plot of the median values of the performance indicators over the three time periods. Note that the lower the PI for relative effort is, the better the HCR is thought to be performing. Also, a high value for SB/SBF=0 may not indicate that the HCR is performing well - it depends on your objectives.",
-                plotOutput("plot_bar_comparison", height="600px"))
+                plotOutput("plot_bar_comparison"))
               ))
             ), # End of median bar chart tab panel
             tabPanel(title="Performance indicators - boxplots", value="PIbox",
               column(12, fluidRow(
                 tags$span(title="Box plot of the values of the performance indicators over the three time periods. Note that the lower the PI for relative effort is, the better the HCR is thought to be performing. Also, a high value for SB/SBF=0 may not indicate that the HCR is performing well - it depends on your objectives. The box contains the 20-80 percentiles, the tails the 5-95 percentiles.",
-                plotOutput("plot_box_comparison", height="600px"))
+                plotOutput("plot_box_comparison"))
               ))
             ), # End of box plot panel
             tabPanel(title="Performance indicators - table", value="PItable",
@@ -89,15 +88,12 @@ comparing_performance <- function(...){
                 br(),
                 "Performance indicators in the short-, medium- and long-term. The value is the median, the values in the brackets are the 5 and 95 percentiles (i.e. cover 90% of the range of values).",
                 br(),
-               tags$span(title="Peformance indicators in the short-term.", tableOutput("pi_table_all_hcrs_short")),
-               tags$span(title="Peformance indicators in the medium-term.", tableOutput("pi_table_all_hcrs_medium")),
-               tags$span(title="Peformance indicators in the long-term.", tableOutput("pi_table_all_hcrs_long"))
+                tags$span(title="Peformance indicators in the short-term.", tableOutput("pi_table_all_hcrs_short")),
+                tags$span(title="Peformance indicators in the medium-term.", tableOutput("pi_table_all_hcrs_medium")),
+                tags$span(title="Peformance indicators in the long-term.", tableOutput("pi_table_all_hcrs_long"))
               ))
-            ) # End of table plot panel
+            ) # End of PI table panel
           ) # End of tabsetPanel
-                      
-          
-          
         ) # End of mainPanel
       ) # End of sidebarLayout
     ), # End of Compare results tabPanel
@@ -309,27 +305,41 @@ comparing_performance <- function(...){
     })
     
     output$plot_hcr <- renderPlot({
-      plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), cex.axis=1.1, cex.lab=1.3)
+      plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), iter=1:input$niters, cex.axis=1.1, cex.lab=1.3)
     })
     
+    # Plotting the comparison bar and box plots
+    # Comparison plots
+    no_cols <- 2
+    height_per_pi <- 200 # Could be adjustable depending on screen size?
+    # Alt.
+    total_height <- 800
+    max_height_per_row <- total_height / 2
     
-    output$plot_bar_comparison <- renderPlot({
-      dat <- all_pis()
-      # Subset out the PIs
-      dat <- subset(dat, pi %in% input$pi_choice)
-      # Pass all HCRs in, as we we need to keep colours
-      hcr_nos <- input$hcr_choice
-      barboxplot(dat, hcr_nos, plot_type="median_bar")
-    })
-    
-    output$plot_box_comparison <- renderPlot({
-      dat <- all_pis()
-      # Subset out the PIs
-      dat <- subset(dat, pi %in% input$pi_choice)
-      # Pass all HCRs in, as we we need to keep colours
-      hcr_nos <- input$hcr_choice
-      barboxplot(dat, hcr_nos, plot_type="box", quantiles=pi_quantiles)
-    })
+    plot_barbox_comparison <- function(plot_type, quantiles=NULL, no_cols=2){
+      out <- renderPlot({
+        dat <- all_pis()
+        # Subset out the PIs
+        dat <- subset(dat, pi %in% input$pi_choice)
+        # Pass all HCRs in, as we we need to keep colours
+        hcr_nos <- input$hcr_choice
+        barboxplot(dat, hcr_nos, plot_type=plot_type, quantiles=quantiles, no_cols=no_cols)
+      },
+      height=function(){
+        # Each row the same height as PIs drop out
+        #return(max(height_per_pi*1.5, (height_per_pi * ceiling(length(input$pi_choice) / no_cols))))
+        # Fill space
+        return({
+          nrows <- ceiling(length(input$pi_choice) / no_cols)
+          height_per_row <- min(total_height / nrows, max_height_per_row)
+          return(height_per_row * nrows)
+        })
+      })
+      return(out)
+    }
+      
+    output$plot_bar_comparison <- plot_barbox_comparison(plot_type="median_bar", no_cols=no_cols)
+    output$plot_box_comparison <- plot_barbox_comparison(plot_type="box", quantiles = pi_quantiles, no_cols=no_cols)
     
     # Fix labeling for table captions - use the non-reactive version of the stock
     time_periods <- stock_noreactive$time_periods()
@@ -337,36 +347,23 @@ comparing_performance <- function(...){
       paste(x[1], "-term ", x[2], sep="")
     })
     
-    # Seems inelegant to do this three times - one for each time period
-    output$pi_table_all_hcrs_short <- renderTable({
-      dat <- all_pis()
-      # Which time period
-      tp <- sort(unique(dat$time_period))[1] # Short term is 1, MT = 2 etc
-      # Subset out the PIs
-      dat <- subset(dat, pi %in% input$pi_choice & hcr_no %in% input$hcr_choice & time_period == tp)
-      tab <- pi_table_all_hcrs(pis = dat, quantiles = quantiles)
-      return(tab)
-    }, caption = time_period_text[[1]])
+    # period is 1, 2, or 3 - for ST, MT, LT
+    render_pi_table_all_hcrs <- function(period){
+      out <- renderTable({
+        dat <- all_pis()
+        # Which time period
+        tp <- sort(unique(dat$time_period))[period] # Short term is 1, MT = 2 etc
+        # Subset out the PIs
+        dat <- subset(dat, pi %in% input$pi_choice & hcr_no %in% input$hcr_choice & time_period == tp)
+        tab <- pi_table_all_hcrs(pis = dat, quantiles = quantiles)
+        return(tab)
+      }, caption = time_period_text[[period]])
+      return(out)
+    }
     
-    output$pi_table_all_hcrs_medium <- renderTable({
-      dat <- all_pis()
-      # Which time period
-      tp <- sort(unique(dat$time_period))[2] # Short term is 1, MT = 2 etc
-      # Subset out the PIs
-      dat <- subset(dat, pi %in% input$pi_choice & hcr_no %in% input$hcr_choice & time_period == tp)
-      tab <- pi_table_all_hcrs(pis = dat, quantiles = quantiles)
-      return(tab)
-    }, caption = time_period_text[[2]])
-    
-    output$pi_table_all_hcrs_long <- renderTable({
-      dat <- all_pis()
-      # Which time period
-      tp <- sort(unique(dat$time_period))[3] # Short term is 1, MT = 2 etc
-      # Subset out the PIs
-      dat <- subset(dat, pi %in% input$pi_choice & hcr_no %in% input$hcr_choice & time_period == tp)
-      tab <- pi_table_all_hcrs(pis = dat, quantiles = quantiles)
-      return(tab)
-    }, caption = time_period_text[[3]])
+    output$pi_table_all_hcrs_short <- render_pi_table_all_hcrs(period = 1)
+    output$pi_table_all_hcrs_medium <- render_pi_table_all_hcrs(period = 2)
+    output$pi_table_all_hcrs_long <- render_pi_table_all_hcrs(period = 3)
     
   } # End of server function
   
