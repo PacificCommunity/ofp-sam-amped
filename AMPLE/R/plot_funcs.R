@@ -58,11 +58,12 @@ plot_time_periods <- function(stock){
 #' @param max_spaghetti_iters The number of iterations to show as spaghetti before ribbons are shown. Default is 50.
 #' @param quantiles Quantiles of the ribbons.
 #' @param show_time_periods Boolean. Show the time period lines on the plot.
+#' @param cex_leg Expansion of legend text (not handled by ... to plot)
 #' @param ... Other arguments to pass to the plot() function.
 #' @return A plot
 #' @noRd
 #' @keywords internal 
-plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), show_time_periods = FALSE, ...){
+plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), cex_leg = 1, show_time_periods = FALSE, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # True bk
   bk_true <- stock$biomass / stock$k
@@ -86,7 +87,7 @@ plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stoc
   # Draw a ribbon if more than X iters
   if (length(iters) >= max_spaghetti_iters){
     draw_ribbon(x=years, y=bk_true[iters,], quantiles=quantiles)
-    legend(x="bottomleft", legend=c("Average true SB/SBF=0","Last replicate"), lty=c(2,1), lwd=2, col=true_col)
+    legend(x="bottomleft", legend=c("Average true SB/SBF=0","Last replicate"), lty=c(2,1), lwd=2, col=true_col, cex=cex_leg)
   } else {
     for(i in iters){
       lines(x=years, y=bk_true[i,], col=scales::alpha("black", 0.25), lwd=2, lty=1)
@@ -99,7 +100,7 @@ plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stoc
       # Plot the estimated B/K  - plotted first so that the Intro to HCR shows it
       lines(x=years, y=stock$hcr_ip[last_iter,], col=est_col, lty=1, lwd=2)
       # Only show legend if not already showing a legend
-      legend(x="bottomleft", legend=c("True","Estimated"), lwd=2, col=c(true_col, est_col))
+      legend(x="bottomleft", legend=c("True","Estimated"), lwd=2, col=c(true_col, est_col), cex=cex_leg)
     }
   }
   # Plot the last true iteration in black
@@ -195,10 +196,11 @@ plot_catch_hcr <- function(stock, mp_params, timestep, ...){
 #' @param max_spaghetti_iters The number of iterations to show as spaghetti before ribbons are shown. Default is 50.
 #' @param quantiles Quantiles of the ribbons.
 #' @param show_time_periods Boolean. Show the time period lines on the plot.
+#' @param cex_leg Expansion of legend text (not handled by ... to plot)
 #' @param ... Other arguments to pass to the plot() function.
 #' @noRd
 #' @keywords internal 
-plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), show_time_periods=FALSE, ...){
+plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), cex_leg = 1, show_time_periods=FALSE, ...){
   years <- as.numeric(dimnames(stock$biomass)$year)
   # Set ylim - use same as HCR plot
   ymax <- get_catch_ymax(stock$catch, mp_params)
@@ -212,7 +214,7 @@ plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], 
   # Draw a ribbon if more than X iters
   if (length(iters) >= max_spaghetti_iters){
     draw_ribbon(x=years, y=stock$catch[iters,], quantiles=quantiles)
-    legend(x="bottomleft", legend=c("Average catch","Last replicate"), lty=c(2,1), lwd=2, col="black")
+    legend(x="bottomleft", legend=c("Average catch","Last replicate"), lty=c(2,1), lwd=2, col="black", cex=cex_leg)
   } else {
   # Otherwise plot all iters in grey
     for(i in iters){
@@ -233,10 +235,11 @@ plot_catch_iters <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], 
 #' @param max_spaghetti_iters The number of iterations to show as spaghetti before ribbons are shown. Default is 50.
 #' @param quantiles Quantiles of the ribbons.
 #' @param show_time_periods Boolean. Show the time period lines on the plot.
+#' @param cex_leg Expansion of legend text (not handled by ... to plot)
 #' @param ... Other arguments to pass to the plot() function.
 #' @noRd
 #' @keywords internal 
-plot_cpue <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), show_time_periods = FALSE,  ...){
+plot_cpue <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spaghetti_iters=50, quantiles=c(0.05, 0.95), cex_leg=1, show_time_periods = FALSE,  ...){
   cpue <- stock$relative_cpue()
   years <- as.numeric(dimnames(cpue)$year)
   # Set ylim - use same as HCR plot
@@ -251,7 +254,7 @@ plot_cpue <- function(stock, mp_params, iters = 1:dim(stock$biomass)[1], max_spa
   # Draw a ribbon if more than X iters
   if (length(iters) >= max_spaghetti_iters){
     draw_ribbon(x=years, y=cpue[iters,], quantiles=quantiles)
-    legend(x="bottomleft", legend=c("Average CPUE","Last replicate"), lty=c(2,1), lwd=2, col="black")
+    legend(x="bottomleft", legend=c("Average CPUE","Last replicate"), lty=c(2,1), lwd=2, col="black", cex=cex_leg)
   } else {
   # Otherwise plot all iters in grey
     for(i in iters){

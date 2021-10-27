@@ -11,6 +11,11 @@
 #' @param ... Not used
 #' @export
 comparing_performance <- function(...){
+  
+  # Stuff to reset the par after exiting
+  def.par <- par(no.readonly = TRUE)
+  on.exit(par(def.par))
+  
   # User interface ----
   ui <- navbarPage(
     title="Comparing HCR performance",
@@ -37,13 +42,14 @@ comparing_performance <- function(...){
         mainPanel(
           column(6,
             fluidRow(
-              plotOutput("plot_catch"),#,height="250px"),
+              plotOutput("plot_catch", height="300px"),
             ), 
             fluidRow(
-              plotOutput("plot_biomass"),#,height="250px"),
+              plotOutput("plot_biomass", height="300px"),
             ), 
             fluidRow(
-              plotOutput("plot_cpue"),#,height="250px")
+              plotOutput("plot_cpue", height="300px")
+            #  plotOutput("plot_lhs", height="900px")
             ) 
           ),
           column(6,
@@ -126,6 +132,7 @@ comparing_performance <- function(...){
   server <- function(input, output,session) {
     
     pi_quantiles <- c(0.05, 0.10, 0.90, 0.95)
+    
 
     # Evaluating reactiveExpr can only be done inside a reactive consumer (like an observer or reactive)
     get_stoch_params <- stochParamsSetterServer("stoch")
@@ -274,6 +281,9 @@ comparing_performance <- function(...){
     # Output stuff
     max_spaghetti_iters <- 50
     quantiles <- c(0.05, 0.95)
+    lhs_mar <- c(5.1,4.1,1,2.1) # Margins for the LHS plots - reduced top
+    cex_axis <- 1.1
+    cex_lab <- 1.3
     
     
     output$print_number_hcrs<- renderText({
@@ -292,20 +302,44 @@ comparing_performance <- function(...){
     caption= "Performance indicators",
     auto=TRUE)
     
+    # Advice from CRAN submission about how to deal with resetting par()
+    # opar <- par(mfrow = c(2,2))
+    # on.exit(par(opar))
+    
     output$plot_catch <- renderPlot({
-      plot_catch_iters(stock=stock(), mp_params=get_mp_params(), max_spaghetti_iters = max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3)
+      par(mar = lhs_mar) # Decrease T
+      plot_catch_iters(stock=stock(), mp_params=get_mp_params(), max_spaghetti_iters = max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=cex_axis, cex.lab=cex_lab)
     })
     
     output$plot_biomass <- renderPlot({
-      plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
+      par(mar = lhs_mar)
+      plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=cex_axis, cex.lab=cex_lab)
     })
     
     output$plot_cpue <- renderPlot({
-      plot_cpue(stock=stock(), mp_params=get_mp_params(), max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3)
+      par(mar = lhs_mar)
+      plot_cpue(stock=stock(), mp_params=get_mp_params(), max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=cex_axis, cex.lab=cex_lab)
     })
     
     output$plot_hcr <- renderPlot({
       plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), iter=1:input$niters, cex.axis=1.1, cex.lab=1.3)
+    })
+    
+    # Attempt at plotting all three plots in one panel
+    # But a faff as the legend comes out tiny so there is an additional legend cex argument.
+    # Not used but kept here in case I want to revisit
+    output$plot_lhs <- renderPlot({
+      old_mfrow <- par("mfrow")
+      old_mar <- par("mar")
+      par(mfrow=c(3,1))
+      par(mar = c(5.1,5.1,1,2.1)) # Increase L margin and decrease T
+      cex_axis <- 1.6
+      cex_lab <- 1.9
+      plot_catch_iters(stock=stock(), mp_params=get_mp_params(), max_spaghetti_iters = max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=cex_axis, cex.lab=cex_lab, cex_leg=cex_lab)
+      plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=cex_axis, cex.lab=cex_lab, cex_leg=cex_lab)
+      plot_cpue(stock=stock(), mp_params=get_mp_params(), max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=cex_axis, cex.lab=cex_lab, cex_leg=cex_lab)
+      # Reset par
+      par(mfrow=old_mfrow, mar=old_mar)
     })
     
     # Plotting the comparison bar and box plots
