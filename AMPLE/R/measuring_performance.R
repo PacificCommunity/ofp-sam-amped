@@ -71,7 +71,19 @@ measuring_performance <- function(...){
           stockParamsSetterUI("stock")
         ) # End of mainPanel
       ) # End of sidebarLayout
-    ) # End of Settings tabPanel
+    ), # End of Settings tabPanel
+    
+    tabPanel(title = "About",
+      sidebarLayout(
+        sidebar_setup(
+          ample_maintainer_and_licence()
+        ),
+        mainPanel(
+          spc_about()
+        ) # End of mainPanel
+      ) # End of sidebarLayout
+    ) # End of About tabPanel
+    
   ) # End of navbarPage
   
   #--------------------------------------------------------------------------

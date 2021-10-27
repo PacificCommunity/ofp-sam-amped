@@ -16,7 +16,7 @@ intro_hcr <- function(...){
   # Use navbarPage (fluidPage has a problem with title argument and tabs)
   ui <- navbarPage(
     title="Introduction to HCRs",
-      tabPanel(title = "tabPanel 1 title",
+      tabPanel(title = "What is a Harvest Control Rule?",
         # Initiate sidebarLayout - fixed sidebar for all tabs (but we can turn the interaction options on and off)
         sidebarLayout(
           sidebar_setup(
@@ -33,9 +33,6 @@ intro_hcr <- function(...){
             br(),
             # Stochasticity module
             stochParamsSetterUI("stoch", init_biol_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=FALSE),
-            br(),
-            # Life history parameters projection options
-            stockParamsSetterUI("stock"),
             br()
           ),
 
@@ -78,20 +75,30 @@ intro_hcr <- function(...){
         ) # End of sidebarLayout
       ), # End of tabPanel 1
 
-      tabPanel(title = "tabPanel 2 title",
+      tabPanel(title = "Settings",
         # Initiate sidebarLayout - this is annoying having to do this for each tab - but could use functions to reduce amount of boilerplate code
         sidebarLayout(
-          intro_hcr_sidebar_setup(
+          sidebar_setup(
             br()
           ),
           mainPanel(
+            # Life history parameters projection options
+            stockParamsSetterUI("stock"),
           ) # End of mainPanel
         ) # End of sidebarLayout
-      ) # End of tabPanel 2
+      ), # End of Settings tabPanel 
 
+    tabPanel(title = "About",
+      sidebarLayout(
+        sidebar_setup(
+          ample_maintainer_and_licence()
+        ),
+        mainPanel(
+          spc_about()
+        ) # End of mainPanel
+      ) # End of sidebarLayout
+    ) # End of About tabPanel
 
-
-    #) # End of tabsetPanel1
   ) # End of navbarPage
   
   #--------------------------------------------------------------------------

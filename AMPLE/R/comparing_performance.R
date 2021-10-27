@@ -109,19 +109,30 @@ comparing_performance <- function(...){
         sidebar_setup(
         ),
         mainPanel(
-          br(),
-          # Life history parameters projection options
-          stockParamsSetterUI("stock"),
-          br(),
-          # Number of iteration
-          numericInput("niters", "Number of iterations", value = 100, min=10, max=1000, step=10),
-          # Stochasticity module 
-          stochParamsSetterUI("stoch", init_biol_sigma=0.2, init_est_sigma=0.0, init_est_bias=0.0, show_var=TRUE),
-          br()
+          fluidRow(
+            br(),
+            # Life history parameters projection options
+            stockParamsSetterUI("stock"),
+            br(),
+            # Number of iteration
+            numericInput("niters", "Number of iterations", value = 100, min=10, max=1000, step=10),
+            # Stochasticity module 
+            stochParamsSetterUI("stoch", init_biol_sigma=0.2, init_est_sigma=0.0, init_est_bias=0.0, show_var=TRUE),
+          )
         ) # End of mainPanel
       ) # End of sidebarLayout
-    ) # End of Settings tabPanel
+    ), # End of Settings tabPanel
 
+    tabPanel(title = "About",
+      sidebarLayout(
+        sidebar_setup(
+          ample_maintainer_and_licence()
+        ),
+        mainPanel(
+          spc_about()
+        ) # End of mainPanel
+      ) # End of sidebarLayout
+    ) # End of About tabPanel
 
 
   ) # End of navbarPage
@@ -322,6 +333,7 @@ comparing_performance <- function(...){
     })
     
     output$plot_hcr <- renderPlot({
+      par(mar = lhs_mar) # Decrease T
       plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), iter=1:input$niters, cex.axis=1.1, cex.lab=1.3)
     })
     
@@ -352,6 +364,7 @@ comparing_performance <- function(...){
     
     plot_barbox_comparison <- function(plot_type, quantiles=NULL, no_cols=2){
       out <- renderPlot({
+        req(input$hcr_choice)
         dat <- all_pis()
         # Subset out the PIs
         dat <- subset(dat, pi %in% input$pi_choice)
@@ -384,6 +397,7 @@ comparing_performance <- function(...){
     # period is 1, 2, or 3 - for ST, MT, LT
     render_pi_table_all_hcrs <- function(period){
       out <- renderTable({
+        req(input$hcr_choice)
         dat <- all_pis()
         # Which time period
         tp <- sort(unique(dat$time_period))[period] # Short term is 1, MT = 2 etc
