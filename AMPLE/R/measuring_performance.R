@@ -1,6 +1,11 @@
-# Put together the Measuring Performance app
+# The Measuring Performance app
+# measuring_performance.R
 
-#' Introduction to indicators app launcher
+# Author: Finlay Scott (SPC) <finlays@spc.int>
+# Soundtrack: Bad Magic by Motorhead
+# Distributed under the terms of the GNU General Public License GPL (>= 3)
+
+#' Measuring performance app launcher
 #' 
 #' Launches the introduction to indicators Shiny app.
 #' @param ... Not used
@@ -13,8 +18,8 @@ measuring_performance <- function(...){
 
   # User interface ----
   ui <- navbarPage(
-    title="navbarPage title",
-    tabPanel(title = "tabPanel 1 title",
+    title="Measuring HCR performance",
+    tabPanel(title = "How to measure performance",
       # Initiate sidebarLayout
       sidebarLayout(
         sidebar_setup(
@@ -59,11 +64,22 @@ measuring_performance <- function(...){
         ) # End of mainPanel
       ) # End of sidebarLayout
     ), # End of tabPanel 1
+    
+    tabPanel(title = "Information",
+      sidebarLayout(
+        sidebar_setup(
+          br()
+        ),
+        mainPanel(
+          # Should work with devtools and after installation 
+          shiny::includeMarkdown(system.file("introtext", "measuring_performance.md", package="AMPLE"))
+        ) # End of mainPanel
+      ) # End of sidebarLayout
+    ), # End of Settings tabPanel 
 
     tabPanel(title = "Settings",
       sidebarLayout(
         sidebar_setup(
-          br()
         ),
         mainPanel(
           br(),
@@ -159,7 +175,7 @@ measuring_performance <- function(...){
     output$plot_biomass <- renderPlot({
       par(mar = lhs_mar) # Decrease T
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
-      plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True SB/SBF=0", iters=iter_range, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
+      plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True biomass", iters=iter_range, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
     })
     
     output$plot_cpue <- renderPlot({

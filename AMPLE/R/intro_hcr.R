@@ -71,11 +71,8 @@ intro_hcr <- function(...){
           br()
         ),
         mainPanel(
-          #shiny::includeMarkdown("introtext/intro_hcr.md")
           # Should work with devtools and after installation 
           shiny::includeMarkdown(system.file("introtext", "intro_hcr.md", package="AMPLE"))
-          #shiny::includeMarkdown("C:/Work/ShinyMSE/ofp-sam-amped/AMPLE/inst/introtext/intro_hcr.md")
-          
         ) # End of mainPanel
       ) # End of sidebarLayout
     ), # End of Settings tabPanel 

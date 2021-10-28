@@ -49,6 +49,7 @@ Pressing the **Reset** button resets the projection. Choose another shape for yo
 # Variability
 
 Variability is an important factor when considering how HCRs perform.
+The real world is very noisy and full of uncertainty. It is important that this uncertainty is included when considering how an HCR might perform.
 When you have no variability in the projection, you will get the same projection each time (if the shape of the HCR is kept the same).
 
 Variability can be included in the projection in two ways: biological variability in the stock dynamics (e.g. natural variability in recruitment) and through differences between the estimated level of stock biomass and the 'true' level.

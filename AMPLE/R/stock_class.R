@@ -409,7 +409,7 @@ Stock <- R6::R6Class("Stock",
                         sbsbf0=c(signif(sbsbf0, signif), sbsbf0_summary),
                         Catch=c(signif(catch, signif), catch_summary),
                         rel_cpue=c(signif(rel_cpue, signif), rel_cpue_summary))
-      colnames(out)[2] <- "Final SB/SBF=0"
+      colnames(out)[2] <- "Final biomass"
       colnames(out)[3] <- "Final catch"
       colnames(out)[4] <- "Final relative CPUE"
       return(out)
@@ -475,7 +475,7 @@ Stock <- R6::R6Class("Stock",
       time_periods <- self$time_periods()
       #data <- list(sbsbf0 = sbsbf0, prob_lrp = prob_lrp, catch = catch, rel_cpue = rel_cpue, rel_effort = rel_effort, catch_stab = catch_stab, prox_trp = prox_trp)
       # Give them proper names
-      data <- list("SB/SBF0" = sbsbf0, "Prob. > LRP" = prob_lrp, "Catch" = catch, "Relative CPUE" = rel_cpue, "Relative effort" = rel_effort, "Catch stability"= catch_stab, "Proximity to TRP" = prox_trp)
+      data <- list("Biomass" = sbsbf0, "Prob. > LRP" = prob_lrp, "Catch" = catch, "Relative CPUE" = rel_cpue, "Relative effort" = rel_effort, "Catch stability"= catch_stab, "Proximity to TRP" = prox_trp)
       
       t2 <- lapply(data, function(x) {
         lapply(time_periods, function(y) {

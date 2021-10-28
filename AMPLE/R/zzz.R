@@ -12,16 +12,8 @@
       package = "AMPLE"
     )
   )
-  #shiny::addResourcePath(
-  #  prefix = "introtext",
-  #  directoryPath = system.file(
-  #    "introtext",
-  #    package = "AMPLE"
-  #  )
-  #)
 }
 
 .onUnload <- function(libname, pkgname) {
   shiny::removeResourcePath("img")
-  #shiny::removeResourcePath("introtext")
 }
