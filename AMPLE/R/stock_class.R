@@ -39,11 +39,23 @@ Stock <- R6::R6Class("Stock",
   # R6 classes are not reactive, so even in you make a reactiveVal() of an instance of an R6 class
   # changing that object will not invalidate the shiny magic and nothing reacts.
   # Solution 1 is to use S3 class but they are horrible
-  # Solution 2 is this workaround from Winston Change: 
+  # Solution 2 is this workaround from Winston Change - remember to thank him:  
   # https://community.rstudio.com/t/good-way-to-create-a-reactive-aware-r6-class/84890/8 
   # I will try this here. It involves adding an 'invalidate' function which triggers if certain methods are
   # called. I want this class only to invalidate when the project method is called, because that means that
   # something happened and the plots should update.
+  
+  # Notes on using the reactive stock
+  # stock is a reactiveExpr. Evaluating stock() calls the Stock$reactive() method.
+  # This method accesses a reactiveVal (called reactiveDep) inside Stock and then returns self.
+  # This effectively makes stock a reactive version of a Stock as each call to it accesses reactiveDep.
+  # When reactiveDep changes, the stock object invalidates.
+  # Changing reativeDep is added to the methods you want to invalidate the stock.
+  # Here we add it to project() and reset(). When called, the last thing they do is change the
+  # value of reactiveDep using the invalidate() method.
+  # stock() therefore becomes invalid and triggers things in the Shiny app.
+  
+  
                      
   # Keeps track of whether object has been invalidated.
   private = list(

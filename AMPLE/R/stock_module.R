@@ -9,6 +9,7 @@
 #' @name Stock module
 stockParamsSetterUI <- function(id){
   ns <- NS(id)
+  header <- tags$p("Here you can adjust the settings for the app, including the life history of the stock and length of the projections. Note that changing these settings will reset the app.")
   # Life history parameters - used to determine the r and K in the production model
   stock_lh <- tags$span(title="Choose the life history of the stock: slow, medium or fast growing. Some HCRs are more appropriate for different life histories.",
     radioButtons(ns("stock_lh"), label= "Stock life history", choices = list("Slow growth" = "slow", "Medium growth" = "medium", "Fast growth" = "fast"), selected = "medium"))
@@ -28,7 +29,7 @@ stockParamsSetterUI <- function(id){
   last_historical_timestep <- tags$span(title="The number of years that make up the historical period.",
     numericInput(ns("last_historical_timestep"), label="Length of historical period", value=10, min=2, max=19, step=1))
 
-  return(tagList(stock_lh, stock_history, initial_year, nyears, last_historical_timestep))
+  return(tagList(header, stock_lh, stock_history, initial_year, nyears, last_historical_timestep))
 }
 
 #' stockParamsSetterServer
