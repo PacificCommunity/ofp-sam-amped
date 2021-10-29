@@ -10,7 +10,7 @@ Description: AMPLE provides three Shiny apps that introduce Harvest Control Rule
     'Introduction to indicators' builds on the previous app and introduces the idea of using performance indicators
     to evaluate HCR performance.
     'Comparing performance' allows multiple HCRs to be created and tested, and their performance compared so that the
-    preferred HCR can be selected,
+    preferred HCR can be selected.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true

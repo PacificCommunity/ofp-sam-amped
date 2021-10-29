@@ -7,7 +7,8 @@
 
 #' Measuring performance app launcher
 #' 
-#' Launches the introduction to indicators Shiny app.
+#' Launches the 'Measuring Performance' Shiny app.
+#' See the 'Information' tab in the app for more information.
 #' @param ... Not used
 #' @export
 measuring_performance <- function(...){

@@ -8,6 +8,7 @@
 #' Introduction to HCRs app launcher
 #' 
 #' Launches the introduction to HCRs Shiny app.
+#' See the 'Information' tab in the app for more information.
 #' @param ... Not used
 #' @export
 intro_hcr <- function(...){

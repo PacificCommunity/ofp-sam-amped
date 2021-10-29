@@ -8,6 +8,7 @@
 #' 'Comparing HCR Performance' app launcher
 #' 
 #' Launches the Comparing Performance Shiny app.
+#' See the 'Information' tab in the app for more information.
 #' @param ... Not used
 #' @export
 comparing_performance <- function(...){
