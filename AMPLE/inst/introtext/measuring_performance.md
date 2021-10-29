@@ -1,7 +1,7 @@
-[//]: # (Information and instructions for the Introduction to HCRs)
-[//]: # (intro_hcr.md)
+[//]: # (Information and instructions for the Measuring Performance app)
+[//]: # (measuring_performance.md)
 [//]: # (Author: Finlay Scott (SPC) <finlays@spc.int>)
-[//]: # (Soundtrack: Sometimes I Dream of Glue by Luke Haines
+[//]: # (Soundtrack: I Sometimes Dream of Glue by Luke Haines)
 [//]: # (Distributed under the terms of the GNU General Public License GPL (>= 3))
 
 # Measuring performance
@@ -119,6 +119,7 @@ Seven performance indicators are calculated:
 
 Generally, for most indicators, the higher the value the better (i.e. higher catches, and higher catch stability, are assumed to be better than lower catches and catch levels that change a lot over time).
 However, higher fishing effort is not necessarily better as it may mean higher costs of fishing.
+Similarly, higher biomass might not be better. If the biomass is too high, it may mean you could have fished more.
 
 Try different HCRs and see how they perform.
 You will find that not all HCRs will be good at all performance indicators. Some may have higher catches, while having lower CPUE (catch rates), for example.

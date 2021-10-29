@@ -83,7 +83,7 @@ comparing_performance <- function(...){
                 plotOutput("plot_bar_comparison"))
               ))
             ), # End of median bar chart tab panel
-            tabPanel(title="Performance indicators - boxplots", value="PIbox",
+            tabPanel(title="Performance indicators - box plots", value="PIbox",
               column(12, fluidRow(
                 tags$span(title="Box plot of the values of the performance indicators over the three time periods. Note that the lower the PI for relative effort is, the better the HCR is thought to be performing. Also, a high value for SB/SBF=0 may not indicate that the HCR is performing well - it depends on your objectives. The box contains the 20-80 percentiles, the tails the 5-95 percentiles.",
                 plotOutput("plot_box_comparison"))
@@ -103,6 +103,18 @@ comparing_performance <- function(...){
         ) # End of mainPanel
       ) # End of sidebarLayout
     ), # End of Compare results tabPanel
+    
+    tabPanel(title = "Information",
+      sidebarLayout(
+        sidebar_setup(
+          br()
+        ),
+        mainPanel(
+          # Should work with devtools and after installation 
+          shiny::includeMarkdown(system.file("introtext", "comparing_performance.md", package="AMPLE"))
+        ) # End of mainPanel
+      ) # End of sidebarLayout
+    ), # End of Settings tabPanel 
 
     tabPanel(title = "Settings",
       sidebarLayout(
@@ -178,7 +190,7 @@ comparing_performance <- function(...){
     # - changing stock and MP params
     # - emptying the basket
     observe({
-      message("In stock reset observer")
+      #message("In stock reset observer")
       input$confirm_empty
       stock_params <- get_stock_params()
       mp_params <- get_mp_params()
@@ -205,14 +217,14 @@ comparing_performance <- function(...){
     # Remove the modal dialogue after confirming to empty the basket
     observeEvent(input$confirm_empty,
     {
-      message("Confirming empty basket")
+      #message("Confirming empty basket")
       removeModal() 
     })
     
     
     # Reset the basket if user confirms or if stock_params are updated.
     observe({
-      message("In PIs reset observer")
+      #message("In PIs reset observer")
       input$confirm_empty # After confirming that to empty the basket
       stock_params <- get_stock_params()
       isolate(hcr_no(0))

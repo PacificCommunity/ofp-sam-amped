@@ -1,16 +1,18 @@
-[//]: # (Information and instructions for the Introduction to HCRs)
+[//]: # (Information and instructions for the Introduction to HCRs app)
 [//]: # (intro_hcr.md)
 [//]: # (Author: Finlay Scott (SPC) <finlays@spc.int>)
-[//]: # (Soundtrack: Dear Esther (Original Game Soundtrack) by Jessica Curry
+[//]: # (Soundtrack: Dear Esther (Original Game Soundtrack) by Jessica Curry)
 [//]: # (Distributed under the terms of the GNU General Public License GPL (>= 3))
 
 # Harvest Control Rules
 
 ## Introduction
 
+A HCR is part of a Management Procedure, along with the data collection and estimation method.
+In these apps we focus on HCRs.
 This application attempts to introduce the basic ideas behind a Harvest Control Rule (HCR).
 
-There are three plots: catch (top left), biomass (bottom left) and the HCR (the top right). 
+You can see that there are three plots: catch (top left), biomass (bottom left) and the HCR (the top right). 
 
 The current HCR can be seen in the top right window of the app as the red line.
 The default HCR in the app is a *Threshold catch"* style of HCR (sometimes called a hockey stick).
