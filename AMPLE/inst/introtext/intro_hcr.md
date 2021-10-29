@@ -1,3 +1,9 @@
+[//]: # (Information and instructions for the Introduction to HCRs)
+[//]: # (intro_hcr.md)
+[//]: # (Author: Finlay Scott (SPC) <finlays@spc.int>)
+[//]: # (Soundtrack: Dear Esther (Original Game Soundtrack) by Jessica Curry
+[//]: # (Distributed under the terms of the GNU General Public License GPL (>= 3))
+
 # Harvest Control Rules
 
 ## Introduction
@@ -65,9 +71,8 @@ As biological variability is always encountered in fisheries it is important tha
 Estimation variability is also important.
 The true stock status (e.g. abundance) of a fish stock is never known (because it is impossible to count all of the fish!).
 Instead, the stock status must be estimated, for example, by using a stock assessment model.
-It is important to note that the HCR can only use estimated value of stock status, not the true value (which is never known).
 
-In this app the HCR uses an *estimated* value of biomass to set the catches.
+It is important to note that the HCR can only use *estimated* value of stock status, not the true value (which is never known).
 This means that if the biomass is estimated poorly, the resulting catch limit set by the HCR may not be appropriate.
 For example, the estimated biomass may be higher than the true biomass, meaning the catch limit set by the HCR maybe too high.
 
@@ -75,7 +80,6 @@ Estimation variability and estimation bias can be used to simulate the estimatio
 They can be adjusted to create differences between the true level of the biomass and the estimated level.
 Estimation bias represents situations where the biomass is consistently over or under estimated (e.g. my estimated biomass is always 10% higher than the true value).
 Estimation variability is just a crude way of introducing a random difference between the true and estimated values.
-
 
 When estimation variability or bias is active the biomass plot shows two lines.
 The black line shows the true biomass, the blue line shows the estimated biomass.

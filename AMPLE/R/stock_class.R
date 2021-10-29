@@ -405,10 +405,12 @@ Stock <- R6::R6Class("Stock",
       catch_summary <- paste(catch_qs[2], " (", catch_qs[1], ",", catch_qs[3], ")", sep="")
       rel_cpue_qs <- signif(quantile(rel_cpue, probs=c(quantiles[1], 0.5, quantiles[2])), signif)
       rel_cpue_summary <- paste(rel_cpue_qs[2], " (", rel_cpue_qs[1], ",", rel_cpue_qs[3], ")", sep="")
-      out <- data.frame(Replicate= c(1:length(sbsbf0),"Average and range"),
-                        sbsbf0=c(signif(sbsbf0, signif), sbsbf0_summary),
-                        Catch=c(signif(catch, signif), catch_summary),
-                        rel_cpue=c(signif(rel_cpue, signif), rel_cpue_summary))
+      # Put all together - 
+      # Reorder and sort so that average and range are top, and iterations are reversed
+      out <- data.frame(Replicate= rev(c(1:length(sbsbf0),"Average and range")),
+                        sbsbf0=rev(c(signif(sbsbf0, signif), sbsbf0_summary)),
+                        Catch=rev(c(signif(catch, signif), catch_summary)),
+                        rel_cpue=rev(c(signif(rel_cpue, signif), rel_cpue_summary)))
       colnames(out)[2] <- "Final biomass"
       colnames(out)[3] <- "Final catch"
       colnames(out)[4] <- "Final relative CPUE"
