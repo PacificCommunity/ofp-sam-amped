@@ -21,7 +21,7 @@ stockParamsSetterUI <- function(id){
 
   # Length of projection, number of historical years and initial year
   initial_year <- tags$span(title="First year of the stock history. It has no effect, it just changes the time axis labels.",
-    numericInput(ns("initial_year"), label="First year", value=2000, min=2000, max=2020, step=1))
+    numericInput(ns("initial_year"), label="First year", value=2010, min=2000, max=2020, step=1))
 
   nyears <- tags$span(title="Total number of years in the projection, including historical period.",
     numericInput(ns("nyears"), label="Number of years", value=30, min=20, max=50, step=1))
