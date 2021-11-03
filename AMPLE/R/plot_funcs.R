@@ -87,7 +87,7 @@ plot_biomass <- function(stock, mp_params, ylab = "SB/SBF=0", iters = 1:dim(stoc
   # Draw a ribbon if more than X iters
   if (length(iters) >= max_spaghetti_iters){
     draw_ribbon(x=years, y=bk_true[iters,], quantiles=quantiles)
-    legend(x="bottomleft", legend=c("Average true SB/SBF=0","Last replicate"), lty=c(2,1), lwd=2, col=true_col, cex=cex_leg)
+    legend(x="bottomleft", legend=c("Average true biomass","Last replicate"), lty=c(2,1), lwd=2, col=true_col, cex=cex_leg)
   } else {
     for(i in iters){
       lines(x=years, y=bk_true[i,], col=scales::alpha("black", 0.25), lwd=2, lty=1)

@@ -34,7 +34,9 @@ measuring_performance <- function(...){
             actionButton("reset", "Reset")),
           br(),
           # Stochasticity module
-          stochParamsSetterUI("stoch", init_biol_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=FALSE)
+          stochParamsSetterUI("stoch", init_biol_sigma=0.0, init_est_sigma=0.0, init_est_bias=0.0, show_var=FALSE),
+          br(),
+          shinyscreenshot::screenshotButton(label="Take a screenshot", filename="meas_perf")
         ),
 
         mainPanel(

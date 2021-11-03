@@ -200,7 +200,7 @@ The catch limit will only be at this maximum catch limit if the biomass is great
 Again, repeatedly press the **Advance** button and follow the evolution of the stock and catch limits. Write down the behaviour and final values in the table.
 
 | HCR | Final biomass | Final catch | Notes |
-|----:|----:|----:|----:|----:|
+|----:|--------:|--------:|--------:|
 | HCR 1 |  |  |  |
 | (Belbow=0.5, Cmax=140) |  |  |  |
 | HCR 2 |  |  |  |
