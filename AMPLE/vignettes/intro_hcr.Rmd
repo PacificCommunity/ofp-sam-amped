@@ -2,7 +2,9 @@
 title: "Introduction to Harvest Control Rules (HCRs)"
 author: "Finlay Scott - OFP, SPC"
 date: "2021-02-11"
-output: rmarkdown::html_vignette
+output:
+    bookdown::html_document2:
+      base_format: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{intro_hcr}
   %\VignetteEngine{knitr::rmarkdown}
@@ -13,7 +15,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  results='hide', echo=FALSE, warning=FALSE, message=FALSE, fig.width = 8, fig.height = 8
+  echo=FALSE, warning=FALSE, message=FALSE, out.width='100%'
 )
 ```
 
@@ -34,13 +36,14 @@ An HCR is a pre-agreed decision rule that is used to set fishing opportunities i
 An HCR should be designed so that the management objectives of the fishery have the greatest chance of being achieved. A good HCR is robust to different sorts of uncertainty (which we will discuss later on).
 
 In this tutorial we will use a simple HCR to set the catch limit of a fishery in every year.
-The HCR takes an estimate of the current stock biomass (scaled between 0 and 1, where 0 means there is no stock and 1 is the amount of fish when is there is no fishing, i.e. the highest it can be) and uses it to set a catch limit in the next year.
+The HCR takes an estimate of the current stock biomass and uses it to set a catch limit in the next year.
+Note that in this app the biomass is scaled between 0 and 1, where 0 means there is no stock (a bad thing) and 1 is the amount of fish when is there is no fishing, i.e. the highest it can be.
 
 HCRs can have different basic shapes.
 In this tutorial we will use a shape called a *threshold catch*. This is sometimes known as a hockey stick.
 The catch limit is set according to the general rule shown in the figure below:
 
-```{r plothcr, fig.cap="A threshold-catch shape HCR"}
+```{r plothcr, fig.cap="A threshold-catch shape HCR", fig.width=8, fig.height=6}
   xrange <- c(0, 1)
   yrange <- c(0, 150)
   xlab <- "Estimated biomass"
@@ -91,14 +94,23 @@ library(AMPLE)
 intro_hcr()
 ```
 
-
-When you start the app you should see three plotting windows and a blue arrow.
+When you start the app you should see three plotting windows and a blue arrow in the main panel, and some controls in the left-hand panel (Figure \@ref(fig:start)).
 Your plots might look slightly different due to variations in the historic catches.
 
-INSERT FIGURE OF FRONT PAGE
+```{r start, fig.cap="The opening screen of the 'Introduction to HCRs' app."}
+knitr::include_graphics("intro_hcr_start.png")
+```
 
-The two plots on the left-hand side show the history of the catch and stock biomass.
+
+The two plots on the left-hand side of the main panel show the history of the catch and stock biomass.
 At the moment, there are only 10 years of catch history from 2010 to 2019 (the biomass has an extra year as it is the biomass at the *start* of the year).
+Remember that the biomass is scaled between 0 and 1, where 1 is the unfished stock biomass, i.e. the maximum biomass.
+
+There are two horizontal dashed lines on the biomass plot. The higher one, at 0.5, is the Target Reference Point (TRP).
+The TRP is a management objective. Ideally, the stock biomass should be close to this line.
+
+The lower horizontal line, at 0.2, is the Limit Reference Point (LRP).
+If the stock biomass falls below this level the stock will have trouble reproducing and may be in serious trouble.
 
 The HCR is shown in the top-right panel. It is the red line (ignore the blue dashed lines for the moment).
 As mentioned above, the shape of the HCR is determined by 4 parameters: *Blim*, *Belbow*, *Cmin* and *Cmax*.
@@ -107,6 +119,7 @@ The HCR parameter values can be controlled using the sliders on the left-hand si
 The first thing to do is to set the parameters of the HCR.
 Set these values (if not already done): *Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140.
 These are the default initial values, but make sure that they have been set OK.
+We will refer to his HCR as *HCR 1*.
 
 **Note** that as you change the HCR parameters, the shape of the HCR will change.
 
@@ -115,7 +128,7 @@ These are the default initial values, but make sure that they have been set OK.
 The purpose of the HCR is to set the catch limit each year. The HCR uses the current estimated value of stock biomass to set the next catch limit.
 This rule will be applied every year in the future to set new catch limits in each year.
 
-We start at the very beginning of 2020 and we want to use the HCR to set the catch limit for 2020.
+We start at the very beginning of 2020 and we want to use *HCR 1* to set the catch limit for 2020.
 The stock biomass can be seen in the bottom-left plot.
 
 The way the HCR operates can be seen by following the blue arrow from the biomass plot, at the bottom left, to the HCR plot, at the top right.
@@ -138,13 +151,16 @@ Press the **Advance** button in the left panel. You have now advanced forward in
 
 Press the **Advance** button again. The catch limit that was set for 2021 is used by the fishery. The stock responds to being fished again and we have a new estimate biomass for the beginning of 2022. This new estimate of biomass is again used by the HCR to set the new catch limit for 2022 (the blue arrow will move again to reflect this).
 
-Keep pressing the **Advance** button and you should see the cycle of how the HCR sets the catch limit, the catch limit affects the stock biomass, and the stock biomass is used by the HCR to set a new catch limit.
+Keep pressing the **Advance** button until you get to the end of the projection (in 2040).
+You should see the cycle of how the HCR sets the catch limit, the catch limit affects the stock biomass, and the stock biomass is used by the HCR to set a new catch limit.
 
 The previous values set by the HCR are shown by grey dots on the HCR plot, and the previous catch limits are shown on the catch plot as grey dashed horizontal lines.
 
-You should see that eventually the fishery settles down to a steady catch limit and stock abundance.
+You should see that eventually the fishery settles down to a steady catch limit and stock abundance (Figure \@ref(ref:hcr1)).
 
-INSERT FINAL FIGURE
+```{r hcr1, fig.cap="The results of running a full projection of HCR 1."}
+knitr::include_graphics("intro_hcr_hcr1.png")
+```
 
 # Trying different HCRs
 
@@ -163,16 +179,22 @@ The parameters of the HCR that we just tried are: *Blim* = 0.2, *Belbow* = 0.5, 
 Here we try a different HCR.
 The general 'hockey stick' shape will be the same, but we will use different HCR parameters by changing the HCR parameters in the left panel.
 Change *Belbow* to be 0.3 and *Cmax* to 130. Keep the other two parameters the same.
+We will refer to this HCR as *HCR 2*.
 You should see that the HCR plot has been updated to show the new shape of the HCR.
 
 Notice that this HCR has a lower maximum catch limit than the previous HCR.
 However, the catch limit will not be set lower unless biomass is lower than 0.3 (the value of *Belbow*).
 
 As before, repeatedly press the **Advance** button and follow the evolution of the stock and the catches.
-Note how the behaviour of the catch and biomass are different to the initial example.
+Note how the behaviour of the catch and biomass are different to the initial example (Figure \@ref(fig:hcr2)).
 Write down the final values and any observations in the table at the end of this section.
 
+```{r hcr2, fig.cap="The results of running a full projection of HCR 2."}
+knitr::include_graphics("intro_hcr_hcr2.png")
+```
+
 As a final example set *Belbow* to 0.8 and *Cmax* to 150 and keep the other parameters the same.
+We will refer to this HCR as *HCR 3*.
 Notice that this HCR has a higher maximum catch limit but a much longer, shallower slope.
 The catch limit will only be at this maximum catch limit if the biomass is greater than 0.8.
 Again, repeatedly press the **Advance** button and follow the evolution of the stock and catch limits. Write down the behaviour and final values in the table.
@@ -187,6 +209,11 @@ Again, repeatedly press the **Advance** button and follow the evolution of the s
 | (Belbow=0.8, Cmax=150) |  |  |  |
 
 You should have seen that different parameterisations of the HCR lead to different fishery dynamics and final settled values.
+
+* You have now looked at the behaviour of three different HCRs. Which of these HCRs do you prefer?
+* Which of them gets the biomass closest to the TRP of 0.5?
+* Which one results in the highest catches?
+* Do any of them take the stock close to or below the LRP of 0.2?
 
 # Introducing uncertainty
 
@@ -215,14 +242,24 @@ What happens when we include natural variability?
 Set the HCR parameters back to their original values (*Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10, *Cmax* = 140).
 Increase the **Biological variability** option to 0.2 and project forward through time using the **Advance** button.
 
-You should see that the biomass now bounces around and is not perfectly flat (unlike before).
+You should see that, unlike before, the biomass now bounces around and is not perfectly flat (Figure \@ref(fig:hcr1noise)).
 This is because the variability in the stock biology is affecting the abundance.
 For example, in some years the stock may produce more recruits than in other years for the same level of biomass.
 This causes fluctuations in the population abundance.
 
+```{r hcr1noise, fig.cap="The results of running a full projection of HCR 1 with biological variability (note that your plot may look different)."}
+knitr::include_graphics("intro_hcr_hcr1_noise.png")
+```
+
 As the HCR uses the estimate of biomass to set the catch limit, it means that the catch limit set by the HCR also bounces around. Changing the catch limits then goes onto affect the stock biomass and so on.
 
 If you press the **Reset** button and run the projection again you should see that you get a different trajectory (uncertainty in action!).
+
+Different HCRs respond differently to biological variability.
+
+* Set up HCR 2 again (*Belbow* = 0.3, *Cmax* = 130) and run several complete projections with the biological variability set to 0.2. What do you notice? Are the catches more or less stable than with HCR 1?
+* Set up HCR 3 again (*Belbow* = 0.8, *Cmax* = 150) and run several complete projections with the biological variability set to 0.2. What do you notice?
+* From this very brief experiment, which of the three HCRs do you prefer and why?
 
 ## Estimation error
 
