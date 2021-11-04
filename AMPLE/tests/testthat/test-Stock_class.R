@@ -1,6 +1,3 @@
-context("The Stock R6 class")
-source("utility_test_funcs.R")
-
 test_that("intialization", {
   # Initialisation
   niters <- round(runif(1, min=1, max=10))
@@ -8,7 +5,8 @@ test_that("intialization", {
   last_historical_timestep <- round(runif(1, min=5, max=nyears-4))
   # Make dummy stock_params
   stock_params = make_dummy_stock_params(nyears = nyears, last_historical_timestep=last_historical_timestep)
-  stock <- Stock$new(stock_params=stock_params, niters = niters)
+  mp_params = make_dummy_mp_params()
+  stock <- Stock$new(stock_params=stock_params, mp_params=mp_params, niters = niters)
 
   # Check the dims of the array fields are right
   array_fields <-  c("biomass", "hcr_ip", "hcr_op", "catch", "effort")
@@ -22,21 +20,17 @@ test_that("intialization", {
   # Catches filled up to the last historical year
   expect_true(all(!is.na(stock$catch[,1:(last_historical_timestep)])))
   expect_true(all(is.na(stock$catch[,(last_historical_timestep+1):nyears])))
-
-  # Check that if mp_params is passed in, hcr_ip and hcr_op are filled up only in last_historical_timestep+1
-  mp_params = make_dummy_mp_params()
-  stock <- Stock$new(stock_params=stock_params, mp_params=mp_params, niters = niters)
   expect_true(all(!is.na(stock$hcr_ip[,last_historical_timestep+1])))
-  expect_true(all(is.na(stock$hcr_ip[,c(1:last_historical_timestep, (last_historical_timestep+2):nyears)])))
+  expect_true(all(is.na(stock$hcr_ip[,(last_historical_timestep+2):nyears])))
   expect_true(all(!is.na(stock$hcr_op[,last_historical_timestep+1])))
-  expect_true(all(is.na(stock$hcr_op[,c(1:last_historical_timestep, (last_historical_timestep+2):nyears)])))
-
+  expect_true(all(is.na(stock$hcr_op[,(last_historical_timestep+2):nyears])))
 })
 
-test_that(fill_biomass, {
+test_that("fill_biomass", {
   stock_params = make_dummy_stock_params()
-  #mp_params = make_dummy_mp_params()
-  stock <- Stock$new(stock_params=stock_params, niters = niters)
+  mp_params = make_dummy_mp_params()
+  niters <- round(runif(1, min=1, max=10))
+  stock <- Stock$new(stock_params=stock_params, mp_params=mp_params, niters = niters)
 
   # Just the first timestep
   for(ts in 2:(last_historical_timestep)){
@@ -48,7 +42,7 @@ test_that(fill_biomass, {
 
 # Project is tricky to write a test for
 # Should do all iters - just checks that all iters have been filled with non-NAs
-test_that(project,{
+test_that("project", {
   niters <- round(runif(1, min=1, max=10))
   nyears <- round(runif(1, min=10, max=40))
   last_historical_timestep <- round(runif(1, min=5, max=nyears-4))

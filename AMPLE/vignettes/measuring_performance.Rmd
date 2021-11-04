@@ -1,5 +1,5 @@
 ---
-title: "Measuring the performance of the HCRs"
+title: "Measuring the performance of the harvest control rules (HCRs)"
 author: "Finlay Scott - OFP, SPC"
 date: "2021-03-11"
 output:
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-This tutorial explores how the performance of a harvest control rule (HCR) can be measured,
+This tutorial explores how the performance of a harvest control rule (HCR) can be measured.
 It uses the *Measuring performance* Shiny app from the *AMPLE* package.
 There are three apps in the *AMPLE* package. This is the second one.
 

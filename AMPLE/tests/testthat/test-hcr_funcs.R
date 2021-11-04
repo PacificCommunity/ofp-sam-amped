@@ -1,6 +1,3 @@
-context("The Stock R6 class")
-source("utility_test_funcs.R")
-
 test_that("get_assessment_hcr_ip", {
   # Test assessment type
 
@@ -23,19 +20,3 @@ test_that("get_assessment_hcr_ip", {
 
 })
 
-#test_that("get_assessment_hcr_op", {
-#
-#get_hcr_op(stock, mp_params, yr)
-#  mp_params <- make_dummy_mp_params(mp_analysis = "assessment", hcr_shape = "threshold")
-#  stock_params <- make_dummy_stock_params()
-#  stock <- Stock$new(stock_params=stock_params, mp_params=mp_params, niters = 1)
-#  yr <- 1
-#  stock$hcr_ip[,yr] <- runif(dim(stock$hcr_ip)[1], min=1e-6, max = 1.0) #
-#  # Evaluate threshold
-#  out <- threshold(input=stock$hcr_ip[,yr,drop=FALSE], mp_params=mp_params)
-#  # But what should it be?
-#
-#
-#
-#
-#})
