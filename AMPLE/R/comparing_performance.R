@@ -38,7 +38,9 @@ comparing_performance <- function(...){
           br(),
           # This should reset everything - empty the stores
           actionButton("empty_basket", "Empty basket"),
-          br()
+          br(),
+          br(),
+          shinyscreenshot::screenshotButton(label="Take a screenshot", filename="comp_perf")
         ), # End sidebar set up
         mainPanel(
           column(6,
@@ -74,11 +76,12 @@ comparing_performance <- function(...){
           checkboxGroupInput(inputId = "hcr_choice", label="HCR selection",
                              # character(0) means no choice is available - updated in server function
                              choiceNames = character(0), choiceValues = character(0)),
-          br()
+          br(),
+          shinyscreenshot::screenshotButton(label="Take a screenshot", filename="comp_perf")
         ),# End of sidebar_setup()
         mainPanel(
           tabsetPanel(id="comparisontabs",
-            tabPanel(title="Performance indicators - medians", value="PImeds",
+            tabPanel(title="Performance indicators - bar charts", value="PImeds",
               column(12, fluidRow( 
                 tags$span(title="Bar plot of the median values of the performance indicators over the three time periods. Note that the lower the PI for relative effort is, the better the HCR is thought to be performing. Also, a high value for SB/SBF=0 may not indicate that the HCR is performing well - it depends on your objectives.",
                 plotOutput("plot_bar_comparison"))
@@ -90,7 +93,7 @@ comparing_performance <- function(...){
                 plotOutput("plot_box_comparison"))
               ))
             ), # End of box plot panel
-            tabPanel(title="Performance indicators - table", value="PItable",
+            tabPanel(title="Performance indicators - tables", value="PItable",
               column(12, fluidRow(
                 br(),
                 "Performance indicators in the short-, medium- and long-term. The value is the median, the values in the brackets are the 5 and 95 percentiles (i.e. cover 90% of the range of values).",
@@ -128,7 +131,7 @@ comparing_performance <- function(...){
             stockParamsSetterUI("stock"),
             br(),
             # Number of iteration
-            numericInput("niters", "Number of iterations", value = 100, min=10, max=1000, step=10),
+            numericInput("niters", "Number of iterations", value = 250, min=10, max=1000, step=10),
             # Stochasticity module 
             stochParamsSetterUI("stoch", init_biol_sigma=0.2, init_est_sigma=0.0, init_est_bias=0.0, show_var=TRUE),
           )
@@ -378,6 +381,7 @@ comparing_performance <- function(...){
     plot_barbox_comparison <- function(plot_type, quantiles=NULL, no_cols=2){
       out <- renderPlot({
         req(input$hcr_choice)
+        req(input$pi_choice)
         dat <- all_pis()
         # Subset out the PIs
         dat <- subset(dat, pi %in% input$pi_choice)
@@ -390,7 +394,8 @@ comparing_performance <- function(...){
         #return(max(height_per_pi*1.5, (height_per_pi * ceiling(length(input$pi_choice) / no_cols))))
         # Fill space
         return({
-          nrows <- ceiling(length(input$pi_choice) / no_cols)
+          npis <- max(length(input$pi_choice), 1)
+          nrows <- ceiling(npis / no_cols)
           height_per_row <- min(total_height / nrows, max_height_per_row)
           return(height_per_row * nrows)
         })
@@ -411,6 +416,7 @@ comparing_performance <- function(...){
     render_pi_table_all_hcrs <- function(period){
       out <- renderTable({
         req(input$hcr_choice)
+        req(input$pi_choice)
         dat <- all_pis()
         # Which time period
         tp <- sort(unique(dat$time_period))[period] # Short term is 1, MT = 2 etc
