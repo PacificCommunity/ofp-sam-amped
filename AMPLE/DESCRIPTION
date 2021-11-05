@@ -25,6 +25,10 @@ Config/testthat/edition: 3
 Depends: 
     shiny (>= 1.7.1)
 Imports: 
+    graphics,
+    grDevices,
+    RColorBrewer,
+    stats,
     R6 (>= 2.5.1),
     scales (>= 1.1.1),
     shinyjs (>= 2.0.0),

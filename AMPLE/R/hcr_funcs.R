@@ -24,6 +24,7 @@
 #' @param mp_params The HCR / management procedure parameters used to evaluate the HCR (as a list).
 #' @param yr The time step of the true stock status used to generate the HCR IP .
 #' @param ... Other arguments, including iters
+#' @import shiny
 #' @export
 get_hcr_ip <- function(stock, mp_params, yr, ...){
   # Check for NA in mp_analysis, if so return NA
@@ -115,7 +116,6 @@ get_hcr_op <- function(stock, mp_params, yr, iters=1:dim(stock$biomass)[1]){
 #' Evaluates a threshold (i.e. hockey stick) harvest control rule.
 #' Used by the \code{hcr_op} function.
 #' @param input A vector of the 'true' stock status
-#' @param stock The stock object
 #' @param mp_params The HCR / management procedure parameters used to evaluate the HCR (as a list).
 #' @param ... Unused
 #' @return A vector of the same dimension as the input.
@@ -138,8 +138,6 @@ threshold <- function(input, mp_params, ...){
 #' 
 #' Evaluates a constant harvest control rule, i.e. one that ignores the stock status and just returns the constant level (catch or effort).
 #' Used by the \code{hcr_op} function.
-#' @param input A vector of the 'true' stock status
-#' @param stock The stock object
 #' @param mp_params The HCR / management procedure parameters used to evaluate the HCR (as a list).
 #' @param ... Unused
 #' @export

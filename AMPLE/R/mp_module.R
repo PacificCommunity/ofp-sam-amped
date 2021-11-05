@@ -19,7 +19,6 @@
 #' @param init_thresh_belbow Initial value of the belbow for the catch threshold HCR.
 #' @param init_constant_catch Initial value of constant catch for the constant catch HCR.
 #' @param init_constant_effort Initial value of constant effort for the constant effort HCR.
-#' @param input_label The label of the menu.
 #'
 #' @return A taglist
 #' @rdname MP_modules
@@ -111,20 +110,13 @@ mpParamsSetterServer <- function(id, get_stoch_params=NULL){
   })
 }
 
-
-# Put these into an R6 class of MP - so we know what it is each one? Probably too much
-#hcr_shape = "threshold"
-#mp_analysis = "assessment" # this is the name of function evaluated to generated the input to HCR
-#mp_type="model"
-#output_type="catch"
-#name=paste("Thresh. catch: Blim=",input$blim_belbow[1],",Belbow=",input$blim_belbow[2],",Cmin=",input$cmin_cmax[1],",Cmax=",input$cmin_cmax[2], sep="")
-#params = c(lim = input$blim_belbow[1], elbow = input$blim_belbow[2], min = input$cmin_cmax[1], max = input$cmin_cmax[2])),
-
-
-#' mp_params_setter
+#' mp_params_switcheroo
 #'
-#' Creates the MP params list based on the MP selection.
+#' Creates the MP params list based on the MP selection from the Shiny UI.
 #' Defined outside of a reactive environment above so we can use it non-reactively (helpful for testing).
+#' @param input List of information taken from the Shiny UI (mpParamsSetterUI)
+#' @param est_sigma Standard deviation of the estimation variability (default = 0).
+#' @param est_bias Estimation bias as a proportion. Can be negative (default = 0).
 #'
 #' @rdname MP_modules
 #' @name MP modules

@@ -28,6 +28,7 @@ test_that("intialization", {
 
 test_that("fill_biomass", {
   stock_params = make_dummy_stock_params()
+  last_historical_timestep <- stock_params$last_historical_timestep
   mp_params = make_dummy_mp_params()
   niters <- round(runif(1, min=1, max=10))
   stock <- Stock$new(stock_params=stock_params, mp_params=mp_params, niters = niters)

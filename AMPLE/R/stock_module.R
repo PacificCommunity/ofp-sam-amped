@@ -59,7 +59,9 @@ stockParamsSetterServer <- function(id, get_stoch_params=NULL){
 #' get_stock_params
 #'
 #' get_stock_params() Sets up default values for the stock, including year range.
-#' Only exported to get the examples to work.
+#' It's a separate function so it can be used and tested outside of a reactive environment.
+#' @param input List of stock parameters taken from the shiny UI (stockParamsSetterUI()).
+#' @param biol_sigma Standard deviation of the biological variability (default = 0).
 #'
 #' @rdname stock_module
 #' @name Stock module

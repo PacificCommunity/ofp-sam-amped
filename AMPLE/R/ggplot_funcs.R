@@ -17,7 +17,7 @@
 #' @noRd
 #' @keywords internal
 get_hcr_colours <- function(hcr_names, chosen_hcr_names){
-  allcols <- colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
+  allcols <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
   names(allcols) <- hcr_names
   hcrcols <- allcols[chosen_hcr_names]
   return(hcrcols)
@@ -39,9 +39,9 @@ get_hcr_colours <- function(hcr_names, chosen_hcr_names){
 #' @noRd
 #' @keywords internal
 barboxplot <- function(dat, hcr_nos, plot_type="median_bar", quantiles=c(0.05, 0.10, 0.90, 0.95), no_cols=2){
-  #hcrcols <- get_hcr_colours(hcr_names=unique(dat$hcrref), chosen_hcr_names=hcr_choices)
   all_hcr_names <- unique(dat$hcr_ref)
-  dat <- subset(dat, hcr_no %in% hcr_nos)
+  #dat <- subset(dat, hcr_no %in% hcr_nos)
+  dat <- dat[dat$hcr_no %in% hcr_nos,] # Trying to remove weird warning about hcr_no being a global variable
   hcr_cols <- get_hcr_colours(hcr_names=all_hcr_names, chosen_hcr_names=unique(dat$hcr_ref))
   
   

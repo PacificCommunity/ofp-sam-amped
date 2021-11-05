@@ -421,7 +421,9 @@ comparing_performance <- function(...){
         # Which time period
         tp <- sort(unique(dat$time_period))[period] # Short term is 1, MT = 2 etc
         # Subset out the PIs
-        dat <- subset(dat, pi %in% input$pi_choice & hcr_no %in% input$hcr_choice & time_period == tp)
+        #dat <- subset(dat, pi %in% input$pi_choice & hcr_no %in% input$hcr_choice & time_period == tp)
+        # Remove use of subset to avoid global variable warning
+        dat <- dat[dat$pi %in% input$pi_choice & dat$hcr_no %in% input$hcr_choice & dat$time_period == tp,]
         tab <- pi_table_all_hcrs(pis = dat, quantiles = quantiles)
         return(tab)
       }, caption = time_period_text[[period]])

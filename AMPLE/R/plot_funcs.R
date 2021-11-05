@@ -12,6 +12,7 @@
 #' Plots the connecting arrow between the biomass plot and the HCR plot in the 'Introduction to HCRs' app.
 #' @param stock An R6 class Stock object.
 #' @param timestep The time step of the HCR input.
+#' @importFrom graphics "arrows" "grid" "legend" "lines" "par" "points" "polygon"
 #' @noRd
 #' @keywords internal 
 plot_hcr_intro_arrow <- function(stock, timestep){

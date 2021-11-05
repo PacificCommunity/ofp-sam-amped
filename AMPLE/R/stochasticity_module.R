@@ -65,15 +65,15 @@ stochParamsSetterServer <- function(id){
 }
 
 
-# Defined outside of reactive so we can use it in tests
-#' mp_params_setter
+#' set_stoch_params
 #'
-#' set_stoch_params() Sets up default values. Only exported to get the examples to work.
-#'
+#' set_stoch_params() sets up default values for the stochasticity parameters.
+#' Defined as a separate function so it can be used for testing outside of a reactive environment.
+#' @param input A list of stochasticity parameters.
 #' @rdname stoch_module
 #' @name Stochasticity module
 set_stoch_params <- function(input){
-  # Create a list of the stochaticity parameters - if they are not in the input, set to 0
+  # Create a list of the stochasticity parameters - if they are not in the input, set to 0
   params <- c("biol_sigma", "est_sigma", "est_bias")
   out <- lapply(params, function(x) ifelse(is.null(input[[x]]), 0.0, input[[x]]))
   names(out) <- params

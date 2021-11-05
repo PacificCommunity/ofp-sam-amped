@@ -17,6 +17,7 @@
 #' @param b Correlation factor: -1 (red) to 1 (blue), 0 (white)
 #' @param sd Standard deviation
 #' @references Ranta and Kaitala 2001 Proc. R. Soc.
+#' @importFrom stats "quantile" "reshape" "rlnorm" "rnorm"
 #' @noRd
 #' @keywords internal
 next_corrnoise <- function(x, b, sd=0.1){
