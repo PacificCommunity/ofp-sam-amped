@@ -92,10 +92,3 @@ If you change the values for estimation variability and bias you will see change
 This is why HCRs are designed to be used with a specific estimation process, so you can factor the details of the estimation process when designing the HCR.
 It's also why testing the HCR using simulations is very important.
 
-## Tutorial
-
-A more detailed tutorial can be found at these links:
-
-
-
-

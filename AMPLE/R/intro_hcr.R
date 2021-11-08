@@ -74,7 +74,9 @@ intro_hcr <- function(...){
         ),
         mainPanel(
           # Should work with devtools and after installation 
-          shiny::includeMarkdown(system.file("introtext", "intro_hcr.md", package="AMPLE"))
+          shiny::includeMarkdown(system.file("introtext", "intro_hcr.md", package="AMPLE")),
+          # If putting on-line add link to the HCR vignette
+          a("Tutorial", target="_blank", system.file("introtext", "intro_hcr_vignette.html", package="AMPLE"))
         ) # End of mainPanel
       ) # End of sidebarLayout
     ), # End of Settings tabPanel 
