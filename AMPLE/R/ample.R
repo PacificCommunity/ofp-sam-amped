@@ -13,12 +13,17 @@
 #'    to evaluate HCR performance.
 #'    'Comparing performance' allows multiple HCRs to be created and tested, and their performance compared so that the
 #'    preferred HCR can be selected.
+#'    
+#'    Harvest Control Rules are used as part of a fishery harvest strategy.
+#'    This package was put together as part of capacity building efforts by the Pacific Community (SPC) to develop fishery harvest strategies for tuna stocks in the western and central Pacific Ocean (WCPO), working with the Western and Central Pacific Fisheries Commission (WCPFC).
+#'    For more information on tuna harvest strategies in the WCPO please see LINKs.
 #' 
 #' @section AMPLE functions:
 #' Too launch the apps use the functions: \code{intro_hcr()}, \code{measuring_performance()} and \code{comparing_performance()}.
 #' 
 #' @section Acknowledgement:
-#' With thanks to Andre Punt, and Winston Chang (for help with the R6 / Shiny reactivity).
+#' With thanks to Andre Punt.
+#' Also thanks to Winston Chang for help with the R6 class / Shiny reactivity.
 #'
 #' @docType package
 #' @name ample
