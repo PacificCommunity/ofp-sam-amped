@@ -75,7 +75,7 @@ intro_hcr <- function(...){
         mainPanel(
           # Should work with devtools and after installation 
           shiny::includeMarkdown(system.file("introtext", "intro_hcr.md", package="AMPLE")),
-          # Premake the vignette and drop it into the *root* www folder (not the inst/www folder)
+          # Premake the vignette and drop it into the inst/www/tutorials folder
           h1("Tutorial"),
           p("A more detailed tutorial can be found at these links:"),
           a("Tutorial (html version)", target="_blank", href="tutorials/intro_hcr.html")

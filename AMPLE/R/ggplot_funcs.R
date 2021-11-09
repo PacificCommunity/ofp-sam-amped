@@ -35,7 +35,7 @@ get_hcr_colours <- function(hcr_names, chosen_hcr_names){
 #' @param no_cols Number of column in each row. Default is 2.
 #' 
 #' @return A ggplot2 plot object.
-#' @importFrom ggplot2 "ggplot" "aes_string" "geom_bar" "theme" "element_blank" "xlab" "facet_wrap" "theme_bw" "geom_boxplot" "scale_fill_manual" "ylab"
+#' @importFrom ggplot2 "ggplot" "aes_string" "geom_bar" "theme" "element_blank" "xlab" "facet_wrap" "theme_bw" "geom_boxplot" "scale_fill_manual" "ylab" "element_text"
 #' @noRd
 #' @keywords internal
 barboxplot <- function(dat, hcr_nos, plot_type="median_bar", quantiles=c(0.05, 0.10, 0.90, 0.95), no_cols=2){
@@ -67,7 +67,8 @@ barboxplot <- function(dat, hcr_nos, plot_type="median_bar", quantiles=c(0.05, 0
   p <- p + theme(legend.position="bottom", legend.title=element_blank())
   
   # Size of labels etc
-  #p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+  text_size <- 14
+  p <- p + theme(axis.text=element_text(size=text_size), axis.title=element_text(size=text_size), strip.text=element_text(size=text_size), legend.text=element_text(size=text_size))
   return(p)
 }
 

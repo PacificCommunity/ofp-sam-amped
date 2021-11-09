@@ -24,16 +24,22 @@ knitr::opts_chunk$set(
 This tutorial explores how to compare the performance of several harvest control rules (HCRs).
 It uses the *Comparing performance* Shiny app from the *AMPLE* package.
 There are three apps in the *AMPLE* package. This is the third one.
+If you are unsure what an HCR is you should look at the first app, *Introduction to HCRs*.
 
 The previous tutorial (*Measuring the performance of HCRs*) introduced the idea of performance indicators (PIs) and how they can be used to measure the performance of an HCR in relation to the management objectives.
-Before a HCR is adopted its performance is tested and evaluated using computer simulations (known as Management Strategy Evaluation - MSE).
-During these evaluations the performance of a proposed HCR is measured using a collection of indicators, known as performance indicators (PIs).
+
+The performance of a proposed HCR is tested and evaluated using computer simulations (known as Management Strategy Evaluation - MSE).
+During these evaluations the performance is measured using a collection of indicators, known as performance indicators (PIs).
 
 In this tutorial we will generate PIs for several HCRs (known as candidate HCRs) and compare them.
-By considering what the objectives of the fishery are we can select the most appropriate HCR.
+By considering what the objectives of the fishery are, we can select the most appropriate HCR.
 
 **Note** that the fishery used in this tutorial is not based on a particular fishery or stock.
 It's just a toy example.
+
+Also **note** that in this app the biomass is scaled between 0 and 1, where 0 means there is no biomass (a bad thing) and 1 is the amount of biomass when is there is no fishing, i.e. the highest it can be.
+Scaling the biomass between 0 and 1 can make it easier to understand if the stock is over or underexploited.
+
 
 **Important note about management procedures**.
 An HCR is part of a management procedure (MP), along with two other elements: the data collection and the estimation process.
@@ -45,7 +51,7 @@ When we talk about comparing HCRs we are really comparing MPs.
 # Getting started
 
 If you want to use the app online, it is available at the following address:
-[https://ofp-sam.shinyapps.io/amped-fixaddress/](https://ofp-sam.shinyapps.io/amped-fixaddress/)
+[https://ofp-sam.shinyapps.io/ample-comparing-performance/](https://ofp-sam.shinyapps.io/ample-comparing-performance/)
 
 Alternatively, if you are using your own version of R and have installed the *AMPLE* package, you can run this app by entering the following commands into the R console:
 
@@ -64,7 +70,7 @@ On the left-side of the main panel there are plots of catch, biomass and CPUE re
 These three plots have 10 years of historical data, from 2010 to 2019.
 There is an additional year of data for biomass as it shows the biomass at the start of the year.
 
-The horizontal dashed lines on the biomass plot are the Target Reference Point (0.5) and Limit Reference Point (0.2).
+The horizontal dashed lines on the biomass plot are the Target Reference Point (TRP = 0.5) and Limit Reference Point (LRP = 0.2).
 
 The HCR is shown at the top of the right-hand panel. The HCR is the red line.
 
@@ -102,37 +108,40 @@ This HCR will be referred to as *HCR 1*.
 
 Press the **Project** button to run the projection.
 In the previous tutorial when you ran the projection it ran a single projection.
-Here, when you run a projection 250 replicates will be run (this may take a few seconds, depending on your machine).
+Here, when you run a projection 250 replicates will be run (i.e. 250 projections will be run). This may take a few seconds, depending on your machine.
 As noted above, biological variability is switched on and set to 0.2 so that each replicate is slightly different.
 This is the same as using the *Measuring performance* app and clicking **Project** 250 times.
 
 After clicking **Project** the time series plots will show the results.
-The grey ribbon shows the range that most (90%) of the replicates fell into, as well as the average value (the dashed line), and the final replicate as an example (the solid illustration).
+The grey ribbon shows the range of values of the replicates (it contains 90% of the full range of values).
+The average value (the dashed line), and the final replicate as an example (the solid line) are also shown.
 
 A table of performance indicators has also appeared underneath the HCR plot.
 Here we calculate PIs over three different time periods: short-, medium- and long-term.
 These time periods can be seen on the time series plots of catch, biomass and relative CPUE as vertical dashed lines.
 
-Seven performance indicators are calculated:
+Seven performance indicators are calculated (Table \@ref(tab:pis)).
+
+Table: (\#tab:pis) The seven performance indicators used to measure performance in this app.
 
 | Performance indicator | Description |
 |:-------|:-------|
 | Biomass | The biomass relative to the unfished biomass.|
-| Probability of being above the LRP | This reflects the of risk of stock being overfished. |
+| Probability of being above the LRP | This reflects the of risk of the stock being overfished. |
 | Catch | The expected catches. |
-| Relative CPUE | The CPUE relative to the CPUE in the last historical year. |
+| Relative CPUE | The CPUE (or catch rate) relative to the CPUE in the last historical year. |
 | Relative effort | The fishing effort relative to the effort in the last historical year. |
 | Catch stability | How much the catches change over time. A value of 1 means that the catches are very stable and do not change at all. A low value, close to 0, means that the catches fluctuate a lot over time (probably not a good thing). |
-| Proximity to the TRP | How close the biomass is to the TRP on average. A value of 1 means that the biomass is always at the TRP. A low value close to 0 means that the biomass spends a lot of time being much higher, or lower, than the TRP. |
+| Proximity to the TRP | How close the biomass is to the TRP on average. A value of 1 means that the biomass is always at the TRP. A low value, close to 0, means that the biomass spends a lot of time being much higher, or lower, than the TRP. |
 
-<br />
-
-Generally, for most indicators, the higher the value the better (i.e. higher catches, and higher catch stability, are assumed to be better than lower catches and catch levels that change a lot over time).
+Generally, for most indicators, the higher the value the better (e.g. higher catches, and higher catch stability are assumed to be better than lower catches and catch levels that change a lot over time).
 However, higher fishing effort is not necessarily better as it may mean higher costs of fishing.
 Similarly, higher biomass might not be better. If the biomass is too high, it may mean you could have fished more.
 
-By looking at the summary plots and the table of PIs, we think that this HCR is worth considering in more detail.
-It is a *candidate* HCR, i.e. a candidate for adoption.
+By looking at the summary plots and the table of PIs, we can decide if we think the current HCR is worth considering further.
+
+The HCR we have just tested, *HCR 1*, looks OK (e.g. there is a high chance of being above the LRP and the expected catches look OK).
+We therefore consider *HCR 1* as a *candidate* HCR, i.e. a candidate for adoption.
 
 Click on the **Add HCR to basket** button to add the HCR to the basket of candidate HCRs. You should see that the counter **Number of HCRs in basket** increases by 1.
 
@@ -142,15 +151,15 @@ knitr::include_graphics("comp_perf_hcr1.png")
 
 ## Add more HCRs to the basket
 
-We now have one HCR in our basket. We are going to add two more HCRs to basket and then compare the results of all three of them.
+We now have one HCR in our basket. We are going to add two more HCRs to the basket and then compare the results of all three of them.
 
-Repeat the above process (set up the HCR, run the projection, add to the basket) two other HCRs.
+Repeat the above process (set up the HCR, run the projection, add to the basket) two more HCRs.
 Use the following parameters:
 
 * HCR2: *Blim* = 0.2, *Belbow* = 0.3, *Cmin* = 10 and *Cmax* = 130. 
 * HCR3: *Blim* = 0.2, *Belbow* = 0.7, *Cmin* = 10 and *Cmax* = 150. 
 
-You should now have three HCRs in your basket (check the counter).
+You should now have three HCRs in your basket (check the counter and don't forget to **Add HCR to basket** after projecting).
 
 # Comparing the performance
 
@@ -158,7 +167,10 @@ We can now compare the performance of the three HCRs.
 
 Select the **Compare performance** tab at the top of the app window.
 In the main panel you should see a lot of bar plots.
-Each window shows the average value of a PI for each of the HCRs in the basket, in the three different time periods (short-, medium- and long-term) (Figure \@ref(fig:compbar1)).
+
+Each window shows a different PI for each of the HCRs in the basket.
+The height of the bars is the average value of that PI. 
+The bars are grouped into the three different time periods (short-, medium- and long-term) (Figure \@ref(fig:compbar1)).
 Each HCR has a different colour.
 
 
@@ -171,9 +183,11 @@ This is a lot of information!
 We want to be able to choose which HCR best fits our objectives but it can be difficult when there is so much to look at.
 
 To make things easier, we can drop PIs that we think are unimportant (perhaps they do not measure anything related to your management objectives) by deselecting them from the list in the left panel.
-Similarly, HCRs can be deselected if they do not meet the objectives.
+Bear in mind, that a PI that may be unimportant to you, may actually be very important to someone else.
 
-For example, we might think that the biomass, catch stability and relative effort are less important than the other PIs.
+Similarly, candidate HCRs can be deselected if they do not meet the objectives.
+
+For example, we might think that the *Biomass*, *Catch stability* and *Relative effort* are less important than the other PIs.
 Deselect them from the list on the left.
 This still gives us four PIs left to consider (Figure \@ref(fig:compbar2)).
 
@@ -182,14 +196,14 @@ knitr::include_graphics("comp_perf_compbar2.png")
 ```
 
 The results for the probability of being above LRP look pretty similar for the three HCRs.
-None of them show a low probability of being above the LRP.
-This means that this indicator is not providing us with any information to help us choose between the HCRs.
+They all show a high probability of being above the LRP.
+This means that this indicator is not providing us with any information to help us choose between the HCRs (note that it may be helpful for other HCRs).
 We can deselect it, leaving us with just three PIs to consider.
 
 Looking at the performance of *HCR 2*, we can see that in the short-term the average catches are higher than *HCR 1* and *HCR 3*.
 However, in the medium and long-term it has the lowest catches.
-Additionally, it has the lowest relative CPUE and lowest 'proximity to the TRP' (i.e. is furthest away from the TRP) in all three time periods.
-Unless high catches in the short-term is the absolute top priority, we can conclude that *HCR 2* does not meet the objectives as well as *HCR 1* and *HCR 3*.
+Additionally, it has the lowest relative CPUE and lowest 'proximity to the TRP' (i.e. it is the furthest away from the TRP) in all three time periods.
+Unless high catches in the short-term is the absolute top priority, we can decide that *HCR 2* does not meet our management objectives as well as *HCR 1* and *HCR 3*.
 Deselect *HCR 2* from the list on the left (Figure \@ref(fig:compbar3)).
 
 ```{r compbar3, fig.cap="Using bar charts to compare the average values of only three performance indicators after dropping HCR 2."}
@@ -204,9 +218,12 @@ Considering catches, *HCR 1* has slightly higher average catches in the short-te
 *HCR 3* has higher average relative CPUE in all three time periods.
 *HCR 3* also gets you slightly closer to the TRP in the medium- and long-term.
 
+These are the kind of decisions that managers and stakeholders will need to make.
+You should always have your management objectives in the back of your mind when reviewing the results.
+
 ## Box plots
 
-So far, we have only used the bar charts of the *average* values of the PIs.
+So far, we have only used the bar charts that show the *average* values of the PIs.
 This is only part of the story.
 
 Click on the tab at the top that says **Performance indicators - box plots**.
@@ -218,7 +235,7 @@ The black line across the middle of each box is the average value, the same that
 knitr::include_graphics("comp_perf_compbox1.png")
 ```
 
-For example, the average value of the catches in the medium- and long-term is about the same for both HCRs (the black line in the middle is in the same place).
+For example, the average value of the catches in the medium- and long-term is about the same for both HCRs (the black line in the middle is at the same height).
 However, the box for *HCR 1* is bigger than that of *HCR 3*.
 This means that, although the average value might be the same, we are *less certain* about what the catches will actually be under *HCR 1*.
 This can be an important factor when considering which HCR you prefer.
@@ -226,7 +243,7 @@ This can be an important factor when considering which HCR you prefer.
 ## Table
 
 Finally, it is possible to see all the indicators for each HCR in a table (click on the **Performance indicators - tables**.
-This might look less pretty, but can be very useful of really digging down into the results, particularly if you have narrowed your choices to just a few HCRs.
+This might not look as pretty, but can be very useful for really digging down into the results, particularly if you have narrowed your choices to just a few HCRs.
 
 
 # Exercises
@@ -254,8 +271,8 @@ Write down your final HCR parameter settings and also why you think it is the be
 
 # Summary
 
-Choosing a preferred HCR is not a trivial task.
-It is possible to calculate many different indicators to measure their performance.
+Choosing a preferred HCR is not a simple task.
+It is possible to calculate many different performance indicators to measure their performance.
 The ranges of the indicator values should be considered as well as their average value.
 Additionally, you can have different time periods to consider.
 

@@ -341,7 +341,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1><span class="header-section-number">1</span> Introduction</h1>
 <p>This tutorial explores how the performance of a Harvest Control Rule (HCR) can be measured.
 It uses the <em>Measuring performance</em> Shiny app from the <em>AMPLE</em> package.
-There are three apps in the <em>AMPLE</em> package. This is the second one.</p>
+There are three apps in the <em>AMPLE</em> package. This is the second one.
+If you are unsure what an HCR is you should look at the first app, <em>Introduction to HCRs</em>.</p>
 <p>The previous tutorial (<em>Introduction to HCRs</em>) introduced HCRs and how they can be used to set future fishing opportunities based on estimates of stock status.
 This allowed us to explore how HCRs work and we saw that different HCRs can perform differently.
 We also looked at two sources of uncertainty, <em>biological variability</em> and <em>estimation error</em>, and saw that they can affect the performance of a HCR.</p>
@@ -387,7 +388,7 @@ The value in 2019 is therefore 1.</p>
 <p>These three plots have 10 years of historical data, from 2010 to 2019.
 There is an additional year of data for biomass as it shows the biomass at the start of the year.</p>
 <p>The horizontal dashed lines on the biomass plot are the Target Reference Point (TRP - 0.5) and Limit Reference Point (LRP - 0.2).</p>
-<p><strong>Note</strong> that in this app the biomass is scaled between 0 and 1, where 0 means there is no stock (a bad thing) and 1 is the amount of fish when is there is no fishing, i.e. the highest it can be.
+<p><strong>Note</strong> that in this app the biomass is scaled between 0 and 1, where 0 means there is no biomass (a bad thing) and 1 is the amount of biomass when is there is no fishing, i.e. the highest it can be.
 Scaling the biomass between 0 and 1 can make it easier to understand if the stock is over or underexploited.</p>
 <p>The HCR is shown at the top of the right-hand panel. The HCR is the red line.</p>
 <p>Underneath the HCR plot is something about <strong>Table selection</strong>. The option <strong>Each replicate</strong> should be selected.
@@ -572,7 +573,7 @@ When comparing HCRs we should also compare what happens in the short- and medium
 These time periods can be seen on the time series plots of catch, biomass and relative CPUE as vertical dashed lines.</p>
 <p>Seven performance indicators are calculated (Table <a href="#tab:pis">6.1</a>).</p>
 <table>
-<caption><span id="tab:pis">Table 6.1: </span> The seven performance indicators used to measure perfomance in this app.</caption>
+<caption><span id="tab:pis">Table 6.1: </span> The seven performance indicators used to measure performance in this app.</caption>
 <colgroup>
 <col width="50%" />
 <col width="50%" />
@@ -614,7 +615,7 @@ These time periods can be seen on the time series plots of catch, biomass and re
 </tr>
 </tbody>
 </table>
-<p>Generally, for most indicators, the higher the value the better (i.e. higher catches, and higher catch stability, are assumed to be better than lower catches and catch levels that change a lot over time).
+<p>Generally, for most indicators, the higher the value the better (e.g. higher catches, and higher catch stability are assumed to be better than lower catches and catch levels that change a lot over time).
 However, higher fishing effort is not necessarily better as it may mean higher costs of fishing.
 Similarly, higher biomass might not be better. If the biomass is too high, it may mean you could have fished more.</p>
 </div>

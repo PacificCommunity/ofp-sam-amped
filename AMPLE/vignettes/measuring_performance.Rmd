@@ -24,6 +24,7 @@ knitr::opts_chunk$set(
 This tutorial explores how the performance of a Harvest Control Rule (HCR) can be measured.
 It uses the *Measuring performance* Shiny app from the *AMPLE* package.
 There are three apps in the *AMPLE* package. This is the second one.
+If you are unsure what an HCR is you should look at the first app, *Introduction to HCRs*.
 
 The previous tutorial (*Introduction to HCRs*) introduced HCRs and how they can be used to set future fishing opportunities based on estimates of stock status.
 This allowed us to explore how HCRs work and we saw that different HCRs can perform differently.
@@ -86,7 +87,7 @@ There is an additional year of data for biomass as it shows the biomass at the s
 
 The horizontal dashed lines on the biomass plot are the Target Reference Point (TRP - 0.5) and Limit Reference Point (LRP - 0.2).
 
-**Note** that in this app the biomass is scaled between 0 and 1, where 0 means there is no stock (a bad thing) and 1 is the amount of fish when is there is no fishing, i.e. the highest it can be.
+**Note** that in this app the biomass is scaled between 0 and 1, where 0 means there is no biomass (a bad thing) and 1 is the amount of biomass when is there is no fishing, i.e. the highest it can be.
 Scaling the biomass between 0 and 1 can make it easier to understand if the stock is over or underexploited.
 
 The HCR is shown at the top of the right-hand panel. The HCR is the red line.
@@ -291,8 +292,7 @@ These time periods can be seen on the time series plots of catch, biomass and re
 
 Seven performance indicators are calculated (Table \@ref(tab:pis)).
 
-
-Table: (\#tab:pis) The seven performance indicators used to measure perfomance in this app.
+Table: (\#tab:pis) The seven performance indicators used to measure performance in this app.
 
 | Performance indicator | Description |
 |:-------|:-------|
@@ -304,8 +304,7 @@ Table: (\#tab:pis) The seven performance indicators used to measure perfomance i
 | Catch stability | How much the catches change over time. A value of 1 means that the catches are very stable and do not change at all. A low value, close to 0, means that the catches fluctuate a lot over time (probably not a good thing). |
 | Proximity to the TRP | How close the biomass is to the TRP on average. A value of 1 means that the biomass is always at the TRP. A low value, close to 0, means that the biomass spends a lot of time being much higher, or lower, than the TRP. |
 
-
-Generally, for most indicators, the higher the value the better (i.e. higher catches, and higher catch stability, are assumed to be better than lower catches and catch levels that change a lot over time).
+Generally, for most indicators, the higher the value the better (e.g. higher catches, and higher catch stability are assumed to be better than lower catches and catch levels that change a lot over time).
 However, higher fishing effort is not necessarily better as it may mean higher costs of fishing.
 Similarly, higher biomass might not be better. If the biomass is too high, it may mean you could have fished more.
 
