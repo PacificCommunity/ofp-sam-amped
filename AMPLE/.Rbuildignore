@@ -1,0 +1,7 @@
+^README.Rmd
+^LICENSE.md
+issues
+^doc$
+^Meta$
+app.R
+^rsconnect$
