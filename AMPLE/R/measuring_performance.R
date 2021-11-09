@@ -75,7 +75,7 @@ measuring_performance <- function(...){
         ),
         mainPanel(
           # Should work with devtools and after installation 
-          shiny::includeMarkdown(system.file("introtext", "measuring_performance.md", package="AMPLE"))
+          shiny::includeMarkdown(system.file("introtext", "measuring_performance.md", package="AMPLE")),
           # Premake the vignette and drop it into the *root* www folder (not the inst/www folder)
           h1("Tutorial"),
           p("A more detailed tutorial can be found at these links:"),
