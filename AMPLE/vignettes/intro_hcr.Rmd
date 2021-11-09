@@ -96,7 +96,7 @@ When we talk about comparing HCRs we are really comparing MPs.
 # Getting started
 
 If you want to use the app online, it is available at the following address:
-[https://ofp-sam.shinyapps.io/amped-intro-hcr/](https://ofp-sam.shinyapps.io/amped-intro-hcr/)
+[https://ofp-sam.shinyapps.io/AMPLE-intro-hcr/](https://ofp-sam.shinyapps.io/AMPLE-intro-hcr/)
 
 Alternatively, if you are using your own version of R and have installed the *AMPLE* package, you can run this app by entering the following commands into the R console:
 

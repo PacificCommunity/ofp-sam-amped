@@ -59,11 +59,51 @@ comparing_performance()
 
 The apps are also hosted online at:
 
-* URL 1
-* URL 2
-* URL 3
+* https://ofp-sam.shinyapps.io/AMPLE-intro-hcr/
+* https://ofp-sam.shinyapps.io/AMPLE-measuring-performance/
+* https://ofp-sam.shinyapps.io/AMPLE-comparing-performance/
 
 ## Vignettes
 
 There are three vignettes that walk users through the app.
 These can be used in workshops etc to help learning.
+
+You can access them from R using:
+
+```{r eval=FALSE}
+vignette("intro_hcr", package="AMPLE")
+vignette("measuring_performance", package="AMPLE")
+vignette("comparing_performance", package="AMPLE")
+```
+
+The vignettes are also accessible through the Shiny apps, under the 'Information' tab.
+
+## Deployment
+
+To deploy the apps to shinyapps.io you need to make an 'app.R' file in the *root* directory of the package, i.e. in the same directory as the DESCRIPTION file.
+
+The app.R file should have these contents:
+
+```{r eval=FALSE}
+# Include pkgload in DESCRIPTION import as we need to use it here.
+pkgload::load_all(".")
+intro_hcr() # Or whichever app function you want
+
+# Include this stuff to make the publish button appear in RStudio - otherwise do rsconnect() by hand
+#library(shiny)
+#ui <- fluidPage(
+#  "Hello, world!"
+#  #br(),
+#  #packageDescription("AMPLE")
+#)
+#server <- function(input, output, session) {
+#}
+#shinyApp(ui, server)
+```
+
+In RStudio, set the working directory to the package *root* directory.
+Click publish and select all the files we need  (dropping man, vignettes, test folders).
+
+Do not add this app.R file to the package when submitting to CRAN.
+It should be listed in the .Rbuildignore.
+

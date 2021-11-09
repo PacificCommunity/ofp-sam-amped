@@ -4,7 +4,7 @@ Version: 0.9.0
 Authors@R: 
     person("Finlay", "Scott", , "finlays@spc.int", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-9950-9023"))
-Description: Three Shiny apps are provided that introduce Harvest Control Rules (HCR) for fisheries management.
+Description: Arse Balls Three Shiny apps are provided that introduce Harvest Control Rules (HCR) for fisheries management.
     'Introduction to HCRs' provides a simple overview to how HCRs work. Users are able to select their own HCR and
     step through its performance, year by year. Biological variability and estimation uncertainty are introduced.
     'Measuring performance' builds on the previous app and introduces the idea of using performance indicators
@@ -25,6 +25,8 @@ Config/testthat/edition: 3
 Depends: 
     shiny (>= 1.7.1)
 Imports: 
+    markdown,
+    pkgload,
     graphics,
     grDevices,
     RColorBrewer,
