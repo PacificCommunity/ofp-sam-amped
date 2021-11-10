@@ -15,10 +15,6 @@
 #' measuring_performance()
 #' @export
 measuring_performance <- function(...){
-  
-  # Stuff to reset the par after exiting
-  def.par <- par(no.readonly = TRUE)
-  on.exit(par(def.par))
 
   # User interface ----
   ui <- navbarPage(
@@ -168,6 +164,7 @@ measuring_performance <- function(...){
     cex_axis <- 1.1
     cex_lab <- 1.3
     
+    
     output$print_stock <- renderTable({
       # This output is triggered if stock is invalidated, i.e. through the project() method
       stock_temp <- stock()
@@ -179,25 +176,41 @@ measuring_performance <- function(...){
     })
     
     output$plot_catch <- renderPlot({
-      par(mar = lhs_mar) # Decrease T
+      # Par reset
+      parmar <- par()$mar
+      opar <- par(mar=lhs_mar)
+      on.exit(par(opar))
+      
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
       plot_catch_iters(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters = max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3)
     })
     
     output$plot_biomass <- renderPlot({
-      par(mar = lhs_mar) # Decrease T
+      # Par reset
+      parmar <- par()$mar
+      opar <- par(mar=lhs_mar)
+      on.exit(par(opar))
+      
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
       plot_biomass(stock=stock(), mp_params=get_mp_params(), ylab="True biomass", iters=iter_range, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3) # Other args sent to plot function
     })
     
     output$plot_cpue <- renderPlot({
-      par(mar = lhs_mar) # Decrease T
+      # Par reset
+      parmar <- par()$mar
+      opar <- par(mar=lhs_mar)
+      on.exit(par(opar))
+      
       iter_range <- 1:max(iter(),1) # When we start iter() = 0 - and we just to show the catch history
       plot_cpue(stock=stock(), mp_params=get_mp_params(), iters=iter_range, max_spaghetti_iters=max_spaghetti_iters, quantiles=quantiles, show_time_periods = TRUE, cex.axis=1.1, cex.lab=1.3)
     })
     
     output$plot_hcr <- renderPlot({
-      par(mar = lhs_mar) # Decrease T
+      # Par reset
+      parmar <- par()$mar
+      opar <- par(mar=lhs_mar)
+      on.exit(par(opar))
+      
       plot_model_based_hcr(stock=stock(), mp_params=get_mp_params(), iter=iter(), cex.axis=1.1, cex.lab=1.3)
     })
     
