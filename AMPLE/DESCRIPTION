@@ -11,7 +11,7 @@ Description: Three Shiny apps are provided that introduce Harvest Control Rules 
     to measure HCR performance.
     'Comparing performance' allows multiple HCRs to be created and tested, and their performance compared so that the
     preferred HCR can be selected.
-License: GPL (>= 3)
+License: GPL (>= 3) + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)

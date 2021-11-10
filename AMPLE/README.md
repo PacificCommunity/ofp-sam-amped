@@ -15,7 +15,7 @@ The three apps are:
 -   *Introduction to HCRs* provides a simple overview to how HCRs work.
     Users are able to select their own HCR and step through its
     performance, year by year. Biological variability and estimation
-    uncertainty are introduced.
+    error are introduced.
 -   *Measuring performance* builds on the previous app and introduces
     the idea of using performance indicators to evaluate HCR
     performance.
@@ -30,6 +30,14 @@ You can install the released version of AMPLE from
 
 ``` r
 install.packages("AMPLE")
+```
+
+Alternatively, you can get the latest version from the GitHub repository
+[here](https://github.com/PacificCommunity/ofp-sam-amped/tree/master/AMPLE)
+by installing it with the *devtools* package.
+
+``` r
+devtools::install_github("PacificCommunity/ofp-sam-amped/tree/master/AMPLE")
 ```
 
 ## Usage
@@ -75,35 +83,3 @@ vignette("comparing_performance", package="AMPLE")
 
 The vignettes are also accessible through the Shiny apps, under the
 ‘Information’ tab.
-
-## Deployment
-
-To deploy the apps to shinyapps.io you need to make an ‘app.R’ file in
-the *root* directory of the package, i.e. in the same directory as the
-DESCRIPTION file.
-
-The app.R file should have these contents:
-
-``` r
-# Include pkgload in DESCRIPTION import as we need to use it here.
-pkgload::load_all(".")
-intro_hcr() # Or whichever app function you want
-
-# Include this stuff to make the publish button appear in RStudio - otherwise do rsconnect() by hand
-#library(shiny)
-#ui <- fluidPage(
-#  "Hello, world!"
-#  #br(),
-#  #packageDescription("AMPLE")
-#)
-#server <- function(input, output, session) {
-#}
-#shinyApp(ui, server)
-```
-
-In RStudio, set the working directory to the package *root* directory.
-Click publish and select all the files we need (dropping man, vignettes,
-test folders).
-
-Do not add this app.R file to the package when submitting to CRAN. It
-should be listed in the .Rbuildignore.

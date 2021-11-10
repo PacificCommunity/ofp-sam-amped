@@ -9,7 +9,10 @@
 #' 
 #' Launches the 'Measuring Performance' Shiny app.
 #' See the 'Information' tab in the app for more information.
+#' Also see the package vignette (\code{vignette("measuring_performance", package="AMPLE")}) for a tutorial.
 #' @param ... Not used
+#' @examples
+#' measuring_performance()
 #' @export
 measuring_performance <- function(...){
   

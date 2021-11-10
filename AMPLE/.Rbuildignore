@@ -1,7 +1,6 @@
-^README.Rmd
-^LICENSE.md
-issues
+^issues
 ^doc$
 ^Meta$
-app.R
+^app.R
 ^rsconnect$
+^deployment_notes.md

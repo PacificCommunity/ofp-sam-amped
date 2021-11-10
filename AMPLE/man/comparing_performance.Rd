@@ -12,4 +12,8 @@ comparing_performance(...)
 \description{
 Launches the Comparing Performance Shiny app.
 See the 'Information' tab in the app for more information.
+Also see the package vignette (\code{vignette("comparing_performance", package="AMPLE")}) for a tutorial.
+}
+\examples{
+comparing_performance()
 }

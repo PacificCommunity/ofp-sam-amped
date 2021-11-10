@@ -9,7 +9,10 @@
 #' 
 #' Launches the Comparing Performance Shiny app.
 #' See the 'Information' tab in the app for more information.
+#' Also see the package vignette (\code{vignette("comparing_performance", package="AMPLE")}) for a tutorial.
 #' @param ... Not used
+#' @examples
+#' comparing_performance()
 #' @export
 comparing_performance <- function(...){
   

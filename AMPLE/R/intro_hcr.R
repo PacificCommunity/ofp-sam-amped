@@ -9,7 +9,10 @@
 #' 
 #' Launches the introduction to HCRs Shiny app.
 #' See the 'Information' tab in the app for more information.
+#' Also see the package vignette (\code{vignette("intro_hcr", package="AMPLE")}) for a tutorial.
 #' @param ... Not used
+#' @examples
+#' intro_hcr()
 #' @export
 intro_hcr <- function(...){
 
