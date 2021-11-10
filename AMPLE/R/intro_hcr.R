@@ -5,14 +5,17 @@
 # Soundtrack: Disintegration Dubs by G36 vs JK Flesh
 # Distributed under the terms of the GNU General Public License GPL (>= 3)
 
+# Note use of spurious importFrom to remove spurious note in R CMD check --as-cran
+
 #' Introduction to HCRs app launcher
 #' 
 #' Launches the introduction to HCRs Shiny app.
 #' See the 'Information' tab in the app for more information.
 #' Also see the package vignette (\code{vignette("intro_hcr", package="AMPLE")}) for a tutorial.
 #' @param ... Not used
+#' @importFrom markdown "renderMarkdown"
 #' @examples
-#' intro_hcr()
+#' \dontrun{intro_hcr()}
 #' @export
 intro_hcr <- function(...){
 

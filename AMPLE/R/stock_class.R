@@ -27,6 +27,8 @@ next_corrnoise <- function(x, b, sd=0.1){
   return(nextx)
 }
 
+# Note use of spurious importFrom to remove spurious note in R CMD check --as-cran
+
 #' R6 Class representing a stock
 #' 
 #' @description
@@ -36,6 +38,7 @@ next_corrnoise <- function(x, b, sd=0.1){
 #' A stock has biomass, effort, catch and hcr_ip and hcr_op fields as well as the life history parameters.
 #' The population dynamics are a simple biomass dynamic model.
 #' The Stock class is used for the Shiny apps in the AMPLE package.
+#' @importFrom R6 "R6Class"
 Stock <- R6::R6Class("Stock",
   # R6 classes are not reactive, so even in you make a reactiveVal() of an instance of an R6 class
   # changing that object will not invalidate the shiny magic and nothing reacts.

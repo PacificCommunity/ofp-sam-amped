@@ -12,7 +12,7 @@
 #' Also see the package vignette (\code{vignette("comparing_performance", package="AMPLE")}) for a tutorial.
 #' @param ... Not used
 #' @examples
-#' comparing_performance()
+#' \dontrun{comparing_performance()}
 #' @export
 comparing_performance <- function(...){
   

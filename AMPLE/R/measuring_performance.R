@@ -12,7 +12,7 @@
 #' Also see the package vignette (\code{vignette("measuring_performance", package="AMPLE")}) for a tutorial.
 #' @param ... Not used
 #' @examples
-#' measuring_performance()
+#' \dontrun{measuring_performance()}
 #' @export
 measuring_performance <- function(...){
 

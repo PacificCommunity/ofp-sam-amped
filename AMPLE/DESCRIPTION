@@ -13,6 +13,7 @@ Description: Three Shiny apps are provided that introduce Harvest Control Rules 
     'Comparing performance' allows multiple HCRs to be created and tested, and their performance compared so that the
     preferred HCR can be selected.
 License: GPL (>= 3)
+URL: https://github.com/PacificCommunity/ofp-sam-amped/tree/master/AMPLE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
@@ -27,7 +28,6 @@ Depends:
     shiny (>= 1.7.1)
 Imports: 
     markdown,
-    pkgload,
     graphics,
     grDevices,
     RColorBrewer,
