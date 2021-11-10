@@ -8,9 +8,12 @@
 
 ## Introduction
 
-A HCR is part of a Management Procedure, along with the data collection and estimation method.
-In these apps we focus on HCRs.
-This application attempts to introduce the basic ideas behind a Harvest Control Rule (HCR).
+This is the first app in the **AMPLE** package.
+It is the best to start if you are unfamiliar with HCRs.
+
+This app attempts to introduce the basic ideas behind a Harvest Control Rule (HCR).
+An HCR is part of a Management Procedure, along with the data collection and estimation method.
+In this app we only focus on HCRs.
 
 You can see that there are three plots: catch (top left), biomass (bottom left) and the HCR (the top right). 
 
@@ -29,7 +32,7 @@ You can see how the current level of biomass is used in the HCR by following the
 The HCR uses the biomass input to set the catch limit in the next time step.
 The vertical blue dashed line on the HCR plot shows the current estimated value of the stock biomass.
 Where this vertical blue line meets the red line of the HCR gives the next catch limit.
-The horizontal blue dashed line on the HCR plot is the catch limit set for the next time step.
+The horizontal blue dashed line is the catch limit set for the next time step.
 
 The horizontal, blue dashed line is also shown on the catch plot.
 It shows what the catch will be in the next time step.
@@ -37,18 +40,19 @@ It shows what the catch will be in the next time step.
 ## How it works
 
 When you start the app there are already several years of historical catch and biomass data.
-In this app we start moving into the future, one time step at a time.
+We can start moving into the future, one year at a time.
 In each year, the HCR will set a new catch limit, based on the current estimated biomass.
-The process starts moves anti-clockwise.
+The process moves anti-clockwise around the main panel.
 
 Pressing the **Advance** button steps the projection forward by one time step.
-When this happens, fishing happens by catching the catch limit set by the HCR (you should see that the next catch goes to where the blue dashed line was).
+Fishing happens by catching the catch limit set by the HCR (you should see that the next catch goes to where the blue dashed line was).
 The stock responds to being fished and the biomass is updated to the next year based on the level of fishing and the population dynamics of the stock.
 The HCR then uses the current biomass of the stock to set the next catch limit.
 
 By repeatedly pressing the **Advance** button you can see how the stock level changes and how the catch limit is set by HCR, depending on the stock level.
+
 Note that the shape of the HCR does not change through the projection.
-You decide at the beginning of the projection what the shape of the HCR should be (a big decision!), then see what happens.
+You decide at the beginning of the projection what the shape of the HCR should be (a big decision!), then see what happens as it is applied every year.
 
 The ghosts of past catch limits are shown as grey dashed lines on the catch plot and as grey dots on the HCR plot. These allow you to see which parts of the HCR have been active. 
 
@@ -72,13 +76,13 @@ As biological variability is always encountered in fisheries it is important tha
 
 Estimation variability is also important.
 The true stock status (e.g. abundance) of a fish stock is never known (because it is impossible to count all of the fish!).
-Instead, the stock status must be estimated, for example, by using a stock assessment model.
+Instead, the stock status must be estimated, for example by using a stock assessment model.
 
-It is important to note that the HCR can only use *estimated* value of stock status, not the true value (which is never known).
+It is important to note that an HCR can only use the *estimated* value of stock status, not the true value (which is never known).
 This means that if the biomass is estimated poorly, the resulting catch limit set by the HCR may not be appropriate.
-For example, the estimated biomass may be higher than the true biomass, meaning the catch limit set by the HCR maybe too high.
+For example, if the estimated biomass is higher than the true biomass, the catch limit set by the HCR might be too high.
 
-Estimation variability and estimation bias can be used to simulate the estimation process.
+Estimation variability and estimation bias is used in this app to simulate the estimation process.
 They can be adjusted to create differences between the true level of the biomass and the estimated level.
 Estimation bias represents situations where the biomass is consistently over or under estimated (e.g. my estimated biomass is always 10% higher than the true value).
 Estimation variability is just a crude way of introducing a random difference between the true and estimated values.
@@ -89,6 +93,6 @@ It is the blue line that feeds the HCR.
 Increasing the estimation bias and variability will increase the difference between these lines.
 
 If you change the values for estimation variability and bias you will see changes in the performance of the HCR.
-This is why HCRs are designed to be used with a specific estimation process, so you can factor the details of the estimation process when designing the HCR.
+This is why HCRs are designed to be used with a specific estimation process, so you consider the estimation process when designing the HCR.
 It's also why testing the HCR using simulations is very important.
 

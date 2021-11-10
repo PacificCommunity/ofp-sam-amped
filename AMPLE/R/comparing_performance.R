@@ -118,8 +118,10 @@ comparing_performance <- function(...){
           shiny::includeMarkdown(system.file("introtext", "comparing_performance.md", package="AMPLE")),
           # Premake the vignette and drop it into the inst/www/tutorials folder
           h1("Tutorial"),
-          p("A more detailed tutorial can be found at these links:"),
-          a("Tutorial (html version)", target="_blank", href="tutorials/comparing_performance.html")
+          p("A more detailed tutorial can be found at this link:"),
+          a("Tutorial (html version)", target="_blank", href="tutorials/comparing_performance.html"),
+          br(),
+          br()
         ) # End of mainPanel
       ) # End of sidebarLayout
     ), # End of Settings tabPanel 

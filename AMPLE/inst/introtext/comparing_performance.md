@@ -8,14 +8,17 @@
 
 ## Introduction
 
-Before an HCR is adopted and put into operation many candidate HCRs are tested.
-Their performance is compared using performance indicators before the preferred HCR is selected.
+This is the third app in the **AMPLE** package. The first app, **Introduction to Harvest Control Rules (HCRs)** explores how HCRs work.
+If you are unfamiliar with HCRs, you should start there.
 
-In this app you will be testing and comparing the performances of multiple HCRs.
+Before an HCR is adopted and put into operation many candidate HCRs are tested.
+Their performance is compared using *performance indicators* (PIs) and the preferred HCR is selected.
+
+In this app you will be testing and comparing the performances of multiple HCRs using PIs.
 
 The basic process is:
 
-1. Select the shape of an HCR using the controls in the left hand panel.
+1. Select the shape of an HCR using the controls in the left-hand panel.
 2. Run a projection to generate the performance indicators for that HCR by pressing the **Project** button.
 3. Inspect the performance indicators and, if you like them, add the HCR to the basket by pressing **Add HCR to basket**.
 4. Go back to step 1 and try another HCR.
@@ -24,14 +27,14 @@ When you have enough HCRs (at least 3) in your basket you will use the performan
 
 ## How it works
 
-The first page of the app looks very similar to the **Measuring Performance** app, with time series plots of catch, biomass and relative CPUE, as well as the HCR shape.
+The first page of the app looks very similar to the **Measuring performance** app, with time series plots of catch, biomass and relative CPUE, as well as the HCR shape.
 
-In the **Measuring Performance** app you ran one projection, or replicate, at a time.
-Here, when you run a projection, by pressing the **Project** button, 100 replicates will be run.
+In the **Measuring performance** app you ran one projection, or replicate, at a time.
+Here, when you run a projection, by pressing the **Project** button, 250 replicates will be run (this may take a few seconds).
 Biological variability is already switched on (the level can be adjusted in the Setting page) so that uncertainty is considered in the results.
 
 After pressing **Project** a table of *performance indicators* for that HCR is shown under the HCR plot.
-This is the same table as seen in the **Measuring Performance** app.
+This is the same table as seen in the **Measuring performance** app.
 
 Seven performance indicators are calculated:
 
@@ -47,7 +50,7 @@ Seven performance indicators are calculated:
 
 <br />
 
-Generally, for most indicators, the higher the value the better (i.e. higher catches, and higher catch stability, are assumed to be better than lower catches and catch levels that change a lot over time).
+Generally, for most indicators, the higher the value the better (i.e. higher catches and higher catch stability are assumed to be better than lower catches and catch levels that change a lot over time).
 However, higher fishing effort is not necessarily better as it may mean higher costs of fishing.
 Similarly, higher biomass might not be better. If the biomass is too high, it may mean you could have fished more.
 
@@ -68,24 +71,19 @@ This makes it easy to compare the average performance of the HCRs in the differe
 
 As mentioned above, there are seven performance indicators.
 This means that there is a lot of information to process (seven time periods, with three time periods for as many HCRs as are in your basket).
+
 To help, you can de-select performance indicators using the menu on the left.
-You will need to decide which of these performance indicators are most important (which will depend on your fishery objectives) and only focus on those by de-selecting those that are less important.
-For example, if CPUE (catch rates) and catch stability are the most important consideration, de-select all other performance indicators leaving just two.
+You will need to decide which of these performance indicators are the most important (which will depend on your fishery objectives) and only focus on those by de-selecting those that are less important.
+For example, if *CPUE* (catch rates) and *catch stability* are your most important consideration, de-select all other performance indicators leaving just two.
 
 It is also possible to de-select HCRs using the menu on the left.
-This allows you to elimate HCRs that do not perform as well as others.
-By progressively eliminating HCRs you don't want you will eventually arrive at the one that you want to adopt (unless none of them make the grade - in which case go back to the **HCR selection** tab and try out some more HCRs.)
+This allows you to eliminate HCRs that do not perform as well as others and do not meet your objectives.
+By progressively eliminating HCRs you will eventually arrive at the one that you want to adopt (unless none of them make the grade - in which case go back to the **HCR selection** tab and try out some more HCRs.)
 
-### Bar charts, box plots and tables
+## Bar charts, box plots and tables
 
 As well as the bar charts, you can view as box plots. Go to the **Performance indicators - box plots** tab at the top of the app.
 You can now see the range of values for each indicator, not just the average value.
 
 Additionally, you can view the results in a table in the **Performance indicators - table** tab.
-
-## Tutorial
-
-A more detailed tutorial can be found at these links:
-
-
 
