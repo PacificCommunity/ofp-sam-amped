@@ -37,7 +37,7 @@ ample_maintainer_and_licence <- function(){
     tags$h1("AMPLE"),
     tags$p("Amazing Management Procedures expLoration Engine"),
     tags$footer(
-      tags$p("version 0.9.0"),
+      tags$p("Version 1.0.0 Tarantula Deadly Cargo"),
       tags$p("Copyright 2021 OFP SPC MSE Team."),
       tags$p("Distributed under the GPL 3"),
       tags$a("Soure code", href="https://github.com/PacificCommunity/ofp-sam-amped/tree/master/AMPLE")
