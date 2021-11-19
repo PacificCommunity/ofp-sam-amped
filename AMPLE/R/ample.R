@@ -26,6 +26,8 @@
 #' Also thanks to Winston Chang for help with the R6 class / Shiny reactivity.
 #'
 #' @docType package
-#' @name ample
+#' @rdname ample
+#' @name AMPLE
+
 NULL
 #> NULL
