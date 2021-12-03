@@ -23,34 +23,34 @@ knitr::opts_chunk$set(
 
 This tutorial is a quick introduction to Harvest Control Rules (HCRs) and their use in fisheries management.
 It uses the *Introduction to HCRs* Shiny app from the *AMPLE* package.
-There are three apps in the *AMPLE* package. This is the first one and is the one you should start with if you are unsure what a HCR is.
+There are three apps in the *AMPLE* package. This is the first one and is the one you should start with if you are unsure what an HCR is.
 
-In this tutorial we will cover what an HCR is, how they operate, and start to think about the impact of uncertainty on performance.
+In this tutorial we will cover what an HCR is, how they operate, and start to think about the impact of uncertainty on HCR performance.
 
-**Note** that the fishery used in this tutorial is not based on a particular fishery or stock.
+**Note** that the fishery used in this tutorial is not based on a real world fishery or stock.
 It's just a toy example.
 
-# What is an HCR
+# What is an HCR?
 
 An HCR is a pre-agreed decision rule that is used to set fishing opportunities in the future.
-The rule is agreed by stakeholders and managers of that fishery and form part of a fisheries *harvest strategy*.
+The rule is agreed by stakeholders and managers of that fishery.
 
 An HCR should be designed so that the management objectives of the fishery have the greatest chance of being achieved.
-As the real-world can be a very uncertain place, a good HCR is robust to different sorts of uncertainty (which we will discuss later on).
+As the real world can be a very uncertain place, a good HCR is robust to different sorts of uncertainty (which we will discuss later on).
 
 In this tutorial we will use a simple HCR to set the catch limit of a fishery in every year.
-The HCR uses an estimate of the current stock biomass to set a catch limit in the next year
+The HCR uses estimates of the current stock biomass to set that catch limit 
 (HCRs can use information other than stock biomass but we will keep things simple for now)
 This rule will be applied every year in the future to set new catch limits in each year.
 
 **Note** that in this app the biomass is scaled between 0 and 1, where 0 means there is no biomass (a bad thing) and 1 is the amount of biomass when is there is no fishing, i.e. the highest it can be.
-Scaling the biomass between 0 and 1 can make it easier to understand if the stock is over or underexploited.
+Scaling the biomass between 0 and 1 like this can make it easier to understand if the stock is over or underexploited.
 
 HCRs can have different basic shapes.
-In this tutorial we will use a shape called a *threshold catch*. This is sometimes known as a hockey stick.
+In this tutorial we will use a shape called a *threshold catch*. This is sometimes known as a 'hockey stick'.
 The catch limit is set according to the general rule shown in Figure \@ref(fig:plothcr).
 
-```{r plothcr, fig.cap="A threshold-catch shape HCR. The shape is defined by four parameters: Cmin and Cmax (which determine the minimum and maximum catch limit) and Blim and Belbow (which determine the start and stop of sloping section).", fig.width=8, fig.height=6}
+```{r plothcr, fig.cap="A threshold catch shape HCR. The shape is defined by four parameters: Cmin and Cmax (which determine the minimum and maximum catch limit) and Blim and Belbow (which determine the start and stop of sloping section).", fig.width=8, fig.height=6}
   xrange <- c(0, 1)
   yrange <- c(0, 150)
   xlab <- "Estimated stock biomass"
@@ -71,13 +71,14 @@ The catch limit is set according to the general rule shown in Figure \@ref(fig:p
   lines(x=c(0.5, 0.5), y=c(110, 140), lty=2, col="blue")
 ```
 
-The current stock biomass level is on x-axis along the bottom.
+The current stock biomass level is on x-axis along the bottom of the plot.
 The catch limit that will be set in the next year is on the y-axis on the side.
 The red line is the rule that sets the catch limit given the estimated stock biomass.
 
 The basic idea is that if stock biomass is low the catch limit is low, and if the stock biomass is high the catch limit is high.
 By pre-agreeing the shape of the rule, you know exactly what the catch limit will be, given the estimated status of the stock.
-This is easier than all the stakeholders and managers arguing about what the catch limit should be (which takes time and energy and can delay important decisions being made).
+This is easier than all the stakeholders and managers arguing every time a catch limit needs to be set (which takes time and energy and can delay important decisions being made).
+Choosing the right HCR is obviously very important.
 
 The shape of this HCR is determined by 4 parameters: *Blim*, *Belbow*, *Cmin* and *Cmax*, shown in blue in the figure.
 *Cmin* and *Cmax* determine the minimum and maximum catch limit.
@@ -89,7 +90,7 @@ When stock biomass is between *Blim* and *Belbow* the catch limit is set accordi
 
 **Important note about management procedures**.
 An HCR is part of a management procedure (MP), along with two other elements: the data collection and the estimation process.
-Under the harvest strategy approach, when an MP is agreed and adopted by stakeholders all three elements of the MP are agreed together.
+Under a harvest strategy approach, when an MP is agreed and adopted by stakeholders all three elements of the MP are agreed together.
 In this tutorial, and in the app, we assume that the data collection and estimation process are the same for each HCR that we try.
 When we talk about comparing HCRs we are really comparing MPs. 
 
@@ -121,7 +122,7 @@ There are two horizontal dashed lines on the biomass plot. The higher one, at 0.
 The TRP is a management objective. Ideally, the stock biomass should be close to this line.
 
 The lower horizontal line, at 0.2, is the Limit Reference Point (LRP).
-If the stock biomass falls below this level the stock will have trouble reproducing and may be in serious trouble.
+If the stock biomass falls below this level the stock is considered to be overfished and may be in serious trouble.
 
 The HCR is shown in the top-right panel. It is the red line (ignore the blue dashed lines for the moment).
 As mentioned above, the shape of the HCR is determined by 4 parameters: *Blim*, *Belbow*, *Cmin* and *Cmax*.
@@ -136,7 +137,8 @@ We will refer to this HCR as *HCR 1*.
 
 # Using the HCR
 
-The purpose of the HCR is to set the catch limit each year. The HCR uses the current estimated value of stock biomass to set the next catch limit.
+The purpose of the HCR is to set the catch limit each year.
+The HCR uses the current estimated value of stock biomass to set the next catch limit.
 This rule will be applied every year in the future to set new catch limits in each year.
 
 We start at the very beginning of 2020 and we want to use *HCR 1* to set the catch limit for 2020.
@@ -160,7 +162,7 @@ You have now advanced forward in time by a year. Several things have happened (F
 
 * The catch limit that was set by the HCR for 2020 has been used by the fishery. In the catch plot you should see that the catch in the year 2020 has reached this catch limit.
 * The stock has responded to being fished in 2020. You should see that we now have an extra year in the biomass plot up to 2021.
-* The start of the blue arrow to the right of the biomass plot has moved up or down to reflect the new current estimate of biomass. The blue vertical dashed line on the HCR plot has moved left or right as well.
+* The shape of the blue arrow to the right of the biomass plot has shifted to reflect the new current estimate of biomass. The blue vertical dashed line on the HCR plot has moved left or right as well.
 * The HCR has used this new value of biomass to set a new catch limit for 2021 (this may be the same value as the previous catch limit).
 
 ```{r advance, fig.cap="After pressing Advance a single time, fishing has occurred in 2020 using the catch limit that was set by the HCR. The stock biomass has been affected by the new catch limit. The HCR uses the estimate of stock biomass at the start of 2021 to set the catch limit for 2021."}
@@ -168,7 +170,8 @@ knitr::include_graphics("intro_hcr_hcr11.png")
 ```
 
 
-Press the **Advance** button again. The catch limit that was set for 2021 is used by the fishery. The stock responds to being fished again and we have a new estimate biomass for the beginning of 2022. This new estimate of biomass is again used by the HCR to set the new catch limit for 2022 (the blue arrow will move again to reflect this).
+Press the **Advance** button again. The catch limit that was set for 2021 is used by the fishery. The stock responds to being fished again and we have a new estimate of biomass for the beginning of 2022.
+This new estimate of biomass is again used by the HCR to set the new catch limit for 2022 (the blue arrow will move again to reflect this).
 
 Keep pressing the **Advance** button until you get to the end of the projection (in 2040).
 You should see the cycle:
@@ -200,7 +203,7 @@ Different HCRs behave in different ways and some are better at achieving managem
 The parameters of the HCR that we just tried are: *Blim* = 0.2, *Belbow* = 0.5, *Cmin* = 10 and *Cmax* = 140.
 <!--  Final catch = 100 Final B = 0.4 When does it settle: 10 yrs-->
 
-Here we try a different HCR.
+Now we try a different HCR.
 The general 'hockey stick' shape will be the same, but we will use different HCR parameters by changing the HCR parameters in the left panel.
 
 Change *Belbow* to be 0.3 and *Cmax* to 130. Keep the other two parameters the same.
@@ -208,10 +211,11 @@ We will refer to this HCR as *HCR 2*.
 You should see that the HCR plot has been updated to show the new shape of the HCR.
 
 Notice that this HCR has a lower maximum catch limit than the previous HCR.
-However, this limit will only be set if the biomass is greater than 0.3 (the value of *Belbow*).
+This limit will be set if the biomass is greater than 0.3 (the value of *Belbow*).
 
 As before, repeatedly press the **Advance** button and follow the evolution of the stock and the catches (Figure \@ref(fig:hcr2)).
 Note how the behaviour of the catch and biomass are different to the initial example with *HCR 1* (Figure \@ref(fig:hcr1)).
+
 The biology of the fish stock is *exactly* the same as the example we ran earlier with *HCR 1*.
 The *only* difference between the two projections is the shape of the HCR used to set future catch limits.
 
@@ -253,17 +257,17 @@ You have now looked at the behaviour of three different HCRs.
 # Introducing uncertainty
 
 In the real world fisheries management is affected by different types of uncertainty.
-By uncertainty, we mean things that we are not completely sure about, for example the exact status of the stock, and also things that are predict in the future, for example future recruitment.
+By uncertainty, we mean things that we are not completely sure about, for example the exact status of the stock, and also things that are difficult to predict in the future, for example future recruitment.
 
 The projections we have run so far have not considered uncertainty (they are known as *deterministic* simulations).
-This means that if we run another projection with the same HCR, the outcome will be the same.
+This means that if we run another projection with the same HCR, the outcome will be exactly the same.
 Try this now and see.
 
 It is very important to choose an HCR that is robust to different sources of uncertainty, otherwise the outcome may not be what you expected.
 For example, an HCR that performs well when future stock recruitment is stable may not perform well when stock recruitment varies a lot.
 We will look at this here.
 
-Uncertainty is included in the app in two ways: biological variability in the stock dynamics (e.g. natural variability in recruitment) and through differences between the estimated level of stock biomass and the 'true' level.
+Uncertainty is included in the app in two ways: biological variability in the stock dynamics (e.g. natural variability in recruitment) and through differences between the estimated and 'true' level of stock biomass.
 
 These options are initially turned off. 
 Click on the **Show variability option** option in the panel on the left to show the uncertainty options.
@@ -290,7 +294,8 @@ This causes fluctuations in the population abundance.
 knitr::include_graphics("intro_hcr_hcr1_noise.png")
 ```
 
-As the HCR uses the estimate of biomass to set the catch limit, it means that the catch limit set by the HCR also bounces around. The catch limits set by the HCR then go onto affect the stock biomass in the same way as before.
+As the HCR uses the estimate of biomass to set the catch limit, it means that the catch limit set by the HCR also bounces around.
+The catch limits set by the HCR then go onto affect the stock biomass in the same way as before.
 
 If you press the **Reset** button and run the projection again you should see that you get a different trajectory (uncertainty in action!).
 
@@ -305,7 +310,7 @@ Try the following to see:
 
 In the real world we do not know the true stock abundance.
 This means that a HCR is not driven by the *true* value of biomass. Instead it is driven by an *estimated* value (we can never know the true value).
-For example, biomass can be estimated by using a stock assessment model.
+For example, the biomass can be estimated by a stock assessment model.
 The HCR therefore uses an *estimated* value of the stock biomass to set the next catch limit, not the *true* value.
 The difference between the estimated and true value of biomass is called the estimation error and it can have an important impact on the performance of a HCR.
 
@@ -318,20 +323,20 @@ Project the stock forward several times using the **Advance** button.
 You should see that the biomass plot now shows two lines. The black one is the *true* abundance and the blue one is the *estimated* abundance.
 It is the estimated abundance that is used by the HCR to set the catch limit.
 
-You should see that the stock and catch bounce around as you project forward. This variability is not caused by any biological variability (you have turned that off) but from the HCR using the *estimated* value of biomass to set the catch limit.
+You should see that the stock and catch bounce around as you project forward. This variability is not caused by any biological variability (you have turned that off) but from the HCR using the uncertain *estimated* value of biomass to set the catch limit.
 The catch limit, of course, affects the *real* stock abundance.
 
 If you press **Reset** and run the same projection again by pressing **Advance** you should see a slightly different outcome. Try it.
 
 Now turn the **Estimation variability** back to 0 and set the **Estimation bias** to 0.1.
-This means that the estimated value of SB/SBF=0 is always 10% higher than the true value, i.e. we are always overestimating the stock abundance.
+This means that the estimated value of biomass is always 10% higher than the true value, i.e. we are always overestimating the stock abundance.
 
-Project forward and see what happens. Compare the *true* final values of SB/SBF=0 (the black line on the plot) and catch to the numbers you wrote down in the table above for the first HCR.
+Project forward and see what happens. Compare the *true* final values of biomass (the black line on the plot) and catch to the numbers you wrote down in the table above for the first HCR.
 Are the final values higher or lower than when there is no bias?
 <!-- I get lower values than when no bias -->
 
 In the real world, both biological variability and estimation error are operating at the same time.
-It is very important that the selected HCR is robust to this uncertainty at that the management objectives can be achieved.
+It is very important that the selected HCR is robust to this uncertainty so that the management objectives can be achieved.
 
 # Summary
 
@@ -342,7 +347,7 @@ We have looked at three different HCRs and seen that they perform differently.
 
 Uncertainty is a big concern in fisheries management.
 Here we looked at biological and estimation uncertainty.
-We have seen that they can change the performance of the fishery.
+We have seen that they can change the performance of the HCR and the fishery.
 It is very important that an HCR is robust to uncertainty.
 A HCR that performs well in the absence of uncertainty may not perform as well when uncertainty is present.
 
