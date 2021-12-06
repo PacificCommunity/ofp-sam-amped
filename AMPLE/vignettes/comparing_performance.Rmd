@@ -1,5 +1,5 @@
 ---
-title: "Comparing the performance of harvest control rules (HCRs)"
+title: "Comparing the performance of Harvest Control Rules (HCRs)"
 author: "Finlay Scott - OFP, SPC"
 date: "2021-04-11"
 output:
@@ -21,20 +21,19 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-This tutorial explores how to compare the performance of several harvest control rules (HCRs).
+This tutorial explores how to compare the performance of several Harvest Control Rules (HCRs).
 It uses the *Comparing performance* Shiny app from the *AMPLE* package.
 There are three apps in the *AMPLE* package. This is the third one.
 If you are unsure what an HCR is you should look at the first app, *Introduction to HCRs*.
 
 The previous tutorial (*Measuring the performance of HCRs*) introduced the idea of performance indicators (PIs) and how they can be used to measure the performance of an HCR in relation to the management objectives.
-
 The performance of a proposed HCR is tested and evaluated using computer simulations (known as Management Strategy Evaluation - MSE).
-During these evaluations the performance is measured using a collection of indicators, known as performance indicators (PIs).
+During these evaluations the performance is measured using a collection of PIs.
 
-In this tutorial we will generate PIs for several HCRs (known as candidate HCRs) and compare them.
-By considering what the objectives of the fishery are, we can select the most appropriate HCR.
+In this tutorial we will generate PIs for several candidate HCRs and compare them.
+By considering what the objectives of the fishery are, we can then select the most appropriate HCR.
 
-**Note** that the fishery used in this tutorial is not based on a particular fishery or stock.
+**Note** that the fishery used in this tutorial is not based on a real world fishery or stock.
 It's just a toy example.
 
 Also **note** that in this app the biomass is scaled between 0 and 1, where 0 means there is no biomass (a bad thing) and 1 is the amount of biomass when is there is no fishing, i.e. the highest it can be.
@@ -66,7 +65,7 @@ When you start the app you should see something similar to the *Measuring perfor
 knitr::include_graphics("comp_perf_start.png")
 ```
 
-On the left-side of the main panel there are plots of catch, biomass and CPUE relative to the CPUE in the last historical year (2019)
+On the left side of the main panel there are plots of catch, biomass and CPUE relative to the CPUE in the last historical year (2019)
 These three plots have 10 years of historical data, from 2010 to 2019.
 There is an additional year of data for biomass as it shows the biomass at the start of the year.
 
@@ -89,15 +88,15 @@ You can change the variability options by looking in the **Settings** tab (but d
 # Evaluating the performance
 
 We are going to compare the performance of several HCRs.
-We will do this by running projections with uncertainty for different HCRs and then calculating a range of performance indicators (PIs) for them.
-The PIs can then be analysed in a number of different ways.
+We will do this by running projections with uncertainty for different HCRs and calculating a range of performance indicators (PIs) for them.
+The PIs of the different HCRs can then be compared in different ways.
 
-The basic process we will follow here is:
+The basic process we will follow is:
 
-* Set up a HCR using the HCR parameters on the left-hand side;
-* Project the stock forward in time under that HCR (by pressing the **Project** button);
-* Have a quick check of the resulting time series plots and PI values;
-* If you like the HCR, add it to the basket of candidate HCRs (by pressing the **Add HCR to basket** button);
+* Set up an HCR using the HCR parameters on the left-hand side.
+* Project the stock forward in time under that HCR (by pressing the **Project** button).
+* Have a quick check of the resulting time series plots and PI values.
+* If you like the HCR, add it to the basket of candidate HCRs (by pressing the **Add HCR to basket** button).
 * When you have several HCRs in the basket, go to the **Compare performance** tab at the top of the screen and take a look at their relative performance. 
 
 
@@ -127,13 +126,12 @@ Table: (\#tab:pis) The seven performance indicators used to measure performance 
 | Performance indicator | Description |
 |:-------|:-------|
 | Biomass | The biomass relative to the unfished biomass.|
-| Probability of being above the LRP | This reflects the of risk of the stock being overfished. |
+| Probability of being above the LRP | This reflects the risk of the stock being overfished. |
 | Catch | The expected catches. |
 | Relative CPUE | The CPUE (or catch rate) relative to the CPUE in the last historical year. |
 | Relative effort | The fishing effort relative to the effort in the last historical year. |
 | Catch stability | How much the catches change over time. A value of 1 means that the catches are very stable and do not change at all. A low value, close to 0, means that the catches fluctuate a lot over time (probably not a good thing). |
-| Proximity to the TRP | How close the biomass is to the TRP on average. A value of 1 means that the biomass is always at the TRP. A low value, close to 0, means that the biomass spends a lot of time being much higher, or lower, than the TRP. |
-
+| Proximity to the TRP | How close the biomass is to the TRP on average. A value of 1 means that the biomass is always at the TRP. A lower value means that the biomass spends a lot of time being higher, or lower, than the TRP. |
 Generally, for most indicators, the higher the value the better (e.g. higher catches, and higher catch stability are assumed to be better than lower catches and catch levels that change a lot over time).
 However, higher fishing effort is not necessarily better as it may mean higher costs of fishing.
 Similarly, higher biomass might not be better. If the biomass is too high, it may mean you could have fished more.
@@ -153,11 +151,11 @@ knitr::include_graphics("comp_perf_hcr1.png")
 
 We now have one HCR in our basket. We are going to add two more HCRs to the basket and then compare the results of all three of them.
 
-Repeat the above process (set up the HCR, run the projection, add to the basket) two more HCRs.
+Repeat the above process (set up the HCR, run the projection, add to the basket) for two more HCRs.
 Use the following parameters:
 
-* HCR2: *Blim* = 0.2, *Belbow* = 0.3, *Cmin* = 10 and *Cmax* = 130. 
-* HCR3: *Blim* = 0.2, *Belbow* = 0.7, *Cmin* = 10 and *Cmax* = 150. 
+* HCR2: *Blim* = 0.2, *Belbow* = 0.3, *Cmin* = 10 and *Cmax* = 130 
+* HCR3: *Blim* = 0.2, *Belbow* = 0.7, *Cmin* = 10 and *Cmax* = 150 
 
 You should now have three HCRs in your basket (check the counter and don't forget to **Add HCR to basket** after projecting).
 
@@ -169,9 +167,9 @@ Select the **Compare performance** tab at the top of the app window.
 In the main panel you should see a lot of bar plots.
 
 Each window shows a different PI for each of the HCRs in the basket.
+Each HCR has a different colour.
 The height of the bars is the average value of that PI. 
 The bars are grouped into the three different time periods (short-, medium- and long-term) (Figure \@ref(fig:compbar1)).
-Each HCR has a different colour.
 
 
 ```{r compbar1, fig.cap="Using bar charts to compare the average values of performance indicators of three candidate HCRs."}
@@ -201,7 +199,7 @@ This means that this indicator is not providing us with any information to help 
 We can deselect it, leaving us with just three PIs to consider.
 
 Looking at the performance of *HCR 2*, we can see that in the short-term the average catches are higher than *HCR 1* and *HCR 3*.
-However, in the medium and long-term it has the lowest catches.
+However, in the medium- and long-term it has the lowest catches.
 Additionally, it has the lowest relative CPUE and lowest 'proximity to the TRP' (i.e. it is the furthest away from the TRP) in all three time periods.
 Unless high catches in the short-term is the absolute top priority, we can decide that *HCR 2* does not meet our management objectives as well as *HCR 1* and *HCR 3*.
 Deselect *HCR 2* from the list on the left (Figure \@ref(fig:compbar3)).
@@ -243,7 +241,7 @@ This can be an important factor when considering which HCR you prefer.
 ## Table
 
 Finally, it is possible to see all the indicators for each HCR in a table (click on the **Performance indicators - tables**.
-This might not look as pretty, but can be very useful for really digging down into the results, particularly if you have narrowed your choices to just a few HCRs.
+This might not look as pretty, but can be very useful for really digging down into the results, particularly if you have narrowed your choices to just a few HCRs and PIs.
 
 
 # Exercises
@@ -255,7 +253,7 @@ This will empty all the HCRs from your basket.
 
 Using a similar process as above, find an HCR that meets the following two conditions:
 
-* Gives the highest possible catches in the short-term and
+* Gives the highest possible average catches in the short-term and
 * Always has a probability of the biomass being above the LRP of at least 0.8.
 
 Try out as many HCRs as you want (5, 10, 20..., keep adding them to the basket), then use the different methods for exploring the performance to select the best one.
@@ -264,8 +262,8 @@ Try out as many HCRs as you want (5, 10, 20..., keep adding them to the basket),
 
 Now find an HCR that meets these two conditions:
 
-* Gives the highest possible relative CPUE in the long-term and
-* Maintains catches above 100 in all time-periods.
+* Gives the highest possible average relative CPUE in the long-term and
+* Maintains average catches above 100 in all time-periods.
 
 Write down your final HCR parameter settings and also why you think it is the best compared to the others.
 
