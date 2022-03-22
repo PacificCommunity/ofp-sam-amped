@@ -33,11 +33,11 @@ install.packages("AMPLE")
 ```
 
 Alternatively, you can get the latest version from the GitHub repository
-[here](https://github.com/PacificCommunity/ofp-sam-amped/tree/master/AMPLE)
-by installing it with the *devtools* package.
+[here](https://github.com/PacificCommunity/ofp-sam-amped//AMPLE) by
+installing it with the *devtools* package.
 
 ``` r
-devtools::install_github("PacificCommunity/ofp-sam-amped/tree/master/AMPLE")
+devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE")
 ```
 
 ## Usage
