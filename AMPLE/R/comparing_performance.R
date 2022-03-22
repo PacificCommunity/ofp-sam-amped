@@ -39,7 +39,7 @@ comparing_performance <- function(...){
           actionButton("empty_basket", "Empty basket"),
           br(),
           br(),
-          shinyscreenshot::screenshotButton(label="Take a screenshot", filename="comp_perf")
+          shinyscreenshot::screenshotButton(label="Take a screenshot", filename="comp_perf", scale=2)
         ), # End sidebar set up
         mainPanel(
           column(6,
@@ -75,7 +75,7 @@ comparing_performance <- function(...){
                              # character(0) means no choice is available - updated in server function
                              choiceNames = character(0), choiceValues = character(0)),
           br(),
-          shinyscreenshot::screenshotButton(label="Take a screenshot", filename="comp_perf")
+          shinyscreenshot::screenshotButton(label="Take a screenshot", filename="comp_perf", scale=2)
         ),# End of sidebar_setup()
         mainPanel(
           tabsetPanel(id="comparisontabs",
