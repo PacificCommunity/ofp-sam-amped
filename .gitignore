@@ -50,6 +50,8 @@ IntroHCR/app2.R
 ample_dev.R
 intro_hcr_test/
 tutorials/*.md
+dev_amped.R
+PIMPLE/data/*.Rdata
 
 
 
