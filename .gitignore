@@ -42,3 +42,14 @@ rsconnect/
 *.tex
 *.log
 
+# Other shit
+
+AMPLE/.gitignore
+PIMPLE/tempdata
+IntroHCR/app2.R
+ample_dev.R
+intro_hcr_test/
+tutorials/*.md
+
+
+
