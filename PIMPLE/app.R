@@ -155,36 +155,37 @@ ui <- fluidPage(id="top",
       )), # End of about condition
       # HCR selection - can select multiples
       # Only for the main Compare MPs tab, the MPs tab and SOME of the explorePIs tabs
-      #conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs' || input.nvp == 'mps'",
-      conditionalPanel(condition="input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi62')) || input.nvp == 'mps'",
+      conditionalPanel(condition="input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')) || input.nvp == 'mps'",
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
       ),
       # PI choice - only shown in the compare PIs tab
       conditionalPanel(condition="input.nvp == 'compareMPs'",
         checkboxGroupInput(inputId = "pichoice", label="PI selection",choices = piselector, selected=sort(pis_list))
       ),
-      # Show spaghetti on the time series plots - do not show on the HCR tab
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab=='pibiomass' || input.pitab=='pi32' || input.pitab=='pi4')) || input.comptab == 'timeseries' || input.comptab == 'timeseries - alt'",
+      # Show spaghetti on the time series plots - only show when you get time series plots
+      conditionalPanel(condition="(input.nvp == 'explorePIs' && input.pitab=='pi3') || input.comptab == 'timeseries'",
         checkboxInput("showspag", "Show trajectories", value=FALSE) 
       ),
-      # Catch grouping choice (all or PS in 678)
-      conditionalPanel(condition="(input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')))",
-        selectInput(inputId = "catchareachoice", label="Catch grouping (PIs 3 & 6 only)", choices = list("All areas"="total", "Purse seines in areas 6,7 & 8"="ps678"), selected="total")
+      # Catch grouping choice (all, PS in 678, PL in 1234) - show in compare MPs 
+      #conditionalPanel(condition="(input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')))",
+      conditionalPanel(condition="input.nvp == 'compareMPs'",
+        selectInput(inputId = "catchareachoice", label="Catch grouping (PIs 3 & 6 only)", choices = list("All areas"="total", "Purse seines in areas 6,7 & 8"="ps678", "Pole & line in areas 1,2,3 & 4" = "pl_jp"), selected="total")
       ),
-      # For selecting catch plots by area 
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi32' || input.pitab== 'pi62'))",
-        checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list("All areas" = "total", "Purse seines in areas 6,7 & 8" = "ps678", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5","Area 6"="6","Area 7"="7","Area 8"="8" ), selected="total")
+      # Selecting catch by area 
+      conditionalPanel(condition="input.nvp == 'explorePIs' && (input.pitab== 'pi3' || input.pitab== 'pi6')",
+        checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list("All areas" = "total", "Purse seines in areas 6,7 & 8" = "ps678", "Pole & line in areas 1,2,3 & 4" = "pl_jp", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5","Area 6"="6","Area 7"="7","Area 8"="8" ), selected="total")
       ),
+      
       # Select plot type by bar, box or time
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && input.pitab== 'pi32')",
+      conditionalPanel(condition="input.nvp == 'explorePIs' && input.pitab== 'pi3'",
         radioButtons(inputId = "plotchoicebarboxtime", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar")
       ),
       # Select plot type by bar or box (Note - need to include the NVP input as the the pitab input still has value even if not seen)
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pibiomass' || input.pitab== 'pi62'))",
+      conditionalPanel(condition="input.nvp == 'explorePIs' && input.pitab== 'pi6'",
         radioButtons(inputId = "plotchoicebarbox", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box"), selected="median_bar")
       ),
       # Stability or variability
-      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi62'))",
+      conditionalPanel(condition="input.nvp == 'explorePIs' && input.pitab== 'pi6'",
         radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
       ),
       # In Management Procedures tab, show the points and trajectories
@@ -352,7 +353,7 @@ ui <- fluidPage(id="top",
             #),
 
             # *** PI 3: Catch based ones ***
-            tabPanel("PI 3: Relative catches by area",value="pi32",
+            tabPanel("PI 3: Relative catches by area",value="pi3",
               column(12, fluidRow(
                 plotOutput("plot_pi3", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
                 p(relcatchtext),
@@ -376,7 +377,7 @@ ui <- fluidPage(id="top",
             #  p(pi47text)
             #),
             # *** PI 6: Catch stability ***
-            tabPanel("PI 6: Catch stability by area",value="pi62",
+            tabPanel("PI 6: Catch stability by area",value="pi6",
               column(12, fluidRow(
                 p("It is possible to see the variability instead of the stability using the checkbox on the left."),
                 plotOutput("plot_pi6", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
@@ -575,14 +576,12 @@ server <- function(input, output, session) {
       catch_area_choice <- input$catchareachoice
       dat <- subset(periodqs, period != "Rest" & area %in% c("all", catch_area_choice, "ps678x") & piname %in% pi_choices & metric != "catch stability")
 
-
-      # Need to hack pi1 so that all quantiles = X50., else NA
-      # Probably better to do this at the top
-      colnames(periodqs)[substr(colnames(periodqs),1,1)=="X"]
-      if("pi1" %in% dat$pi){
-        dat[dat$pi=="pi1",c("X1.", "X5.", "X10.", "X15.", "X20.", "X80.", "X85.", "X90.","X95.","X99.")] <- dat[dat$pi=="pi1","X50."]
-      }
-
+      ## Need to hack pi1 so that all quantiles = X50., else NA
+      ## Probably better to do this at the top
+      #colnames(periodqs)[substr(colnames(periodqs),1,1)=="X"]
+      #if("pi1" %in% dat$pi){
+      #  dat[dat$pi=="pi1",c("X1.", "X5.", "X10.", "X15.", "X20.", "X80.", "X85.", "X90.","X95.","X99.")] <- dat[dat$pi=="pi1","X50."]
+      #}
 
       p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
       p <- p + ggplot2::ylim(0,NA)
