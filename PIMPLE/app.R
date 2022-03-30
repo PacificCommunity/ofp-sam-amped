@@ -46,6 +46,8 @@ nobs <- dplyr::group_by(hcr_points,hcrref, hcrname, period)
 nobs <- dplyr::summarise(nobs, tnobs=dplyr::n())
 histodat <- dplyr::left_join(histodat, nobs)
 histodat$prop <- histodat$sum / histodat$tnobs
+# Correct the bin so that we use the right hand side of the bin from cut() - means effort of 1 shows an effort of 1
+histodat$bin <- histodat$bin + 0.05
 
 # General plotting parameters
 short_term <- sort(unique(subset(worms, period=="Short")$year))
@@ -118,7 +120,7 @@ biotext <- "PIs 1, 82 and SB/SBF=0 are calculated over all model areas."
 relcatchtext <- "Note that the catches are relative to the average catch in that area grouping in the years 2013-2015."
 barchartplottext <- "The height of each bar shows the median expected value. Note that the bar charts do not show any uncertainty which can be important (see the box plots)."
 boxplottext <- "For box plots the box contains the 50th percentile, the whiskers show the 80th percentile and the horizontal line is the median. The wider the range, the less certain we are about the expected value."
-tabletext <- "The tables show the median indicator values in each time period. The values inside the parentheses is the 80th percentile range."
+tabletext <- "The tables show the median indicator values in each time period. The values inside the parentheses are the 80th percentile range."
 timeseriesplottext <- "The ribbons show the 80th percentile range. The dashed, black line is the median value."
 timeseriesplottext2 <-  "The dashed vertical lines show, from left, the start of the MSE evaluation with three years of 2012 assumptions, the start of the HCR operating with the short-, medium- and long-term periods."
 stabtext <- "Note that the stability can only be compared between time periods, not between areas or area groups, i.e. it is the relative stability in that area."
@@ -138,6 +140,9 @@ ui <- fluidPage(id="top",
       img(src = "spc.png", height = 60),
       br(),
       br(),
+      #-----------------------------------------------------------------------
+      # A shit-tonne of conditional panels to make the sidebar do what we want
+      #-----------------------------------------------------------------------
       conditionalPanel(condition="input.nvp == 'about'",
         tags$html(
           tags$h1("PIMPLE"),
@@ -147,10 +152,11 @@ ui <- fluidPage(id="top",
             tags$p("Copyright 2021 OFP SPC MSE Team."),
             tags$p("Distributed under the GPL 3")
           )
-      )),
-      # Side panel inputs - a bunch of them conditional on what tab you are on
-      # HCR selection
-      conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs' || input.nvp == 'mps'",
+      )), # End of about condition
+      # HCR selection - can select multiples
+      # Only for the main Compare MPs tab, the MPs tab and SOME of the explorePIs tabs
+      #conditionalPanel(condition="input.nvp == 'compareMPs' || input.nvp == 'explorePIs' || input.nvp == 'mps'",
+      conditionalPanel(condition="input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi62')) || input.nvp == 'mps'",
         checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
       ),
       # PI choice - only shown in the compare PIs tab
@@ -169,11 +175,11 @@ ui <- fluidPage(id="top",
       conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pi32' || input.pitab== 'pi62'))",
         checkboxGroupInput(inputId = "areachoice", label="Area selection",choices = list("All areas" = "total", "Purse seines in areas 6,7 & 8" = "ps678", "Area 1" = "1", "Area 2" = "2", "Area 3"="3", "Area 4"="4","Area 5"="5","Area 6"="6","Area 7"="7","Area 8"="8" ), selected="total")
       ),
-      # Select plot type by bar, box or  time
+      # Select plot type by bar, box or time
       conditionalPanel(condition="(input.nvp == 'explorePIs' && input.pitab== 'pi32')",
         radioButtons(inputId = "plotchoicebarboxtime", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar")
       ),
-      # Select plot type by bar, box (Note - need to include the NVP input as the the pitab input still has value even if not seen)
+      # Select plot type by bar or box (Note - need to include the NVP input as the the pitab input still has value even if not seen)
       conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab== 'pibiomass' || input.pitab== 'pi62'))",
         radioButtons(inputId = "plotchoicebarbox", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box"), selected="median_bar")
       ),
@@ -184,7 +190,7 @@ ui <- fluidPage(id="top",
       # In Management Procedures tab, show the points and trajectories
       # Change false to true to show performance options (can hide from users)
       conditionalPanel(condition="((input.nvp == 'mps') && false)",
-        p("Secret HCR performance options"),
+        #p("Secret HCR performance options"),
         # If this is checked the other ones should show
         checkboxInput("showpoints", "Show points", value=FALSE),
         conditionalPanel(condition="input.showpoints==true",
@@ -195,7 +201,8 @@ ui <- fluidPage(id="top",
         )
       ),
       # Kobe plot HCR selection - one at a time only
-      conditionalPanel(condition="input.nvp == 'majurokobeplot'",
+      #conditionalPanel(condition="input.nvp == 'majurokobeplot'",
+      conditionalPanel(condition="input.pitab == 'majurokobeplot'",
         radioButtons(inputId = "hcrchoicekobe", label="HCR selection", selected = unique(periodqs$hcrref)[1], choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref)),
         radioButtons(inputId = "majurokobe", label="Kobe or Majuro plot", selected = "Kobe", choiceNames = c("Kobe", "Majuro"), choiceValues = c("Kobe", "Majuro"))
       )
@@ -211,7 +218,11 @@ ui <- fluidPage(id="top",
         windowTitle="PIMPLE",
         position="fixed-top",
         title="Performance Indicators and Management Procedures Explorer",
-        #----------- Introduction page ----------------------------------
+        
+        #--------------------------------------------
+        # Introduction page 
+        #--------------------------------------------
+        
         tabPanel("Introduction", value="intro",
           # How to use PIMPLE - Add to top
           fluidRow(column(8, 
@@ -241,7 +252,7 @@ ui <- fluidPage(id="top",
               plotOutput("demotimeseriesplot")
             )
           )
-        ),
+        ), # End of Intro tab
 
         #----------------------------------------------------------------------------
         # Comparing performance across all indicators
@@ -250,10 +261,10 @@ ui <- fluidPage(id="top",
           tabsetPanel(id="comptab",
             tabPanel("Bar charts", value="bar",
               fluidRow(column(12,
+                p(barchartplottext),
                 plotOutput("plot_bar_comparehcr", height="auto") # Needs function in the plotOutput() function
               )),
               fluidRow(column(12,
-                p(barchartplottext),
                 p(yearrangetext),
                 p(pi47text),
                 p(biotext),
@@ -263,10 +274,10 @@ ui <- fluidPage(id="top",
             ),
             tabPanel("Box plots", value="box",
               fluidRow(column(12,
+                p(boxplottext),
                 plotOutput("plot_box_comparehcr", height="auto") # Needs function in the plotOutput() function
               )),
               fluidRow(column(12,
-                p(boxplottext),
                 p(yearrangetext),
                 p(pi47text),
                 p(biotext),
@@ -289,11 +300,11 @@ ui <- fluidPage(id="top",
               ))
             ),
             tabPanel("Table", value="bigtable",
-              tags$span(title="Median indicator values. The values inside the parentheses are the 20-80 percentiles",
+              tags$span(title="Median indicator values. The values inside the parentheses are the 80th percentile range.",
+                p(tabletext),
                 tableOutput("table_pis_short"),
                 tableOutput("table_pis_medium"),
                 tableOutput("table_pis_long"),
-                p(tabletext),
                 p(yearrangetext),
                 p(pi47text),
                 p(biotext),
@@ -301,43 +312,44 @@ ui <- fluidPage(id="top",
               )
             )
           )
-        ),
+        ), # End of Compare PIs tab
         #----------------------------------------------------------------------------
         # Tabs for exploring specific indicators in more detail
         #----------------------------------------------------------------------------
-        tabPanel("Explore indicators", value="explorePIs",
+        tabPanel("Other indicators", value="explorePIs",
           tabsetPanel(id="pitab",
-            # --- SBSBF0 and PI 1 & 8 ---
-            tabPanel("PI 1 & 8: Biomass",value="pibiomass",
-              fluidRow(
-                column(12,
-                  # TS of SBSBF0
-                  plotOutput("plot_ts_sbsbf0")
-              )),
-              fluidRow(
-                column(6,
-                  # Bar or box of SB/SBF0
-                  plotOutput("plot_barbox_sbsbf0")
-                ),
-                column(6,
-                  #  PI 1
-                  plotOutput("plot_bar_problrp")
-                )
-              ),
-              fluidRow(
-                column(6,
-                  # PI 8 - bar or box
-                  #plotOutput("plot_barbox_pi8")
-                  plotOutput("plot_barbox_pi82")
-              )),
-              fluidRow(
-                column(12,
-                  p(yearrangetext),
-                  p(biotext),
-                  p(sbsbf02012text)
-                )
-              )
-            ),
+            ## --- SBSBF0 and PI 1 & 8 ---
+            # -------- Drop this - adds nothing -----------
+            #tabPanel("PI 1 & 8: Biomass",value="pibiomass",
+            #  fluidRow(
+            #    column(12,
+            #      # TS of SBSBF0
+            #      plotOutput("plot_ts_sbsbf0")
+            #  )),
+            #  fluidRow(
+            #    column(6,
+            #      # Bar or box of SB/SBF0
+            #      plotOutput("plot_barbox_sbsbf0")
+            #    ),
+            #    column(6,
+            #      #  PI 1
+            #      plotOutput("plot_bar_problrp")
+            #    )
+            #  ),
+            #  fluidRow(
+            #    column(6,
+            #      # PI 8 - bar or box
+            #      #plotOutput("plot_barbox_pi8")
+            #      plotOutput("plot_barbox_pi82")
+            #  )),
+            #  fluidRow(
+            #    column(12,
+            #      p(yearrangetext),
+            #      p(biotext),
+            #      p(sbsbf02012text)
+            #    )
+            #  )
+            #),
 
             # *** PI 3: Catch based ones ***
             tabPanel("PI 3: Relative catches by area",value="pi32",
@@ -348,45 +360,66 @@ ui <- fluidPage(id="top",
               ))
             ),
             # *** PI 4: Relative CPUE***
-            tabPanel("PI 4: Relative CPUE",value="pi4",
-              column(12, fluidRow(
-                plotOutput("plot_ts_relcpue")
-              )),
-              column(6, fluidRow(
-                plotOutput("plot_bar_relcpue")
-              )),
-              column(6, fluidRow(
-                plotOutput("plot_box_relcpue")
-              )),
-              p("Note that the CPUE only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative CPUE is the CPUE relative to that in 2012."),
-              p(yearrangetext),
-              p(pi47text)
-            ),
+            # -------- Drop this - adds nothing -----------
+            #tabPanel("PI 4: Relative CPUE",value="pi4",
+            #  column(12, fluidRow(
+            #    plotOutput("plot_ts_relcpue")
+            #  )),
+            #  column(6, fluidRow(
+            #    plotOutput("plot_bar_relcpue")
+            #  )),
+            #  column(6, fluidRow(
+            #    plotOutput("plot_box_relcpue")
+            #  )),
+            #  p("Note that the CPUE only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative CPUE is the CPUE relative to that in 2012."),
+            #  p(yearrangetext),
+            #  p(pi47text)
+            #),
             # *** PI 6: Catch stability ***
             tabPanel("PI 6: Catch stability by area",value="pi62",
               column(12, fluidRow(
+                p("It is possible to see the variability instead of the stability using the checkbox on the left."),
                 plotOutput("plot_pi6", height="auto"), # Nice  - height is auto - seems to given by the height in renderOutput()
                 p(relcatchtext),
                 p(yearrangetext),
                 p(stabtext)
               ))
-            ),
+            ), # End of PI6 Catch stability tab
+            
+            tabPanel(title="Majuro and Kobe plots", value="majurokobeplot",
+              fluidRow(column(12, 
+                p("Majuro or Kobe plots for a single HCR (chosen from the input menu on the left) in each time period." ),
+                p(paste(yearrangetext, "The historical period covers 2000-2018."),sep=" "),
+                p("The contour colours show the approximate probability of being in that area. Each coloured band represents a 25% chance, e.g. there is a 25% chance of being in the blue zone and a 25% chance of being in the yellow zone etc. A random sample of points are shown as an illustration."),
+                p("The percentage of points falling in each plot quadrant is also shown in the small white box. This represents the chance of being in that quadrant in that time period. A table of the percentages for all HCRs is next to the plot.")
+              )),
+              fluidRow(column(6, plotOutput("plot_kobe_ptables_short")),
+                       column(6, tableOutput("table_kobesummary_short"))),
+              fluidRow(column(6, plotOutput("plot_kobe_ptables_medium")),
+                       column(6, tableOutput("table_kobesummary_medium"))),
+              fluidRow(column(6, plotOutput("plot_kobe_ptables_long")),
+                       column(6, tableOutput("table_kobesummary_long"))),
+              fluidRow(column(6, plotOutput("plot_kobe_ptables_hist")),
+                       column(6, tableOutput("table_kobesummary_hist")))
+            ) # End of Majuro Kobe tab
+            
             # *** PI 7: Relative effort variability***
-            tabPanel("PI 7: Effort stability",value="pi7",
-              column(6, fluidRow(
-                plotOutput("plot_bar_pi7stab"),
-                plotOutput("plot_bar_pi7var")
-              )),
-              column(6, fluidRow(
-                plotOutput("plot_box_pi7stab"),
-                plotOutput("plot_box_pi7var")
-              )),
-              p("Note that the effort only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative effort is the effort relative to that in 2012."),
-              p(yearrangetext),
-              p(pi47text)
-            )
+            # -------- Drop this - adds nothing -----------
+            #tabPanel("PI 7: Effort stability",value="pi7",
+            #  column(6, fluidRow(
+            #    plotOutput("plot_bar_pi7stab"),
+            #    plotOutput("plot_bar_pi7var")
+            #  )),
+            #  column(6, fluidRow(
+            #    plotOutput("plot_box_pi7stab"),
+            #    plotOutput("plot_box_pi7var")
+            #  )),
+            #  p("Note that the effort only includes purse seines in model regions 2, 3 and 5, excluding the associated purse seines in region 5. Relative effort is the effort relative to that in 2012."),
+            #  p(yearrangetext),
+            #  p(pi47text)
+            #)
           )                                
-        ),                                 
+        ), # End of Other indicators tab                                
         #------------------------------------------
         # The Management Procedures
         #------------------------------------------
@@ -400,41 +433,46 @@ ui <- fluidPage(id="top",
               plotOutput("plot_hcrshape",  height="600px")),
         #    tags$span(title="Histograms of which parts of the HCRs were active during the evaluations",
               fluidRow(
+                p("The histograms below shows how often each HCR set a particular value for the catch or effort scalar in each time period."),
               # Uncomment the following line to show the histograms
                 plotOutput("plot_hcrhistograms")
               )
           )
-        ),
+        ), # End of MPs tab
 
         #------------------------------------------
         # Kobe . Majuro plot
         #------------------------------------------
         # Show plot of only a single HCR but table of all of them? - Feels awkward
-        tabPanel(title="Majuro and Kobe plots", value="majurokobeplot",
-                 fluidRow(column(12, 
-                     p("Majuro or Kobe plots for a single HCR (chosen from the input menu on the left) in each time period." ),
-                     p(paste(yearrangetext, "The historical period covers 2000-2018."),sep=" "),
-                     p("The contour colours show the approximate probability of being in that area. Each coloured band represents a 25% chance, e.g. there is a 25% chance of being the blue zone and a 25% chance of being in the yellow zone etc. A random sample of points are shown as an illustration."),
-                     p("The percentage of points falling in each plot quadrant is also shown in the small white box. This represents the chance of being in that quadrant in that time period. A table of the percentages for all HCRs is next to the plot.")
-                 )),
-                 fluidRow(column(6, plotOutput("plot_kobe_ptables_short")),
-                          column(6, tableOutput("table_kobesummary_short"))),
-                 fluidRow(column(6, plotOutput("plot_kobe_ptables_medium")),
-                          column(6, tableOutput("table_kobesummary_medium"))),
-                 fluidRow(column(6, plotOutput("plot_kobe_ptables_long")),
-                          column(6, tableOutput("table_kobesummary_long"))),
-                 fluidRow(column(6, plotOutput("plot_kobe_ptables_hist")),
-                          column(6, tableOutput("table_kobesummary_hist")))
-        ),
+        #tabPanel(title="Majuro and Kobe plots", value="majurokobeplot",
+        #         fluidRow(column(12, 
+        #             p("Majuro or Kobe plots for a single HCR (chosen from the input menu on the left) in each time period." ),
+        #             p(paste(yearrangetext, "The historical period covers 2000-2018."),sep=" "),
+        #             p("The contour colours show the approximate probability of being in that area. Each coloured band represents a 25% chance, e.g. there is a 25% chance of being the blue zone and a 25% chance of being in the yellow zone etc. A random sample of points are shown as an illustration."),
+        #             p("The percentage of points falling in each plot quadrant is also shown in the small white box. This represents the chance of being in that quadrant in that time period. A table of the percentages for all HCRs is next to the plot.")
+        #         )),
+        #         fluidRow(column(6, plotOutput("plot_kobe_ptables_short")),
+        #                  column(6, tableOutput("table_kobesummary_short"))),
+        #         fluidRow(column(6, plotOutput("plot_kobe_ptables_medium")),
+        #                  column(6, tableOutput("table_kobesummary_medium"))),
+        #         fluidRow(column(6, plotOutput("plot_kobe_ptables_long")),
+        #                  column(6, tableOutput("table_kobesummary_long"))),
+        #         fluidRow(column(6, plotOutput("plot_kobe_ptables_hist")),
+        #                  column(6, tableOutput("table_kobesummary_hist")))
+        #), # End of Kobe and Majuro tab
+        
+        #------------------------------------------------------
+        # About
+        #------------------------------------------------------
         tabPanel("About", value="about",
           fluidRow(column(8, 
             spc_about()
           ))
-        )
-      )
-    )
-  )
-)
+        ) # End of About
+      ) # End of navbarPage()
+    ) # End of mainPanel()
+  ) # End of sidebarLayout()
+) # End of fluidPage()
 
 
 #-------------------------------------------------
@@ -500,12 +538,13 @@ server <- function(input, output, session) {
     dat <- dplyr::filter(yearqs, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
     wormdat <- dplyr::filter(worms, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
     p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=FALSE, percentile_range = pi_percentiles)
-      p <- p + ggplot2::ylim(c(0,NA))
-      # Axes limits set here or have tight?
-      p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-      p <- p + ggplot2::ylab("PI 3: Catch (rel. to 2013-2015)")
-      # Size of labels etc
-      p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+    p <- p + ggplot2::ylim(c(0,NA))
+    # Axes limits set here or have tight?
+    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+    p <- p + ggplot2::ylab("PI 3: Catch (rel. to 2013-2015)")
+    p <- p + facet_grid(piname ~ hcrref, scales="free")#, ncol=1)
+    # Size of labels etc
+    p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
     return(p)
   })
 
@@ -589,6 +628,8 @@ server <- function(input, output, session) {
     wormdat <- subset(worms, area %in% c("all", catch_area_choice, "ps678x") & piname %in% pi_choices & metric != "catch stability" & iter %in% wormiters)
 
     p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
+    # Facet by PI
+    p <- p + facet_grid(piname ~ hcrref, scales="free")#, ncol=1)
     #p <- p + ylab("Catch")
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
@@ -606,25 +647,14 @@ server <- function(input, output, session) {
   }, height=function(){max(height_per_pi*1.5, (height_per_pi * length(input$pichoice[input$pichoice %in% pinames_ts])))})
 
   get_pi_table <- function(period_choice="Short"){
-    
     hcr_choices <- input$hcrchoice
     pi_choices <- input$pichoice
     catch_area_choice <- input$catchareachoice
-    #other_area_choice <- c(as.character(NA), "all")
-    #catch_rel_choice <- "relative catch"
-    #metric_choices <- c(catch_rel_choice, "mean_weight", "relative catch stability", "SBSBF0", "relative effort stability", "relative cpue")
-
     if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
       return()
     }
-    
-    
-      catch_area_choice <- input$catchareachoice
-      dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & area %in% c("all", catch_area_choice, "ps678x") & piname %in% pi_choices & metric != "catch stability")
-    
-    
-    # pi3 and pi6 areas are given by user choice, other pi areas are all or NA
-    #dat <- subset(periodqs, hcrref %in% hcr_choices & ((pi %in% c("pi3","pi6") & area == catch_area_choice) | (!(pi %in% c("pi3", "pi6")) & area %in% other_area_choice)) & period == period_choice & piname %in% pi_choices & metric %in% metric_choices)
+    catch_area_choice <- input$catchareachoice
+    dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & area %in% c("all", catch_area_choice, "ps678x") & piname %in% pi_choices & metric != "catch stability")
     tabdat <- pitable(dat, percentile_range = pi_percentiles)
     return(tabdat)
   }
@@ -658,87 +688,87 @@ server <- function(input, output, session) {
 
   # Timeseries
   # SBSBF0
-  output$plot_ts_sbsbf0  <- renderPlot({
-    show_spaghetti <- input$showspag
-    hcr_choices <- input$hcrchoice
-    if(length(hcr_choices) < 1){
-      return()
-    }
-    # SBSBF0 - Just combined area
-    dat <- subset(yearqs, pi=="sbsbf0" & metric=="SBSBF0" & area=="all") 
-    # Add Option for worms
-    wormdat <- subset(worms, pi=="sbsbf0" & metric=="SBSBF0" & area=="all" & iter %in% wormiters) 
-    # Else wormdat <- NULL
-    p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
-    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=3)
-    #p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=3)
-    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp2), linetype=3)
-    p <- p + ggplot2::ylab("SB/SBF=0")
-    p <- p + ggplot2::ylim(c(0,NA))
-    # Axes limits set here or have tight?
-    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-    # Size of labels etc
-    p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
-    return(p)
-  })
+  #output$plot_ts_sbsbf0  <- renderPlot({
+  #  show_spaghetti <- input$showspag
+  #  hcr_choices <- input$hcrchoice
+  #  if(length(hcr_choices) < 1){
+  #    return()
+  #  }
+  #  # SBSBF0 - Just combined area
+  #  dat <- subset(yearqs, pi=="sbsbf0" & metric=="SBSBF0" & area=="all") 
+  #  # Add Option for worms
+  #  wormdat <- subset(worms, pi=="sbsbf0" & metric=="SBSBF0" & area=="all" & iter %in% wormiters) 
+  #  # Else wormdat <- NULL
+  #  p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
+  #  p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=3)
+  #  #p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=3)
+  #  p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp2), linetype=3)
+  #  p <- p + ggplot2::ylab("SB/SBF=0")
+  #  p <- p + ggplot2::ylim(c(0,NA))
+  #  # Axes limits set here or have tight?
+  #  p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+  #  # Size of labels etc
+  #  p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+  #  return(p)
+  #})
 
   # Bar and box plot 
   # SBSBF0
-  output$plot_barbox_sbsbf0 <- renderPlot({
-    plot_type <- input$plotchoicebarbox
-    hcr_choices <- input$hcrchoice
-    if(length(hcr_choices) < 1){
-      return()
-    }
-    dat <- subset(periodqs, period != "Rest" & pi=="sbsbf0" & metric=="SBSBF0" & area=="all") 
-    p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-    p <- p + ggplot2::ylab("SB/SBF=0") + ggplot2::ylim(c(0,1))
-    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2)
-    #p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
-    p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp2), linetype=2)
-    return(p)
-  })
+  #output$plot_barbox_sbsbf0 <- renderPlot({
+  #  plot_type <- input$plotchoicebarbox
+  #  hcr_choices <- input$hcrchoice
+  #  if(length(hcr_choices) < 1){
+  #    return()
+  #  }
+  #  dat <- subset(periodqs, period != "Rest" & pi=="sbsbf0" & metric=="SBSBF0" & area=="all") 
+  #  p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+  #  p <- p + ggplot2::ylab("SB/SBF=0") + ggplot2::ylim(c(0,1))
+  #  p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=lrp), linetype=2)
+  #  #p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp), linetype=2)
+  #  p <- p + ggplot2::geom_hline(ggplot2::aes(yintercept=trp2), linetype=2)
+  #  return(p)
+  #})
 
   # Not used at moment
   # Could add in option for TRP
-  output$plot_barbox_pi8 <- renderPlot({
-    plot_type <- input$plotchoicebarbox
-    hcr_choices <- input$hcrchoice
-    if(length(hcr_choices) < 1){
-      return()
-    }
-    dat <- subset(periodqs, period != "Rest" & pi=="pi8" & metric=="trp_05" & area=="all") 
-    p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-    # Average closeness to TRP
-    p <- p + ggplot2::ylab("PI 8: Proximity to TRP") + ggplot2::ylim(c(0,1))
-    return(p)
-  })
+  #output$plot_barbox_pi8 <- renderPlot({
+  #  plot_type <- input$plotchoicebarbox
+  #  hcr_choices <- input$hcrchoice
+  #  if(length(hcr_choices) < 1){
+  #    return()
+  #  }
+  #  dat <- subset(periodqs, period != "Rest" & pi=="pi8" & metric=="trp_05" & area=="all") 
+  #  p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+  #  # Average closeness to TRP
+  #  p <- p + ggplot2::ylab("PI 8: Proximity to TRP") + ggplot2::ylim(c(0,1))
+  #  return(p)
+  #})
   
-  output$plot_barbox_pi82 <- renderPlot({
-    plot_type <- input$plotchoicebarbox
-    hcr_choices <- input$hcrchoice
-    if(length(hcr_choices) < 1){
-      return()
-    }
-    dat <- subset(periodqs, period != "Rest" & pi=="pi8" & metric=="trp_0425" & area=="all") 
-    p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-    # Average closeness to TRP
-    p <- p + ggplot2::ylab("PI 82: Proximity to SB/SBF=0 in 2012") + ggplot2::ylim(c(0,1))
-    return(p)
-  })
+  #output$plot_barbox_pi82 <- renderPlot({
+  #  plot_type <- input$plotchoicebarbox
+  #  hcr_choices <- input$hcrchoice
+  #  if(length(hcr_choices) < 1){
+  #    return()
+  #  }
+  #  dat <- subset(periodqs, period != "Rest" & pi=="pi8" & metric=="trp_0425" & area=="all") 
+  #  p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+  #  # Average closeness to TRP
+  #  p <- p + ggplot2::ylab("PI 82: Proximity to SB/SBF=0 in 2012") + ggplot2::ylim(c(0,1))
+  #  return(p)
+  #})
 
   # Bar plot 
   # PI 1: Prob of SBSBF0 > LRP
-  output$plot_bar_problrp <- renderPlot({
-    hcr_choices <- input$hcrchoice
-    if(length(hcr_choices) < 1){
-      return()
-    }
-    dat <- subset(periodqs, period != "Rest" & pi=="pi1" & area=="all") 
-    p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="median_bar")
-    p <- p + ggplot2::ylab("PI 1: Prob. SB/SBF=0 > LRP") + ggplot2::ylim(c(0,1))
-    return(p)
-  })
+  #output$plot_bar_problrp <- renderPlot({
+  #  hcr_choices <- input$hcrchoice
+  #  if(length(hcr_choices) < 1){
+  #    return()
+  #  }
+  #  dat <- subset(periodqs, period != "Rest" & pi=="pi1" & area=="all") 
+  #  p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type="median_bar")
+  #  p <- p + ggplot2::ylab("PI 1: Prob. SB/SBF=0 > LRP") + ggplot2::ylim(c(0,1))
+  #  return(p)
+  #})
 
   # For exploring the catches in different regions
   output$plot_pi3 <- renderPlot({
@@ -769,16 +799,17 @@ server <- function(input, output, session) {
       dat <- subset(yearqs, pi=="pi3" & area %in% area_choice & metric == catch_rel_choice) 
       wormdat <- subset(worms, pi=="pi3" & area %in% area_choice & metric == catch_rel_choice & iter %in% wormiters) 
       p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
+      p <- p + facet_grid(area_name ~ hcrref, scales="free")#, ncol=1)
       p <- p + ggplot2::ylab(ylabel)
       p <- p + ggplot2:: ylim(c(0,NA))
       # Axes limits set here or have tight?
-      p <- p + ggplot2::facet_wrap(~area_name, scales="free", ncol=1)
       p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
       # Size of labels etc
       p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
     }
     return(p)
   }, height=function(){
+    # Height of each facet is a little complicated
     if(input$plotchoicebarboxtime=="time"){return(max(height_per_area*1.5, (height_per_area * length(input$areachoice))))}
     if(input$plotchoicebarboxtime %in% c("median_bar","box")){return(max(height_per_area*1.5, (height_per_area * ceiling(length(input$areachoice) / no_facets_row))))}
   })
@@ -814,45 +845,45 @@ server <- function(input, output, session) {
 
   # Timeseries
   # PI: 4
-  output$plot_ts_relcpue <- renderPlot({
-    show_spaghetti <- input$showspag
-    hcr_choices <- input$hcrchoice
-    if(length(hcr_choices) < 1){
-      return()
-    }
-    dat <- subset(yearqs, pi=="pi4") 
-    # Add Option for worms
-    wormdat <- subset(worms, pi=="pi4" & iter %in% wormiters) 
-    # Else wormdat <- NULL
-    # May need to subset over area in the future if we add additional groupings
-    p <- time_ser_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
-    p <- p + ggplot2::ylab("Relative CPUE")
-    p <- p + ggplot2::ylim(c(0,NA))
-    # Axes limits set here or have tight?
-    p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
-    # Size of labels etc
-    p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
-    return(p)
-  })
+  #output$plot_ts_relcpue <- renderPlot({
+  #  show_spaghetti <- input$showspag
+  #  hcr_choices <- input$hcrchoice
+  #  if(length(hcr_choices) < 1){
+  #    return()
+  #  }
+  #  dat <- subset(yearqs, pi=="pi4") 
+  #  # Add Option for worms
+  #  wormdat <- subset(worms, pi=="pi4" & iter %in% wormiters) 
+  #  # Else wormdat <- NULL
+  #  # May need to subset over area in the future if we add additional groupings
+  #  p <- time_ser_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
+  #  p <- p + ggplot2::ylab("Relative CPUE")
+  #  p <- p + ggplot2::ylim(c(0,NA))
+  #  # Axes limits set here or have tight?
+  #  p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+  #  # Size of labels etc
+  #  p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+  #  return(p)
+  #})
 
   # Bar and box plot 
   # PI 4: Catch
-  plot_barbox_relcpue<- function(plot_type="median_bar"){
-    rPlot <- renderPlot({
-      hcr_choices <- input$hcrchoice
-      if(length(hcr_choices) < 1){
-        return()
-      }
-      dat <- subset(periodqs, period != "Rest" & pi=="pi4") 
-      p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-      p <- p + ggplot2::ylab("PI 4: Relative CPUE") + ggplot2::ylim(c(0,NA))
-      return(p)
-    })
-    return(rPlot)
-  }
+  #plot_barbox_relcpue<- function(plot_type="median_bar"){
+  #  rPlot <- renderPlot({
+  #    hcr_choices <- input$hcrchoice
+  #    if(length(hcr_choices) < 1){
+  #      return()
+  #    }
+  #    dat <- subset(periodqs, period != "Rest" & pi=="pi4") 
+  #    p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
+  #    p <- p + ggplot2::ylab("PI 4: Relative CPUE") + ggplot2::ylim(c(0,NA))
+  #    return(p)
+  #  })
+  #  return(rPlot)
+  #}
 
-  output$plot_bar_relcpue <- plot_barbox_relcpue(plot_type="median_bar")
-  output$plot_box_relcpue <- plot_barbox_relcpue(plot_type="box")
+  #output$plot_bar_relcpue <- plot_barbox_relcpue(plot_type="median_bar")
+  #output$plot_box_relcpue <- plot_barbox_relcpue(plot_type="box")
 
   # Bar and box plot 
   # PI 7: Effort variability and stability

@@ -15,3 +15,35 @@ spc_about <- function(){
     tags$p(align="justify", "With over 600 staff, SPC has its headquarters in Noumea, regional offices in Suva and Pohnpei, a country office in Honiara and field staff in other Pacific locations. Its working languages are English and French. See: ", a("https://www.spc.int", href="www.spc.int"))
   )
 }
+
+# The big PI tables for comparing HCRs
+#' pitable
+#'
+#' pitable() is not a plot but a table comparing PIs across HCRs and periods. Only pass in 1 time period at a time.
+#'
+#' @param signif Number of significent digits for table. Default is 3.
+#'
+#' @return A data.frame to be shown as a table.
+#' @rdname comparison_plots
+#' @name Comparison plots
+#' @export
+# Added signif argument to be added to AMPLE
+pitable <- function(dat, percentile_range = c(10,90), signif=3){
+  # Rows are the PIs, columns are the HCRs
+  percentile_min <- dat[,paste("X",percentile_range[1],".",sep="")]
+  percentile_max <- dat[,paste("X",percentile_range[2],".",sep="")]
+  dat$value <- paste(signif(dat$X50.,signif), " (", signif(percentile_min, signif), ",", signif(percentile_max, signif), ")", sep="")
+  # Fix pi1
+  dat[dat$pi=="pi1", "value"] <- signif(dat[dat$pi=="pi1", "X50."],signif)
+  tabdat <- dat[,c("hcrref", "piname", "value")]
+  tabdat[tabdat$name=="Biomass","piname"] <- "SB/SBF=0"
+  tabdat <- as.data.frame(tidyr::spread(tabdat, key="hcrref", value="value"))
+  # Have rownames?
+  #rnames <- tabdat[,1]
+  #tabdat <- tabdat[,-1]
+  #rownames(tabdat) <- rnames
+  colnames(tabdat)[1] <- "Indicator"
+  return(tabdat)
+}
+
+

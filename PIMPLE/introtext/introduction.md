@@ -7,35 +7,37 @@ PIMPLE reference sheets are available (right-click to open in a new tab or save-
 
 ## What is PIMPLE?
 
-(Last update: 09/08/2021)
+PIMPLE is a tool for exploring and comparing the performance of alternative candidate management procedures (MPs) for WCPO skipjack.
 
-PIMPLE is a tool for exploring and comparing the performance of alternative candidate Management Procedures (MPs).
-
-A Management Procedure has three components:
+A management procedure has three components:
 
 1. Data collection
 2. Estimation method (stock assessment model)
 3. Harvest Control Rule (HCR)
 
-For the current set of results, the data collection and estimation method (a stock assessment model) are the same for each MP, and only the HCRs are different.
-This means that we are comparing the performance of HCRs with the aim of selecting one that is most likely to meet your management objectives.
+For the current set of results, the data collection and estimation method are the same for each MP, and only the HCRs are different.
+This means that we can directly compare the performance of the HCRs.
+
+The aim is to select the HCR that is most likely to meet your management objectives.
 
 The performance of each HCR is measured using different performance indicators (PIs).
 PIMPLE can be used to explore and compare the PIs in a number of ways, using different plots and tables.
 This allows trade-offs between the different HCRs to be evaluated.
 
-The focus should be on the *relative* performance of the different MPs, e.g. MP X results in higher catches than MP Y.
+Additional metrics, such as Kobe and Majuro plots, are also available.
+
+The focus should be on the *relative* performance of the different HCRs, e.g. HCR X performs better than HCR Y.
 
 ## How to use PIMPLE
 
-The main purpose of PIMPLE is to compare the relative performance of HCRs. This is most easily done using the **Compare performance** tab at the top of the screen.
+The main purpose of PIMPLE is to compare the relative performance of the candidate HCRs. This is most easily done using the **Compare performance** tab at the top of the screen.
 This tab allows you to view the indicators using different plot types (see below).
 
 To aid investigation it is possible to select the indicators that are of most interest, and deselect those that are of less interest.
 Similarly, it is possible to select and deselect HCRs to focus attention on a smaller subset.
 
-A more detailed investigation of the indicators can be found under the **Explore indicators** tab at the top.
-This allows you to see the indicators in more detail, for example viewing the catch based indicators by model area.
+Other performance indicators can be found under the **Other indicators** tab at the top.
+This allows you to see some of the PI in more detail, for example viewing the catch based indicators by model area.
 
 ## Model Areas
 
@@ -50,7 +52,7 @@ Their numbers relate to their position in the original table of indicators. Thes
 
 The average values of the PIs are calculated over three time periods:
 
-* Short-term: 2022-230
+* Short-term: 2022-2030
 * Medium-term: 2031-2039
 * Long-term: 2040-2048
 
@@ -60,10 +62,12 @@ Some of the indicators are calculated over different model areas, or only calcul
 
 ### SB/SBF=0
 
-
 SB/SBF=0 is the ratio of the adult biomass to the adult biomass in the absence of fishing (sometimes known as depletion).
 The value ranges between 0 and 1.
-SB/SBF=0 is a measure of stock status and can be compared to the Limit Reference Point (0.2) and the Target Reference Point (0.5, interim).
+SB/SBF=0 is a measure of stock status and can be compared to the Limit Reference Point (LRP) of 0.2 and the Target Reference Point (TRP).
+
+At the moment there is no adopted TRP for WCPO skipjack.
+Instead the mean SB/SBF=0 in 2012 is used instead.
 
 ### 1. Probability of SB/SBF=0 being above the Limit Reference Point (LRP)
 
