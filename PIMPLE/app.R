@@ -55,7 +55,9 @@ medium_term <- sort(unique(subset(worms, period=="Medium")$year))
 long_term <- sort(unique(subset(worms, period=="Long")$year))
 last_plot_year <- max(long_term)
 first_plot_year <- 1990
-pi_percentiles <- c(10,90) # Used in tables and time series plots, to match other SPC plots. These need to be in the data
+inner_percentiles <- c(25,75) # Used in tables
+outer_percentiles <- c(10,90)
+#and time series plots, to match other SPC plots. These need to be in the data
 
 # Trim out years for tight time series plots
 yearqs <- subset(yearqs, year %in% first_plot_year:last_plot_year)
@@ -121,7 +123,7 @@ relcatchtext <- "Note that the catches are relative to the average catch in that
 barchartplottext <- "The height of each bar shows the median expected value. Note that the bar charts do not show any uncertainty which can be important (see the box plots)."
 boxplottext <- "For box plots the box contains the 50th percentile, the whiskers show the 80th percentile and the horizontal line is the median. The wider the range, the less certain we are about the expected value."
 tabletext <- "The tables show the median indicator values in each time period. The values inside the parentheses are the 80th percentile range."
-timeseriesplottext <- "The ribbons show the 80th percentile range. The dashed, black line is the median value."
+timeseriesplottext <- "The outer ribbons show the 80th percentile range and the inner ribbons show the 50th percentile range. The dashed, black line is the median value."
 timeseriesplottext2 <-  "The dashed vertical lines show, from left, the start of the MSE evaluation with three years of 2012 assumptions, the start of the HCR operating with the short-, medium- and long-term periods."
 stabtext <- "Note that the stability can only be compared between time periods, not between areas or area groups, i.e. it is the relative stability in that area."
 sbsbf02012text <- "On the SB/SBF=0 plot, the lower dashed line is the Limit Reference Point and the upper dashed line is the mean SB/SBF=0 in 2012."
@@ -538,7 +540,7 @@ server <- function(input, output, session) {
     area_choices <- "total"
     dat <- dplyr::filter(yearqs, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
     wormdat <- dplyr::filter(worms, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
-    p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=FALSE, percentile_range = pi_percentiles)
+    p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=FALSE, outer_percentile_range = outer_percentiles, inner_percentile_range = inner_percentiles)
     p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
     p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
@@ -626,7 +628,7 @@ server <- function(input, output, session) {
     dat <- subset(yearqs, area %in% c("all", catch_area_choice, "ps678x") & piname %in% pi_choices & metric != "catch stability")
     wormdat <- subset(worms, area %in% c("all", catch_area_choice, "ps678x") & piname %in% pi_choices & metric != "catch stability" & iter %in% wormiters)
 
-    p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
+    p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, outer_percentile_range = outer_percentiles, inner_percentile_range = inner_percentiles)
     # Facet by PI
     p <- p + facet_grid(piname ~ hcrref, scales="free")#, ncol=1)
     #p <- p + ylab("Catch")
@@ -654,7 +656,7 @@ server <- function(input, output, session) {
     }
     catch_area_choice <- input$catchareachoice
     dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & area %in% c("all", catch_area_choice, "ps678x") & piname %in% pi_choices & metric != "catch stability")
-    tabdat <- pitable(dat, percentile_range = pi_percentiles)
+    tabdat <- pitable(dat, percentile_range = inner_percentiles)
     return(tabdat)
   }
 
@@ -797,7 +799,7 @@ server <- function(input, output, session) {
       show_spaghetti <- input$showspag
       dat <- subset(yearqs, pi=="pi3" & area %in% area_choice & metric == catch_rel_choice) 
       wormdat <- subset(worms, pi=="pi3" & area %in% area_choice & metric == catch_rel_choice & iter %in% wormiters) 
-      p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, percentile_range = pi_percentiles)
+      p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, outer_percentile_range = outer_percentiles, inner_percentile_range = inner_percentiles)
       p <- p + facet_grid(area_name ~ hcrref, scales="free")#, ncol=1)
       p <- p + ggplot2::ylab(ylabel)
       p <- p + ggplot2:: ylim(c(0,NA))

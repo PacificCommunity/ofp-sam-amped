@@ -1,7 +1,8 @@
 ### Time series plots
 
 Time series plots show the range of values of an indicator over time.
-The envelope shows the 80th percentile range, and so covers most of the range of values.
+The outer envelope shows the 80th percentile range, and so covers most of the range of values.
+The inner envelope shows the 50th percentile range.
 The dashed line in the middle shows the average (median) value.
 
 It possible to superimpose some individual trajectories on the time series plots.

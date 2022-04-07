@@ -87,8 +87,9 @@ barboxplot <- function(dat, hcr_choices, plot_type="median_bar", quantiles=c(0.1
 #'
 #' @export
 time_series_plot <- function(dat, hcr_choices, wormdat=NULL,
-                          alpha20_80 = 1.0, linetype_worm=1,
-                          percentile_range = c(10,90),
+                          linetype_worm=1,
+                          outer_percentile_range = c(5,95),
+                          inner_percentile_range = c(10,90),
                           colour_worm="black",
                           size_worm=0.3, add_start_line=TRUE, time_period_lines=TRUE,
                           short_term = 2016:2024, medium_term = 2025:2033, long_term = 2034:2042,
@@ -98,16 +99,15 @@ time_series_plot <- function(dat, hcr_choices, wormdat=NULL,
   dat <- dat[dat$hcrref %in% hcr_choices,] # Trying to remove weird warning about hcr_no being a global variable
   hcr_cols <- get_hcr_colours(hcr_names=all_hcr_names, chosen_hcr_names=unique(dat$hcrref))
   # Rename for percentiles reference
-  dat <- dplyr::rename(dat, "min" = paste("X",percentile_range[1],".",sep=""), "max" = paste("X",percentile_range[2],".",sep="")) 
+  inner_ynames <- paste0("X", inner_percentile_range, ".")
+  outer_ynames <- paste0("X", outer_percentile_range, ".")
   # Chop out NA rows
   dat <- dat[!is.na(dat$X50.),]
   # Start the plot
   p <- ggplot(dat, aes(x=year))
   # The ribbon
-  p <- p + geom_ribbon(aes(ymin=min, ymax=max, fill=hcrref), alpha=alpha20_80)
-  # The outside lines - needed?
-  p <- p + geom_line(aes(y=max, group=hcrref), colour="black", size=ggplot2::rel(0.5))
-  p <- p + geom_line(aes(y=min, group=hcrref), colour="black", size=ggplot2::rel(0.5))
+  p <- p + geom_ribbon(aes_string(ymin=outer_ynames[1], ymax=outer_ynames[2], fill="hcrref"), alpha=0.5)
+  p <- p + geom_ribbon(aes_string(ymin=inner_ynames[1], ymax=inner_ynames[2], fill="hcrref"))
   # Add median line
   p <- p + geom_line(aes(y=X50., group=hcrref), colour="black", linetype=2, size=ggplot2::rel(0.5))
   p <- p + xlab("Year")
