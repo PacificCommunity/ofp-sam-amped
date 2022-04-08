@@ -1,4 +1,4 @@
-#' Default palette for HCRs
+#' Default palette for SKJ HCRs
 #' 
 #' Get the default palette for the HCR colours
 #' 
@@ -9,8 +9,15 @@
 get_hcr_colours <- function(hcr_names, chosen_hcr_names){
   allcols <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(12,"Paired"))(length(hcr_names))
   names(allcols) <- hcr_names
-  hcrcols <- allcols[as.character(chosen_hcr_names)] # subsetting on factors seems to have stuffed this up
+  hcrcols <- allcols[as.character(chosen_hcr_names)]
   return(hcrcols)
+}
+
+get_betmp_colours <- function(mp_names, chosen_mp_names){
+  allcols <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(9,"Set1"))(length(mp_names))
+  names(allcols) <- mp_names
+  mpcols <- allcols[as.character(chosen_mp_names)]
+  return(mpcols)
 }
 
 

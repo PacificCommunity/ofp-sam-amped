@@ -25,14 +25,57 @@ library(shiny)
 library(ggplot2)
 library(RColorBrewer)
 library(markdown)
+#library(data.table)
 
 source("funcs.R")
 source("plots.R")
 
 # Load the indicator data - including Kobe and Majuro data
 data_files <- load("data/SMD2022_results.Rdata")
+mix_data_files <- load("data/mf_indicator_data.Rdata")
 
 #------------------------------------------------------------------------------------------------------
+
+# Additional data processing for mixed fishery - move to PI calculation
+tll_name_df <- data.frame(tll_assumption = c("tll_sq_1", "tll_sq_085", "tll_sq_115"), tll_ass_name = c("TLL SQ", "TLL SQ -15%", "TLL SQ +15%"))
+mixpi_periodqs <- merge(mixpi_periodqs, tll_name_df)
+mixpiqs <- merge(mixpiqs, tll_name_df)
+
+# Bring in SKJ HCR names
+skj_hcr_names <- unique(periodqs[,c("msectrl", "hcrname", "hcrref")])
+
+# Need to add "SKJ" to them to differentiate from BET MP
+# But then need to do the same for SKJ data for the common HCR selector to work - arse
+#hcrreforder <- order(skj_hcr_names$hcrref)
+newnames <- paste("SKJ", skj_hcr_names$hcrref)
+newlevels <- paste("SKJ", levels(skj_hcr_names$hcrref))
+skj_hcr_names$skjhcrref <- factor(newnames, levels = newlevels)
+colnames(skj_hcr_names)[colnames(skj_hcr_names) == "msectrl"] <- "Z"
+mixpi_periodqs <- merge(mixpi_periodqs, skj_hcr_names)
+mixpiqs <- merge(mixpiqs, skj_hcr_names)
+
+# Check area names - look dodgy
+unique(mixpi_periodqs$area)
+unique(subset(mixpi_periodqs, area == "3")$pi) # SBSBF0 and LRP are just numbers
+unique(subset(mixpi_periodqs, area == "Region 3")$pi) # Impact is region
+
+# Fix this in the PI calculation script
+mixpi_periodqs[is.na(mixpi_periodqs$area), "area"] <- "Ignore me"
+mixpi_periodqs[mixpi_periodqs$area == "All", "area"] <- "All regions"
+mixpiqs[is.na(mixpiqs$area), "area"] <- "Ignore me"
+mixpiqs[mixpiqs$area == "All", "area"] <- "All regions"
+
+mixpi_periodqs[mixpi_periodqs$period=="rest", "period"] <- "Rest"
+mixpiqs[mixpiqs$period=="rest", "period"] <- "Rest"
+
+mixpi_periodqs$period <- factor(mixpi_periodqs$period, levels = c("Short", "Medium", "Long", "Rest"))
+
+# Order by hcrref
+mixpi_periodqs <- mixpi_periodqs[order(mixpi_periodqs$skjhcrref),]
+mixpiqs <- mixpiqs[order(mixpiqs$skjhcrref),]
+
+#------------------------------------------------------------------------------------------------------
+
 # Additional data processing
 
 # Data for the HCR histogram plots
@@ -157,8 +200,8 @@ ui <- fluidPage(id="top",
       )), # End of about condition
       # HCR selection - can select multiples
       # Only for the main Compare MPs tab, the MPs tab and SOME of the explorePIs tabs
-      conditionalPanel(condition="input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')) || input.nvp == 'mps'",
-        checkboxGroupInput(inputId = "hcrchoice", label="HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
+      conditionalPanel(condition="input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')) || input.nvp == 'mps' || input.nvp == 'mixpis'",
+        checkboxGroupInput(inputId = "hcrchoice", label="SKJ HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
       ),
       # PI choice - only shown in the compare PIs tab
       conditionalPanel(condition="input.nvp == 'compareMPs'",
@@ -182,14 +225,6 @@ ui <- fluidPage(id="top",
       conditionalPanel(condition="input.nvp == 'explorePIs' && input.pitab== 'pi3'",
         radioButtons(inputId = "plotchoicebarboxtime", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar")
       ),
-      # Select plot type by bar or box (Note - need to include the NVP input as the the pitab input still has value even if not seen)
-      conditionalPanel(condition="input.nvp == 'explorePIs' && input.pitab== 'pi6'",
-        radioButtons(inputId = "plotchoicebarbox", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box"), selected="median_bar")
-      ),
-      # Stability or variability
-      conditionalPanel(condition="input.nvp == 'explorePIs' && input.pitab== 'pi6'",
-        radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
-      ),
       # In Management Procedures tab, show the points and trajectories
       # Change false to true to show performance options (can hide from users)
       conditionalPanel(condition="((input.nvp == 'mps') && false)",
@@ -208,8 +243,25 @@ ui <- fluidPage(id="top",
       conditionalPanel(condition="input.pitab == 'majurokobeplot'",
         radioButtons(inputId = "hcrchoicekobe", label="HCR selection", selected = unique(periodqs$hcrref)[1], choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref)),
         radioButtons(inputId = "majurokobe", label="Kobe or Majuro plot", selected = "Kobe", choiceNames = c("Kobe", "Majuro"), choiceValues = c("Kobe", "Majuro"))
+      ),
+      # The BET MP and BET / YFT stock options
+      conditionalPanel(condition="input.nvp == 'mixpis'",
+        radioButtons(inputId = "betoryft", label="BET or YFT", selected = "BET", choiceNames = c("BET", "YFT"), choiceValues = c("BET", "YFT")),
+        checkboxGroupInput(inputId = "betmpchoice", label="TLL assumption", selected = unique(mixpi_periodqs$tll_assumption), choiceNames = as.character(unique(mixpi_periodqs$tll_ass_name)), choiceValues = unique(mixpi_periodqs$tll_assumption))),
+        
+      conditionalPanel(condition = "input.nvp == 'mixpis' && input.mixpisid == 'mixss'",
+        radioButtons(inputId = "facetskjorbet", label="Panels by SKJ HCR or BET MP", selected = "betmp", choiceNames = c("BET MP", "SKJ HCR"), choiceValues = c("betmp", "skjhcr"))),
+      
+      # Select plot type by bar or box (Note - need to include the NVP input as the the pitab input still has value even if not seen)
+      conditionalPanel(condition="(input.nvp == 'explorePIs') && (input.pitab== 'pi6') || (input.nvp == 'mixpis' && input.mixpisid == 'mixss')",
+        radioButtons(inputId = "plotchoicebarbox", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box"), selected="median_bar")
+      ),
+      # Stability or variability
+      conditionalPanel(condition="input.nvp == 'explorePIs' && input.pitab== 'pi6'",
+        radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
       )
-    ),
+                         
+    ), # End of sidebarPanel
     
     #---------------------------------------------
     # Main panel
@@ -319,7 +371,7 @@ ui <- fluidPage(id="top",
         #----------------------------------------------------------------------------
         # Tabs for exploring specific indicators in more detail
         #----------------------------------------------------------------------------
-        tabPanel("Other indicators", value="explorePIs",
+        tabPanel("Other SKJ indicators", value="explorePIs",
           tabsetPanel(id="pitab",
             ## --- SBSBF0 and PI 1 & 8 ---
             # -------- Drop this - adds nothing -----------
@@ -422,14 +474,29 @@ ui <- fluidPage(id="top",
             #  p(pi47text)
             #)
           )                                
-        ), # End of Other indicators tab                                
+        ), # End of Other SKJ indicators tab                                
+        #------------------------------------------
+        # Mixed fishery indicators 
+        #------------------------------------------
+        tabPanel(title="Mixed fishery indicators", value="mixpis",
+          tabsetPanel(id="mixpisid",
+            tabPanel("Stock status", value="mixss",
+                     column(12, fluidRow(
+                       plotOutput("plot_box_mixpis_sbsbf0", height="auto")
+                     ))
+            ), # End of mixed fishery stock status tabpanel
+            tabPanel("Prob. > LRP",value="mixplrp"),
+            tabPanel("Catch",value="mixcatch"),
+            tabPanel("Impact",value="miximpact"),
+          ) # End of mixed fishery indicators tabsetPanel
+        ), # End of mixed fishery indicators tab
         #------------------------------------------
         # The Management Procedures
         #------------------------------------------
-        tabPanel(title="Management procedures", value="mps",
+        tabPanel(title="SKJ management procedures", value="mps",
           column(12,
             fluidRow(            
-              p("Currently all the candidate management procedures have the same estimation method (an 8-region MULTIFAN-CL stock assessment model)."),
+              p("Currently all the candidate skipjack management procedures have the same estimation method (an 8-region MULTIFAN-CL stock assessment model)."),
               p("This means that we are only comparing the performance of the HCRs. However, this may not always be the case."),
               p("The current HCRs use a value of estimated depletion (SB/SBF=0) to set a multiplier. This multipler is applied to the catch or effort in 2012 for each fishery to set a new catch or effort limit for the next time period."),
             #tags$span(title="Shape of the  HCRs under consideration",
@@ -442,7 +509,6 @@ ui <- fluidPage(id="top",
               )
           )
         ), # End of MPs tab
-
         #------------------------------------------
         # Kobe . Majuro plot
         #------------------------------------------
@@ -550,6 +616,73 @@ server <- function(input, output, session) {
     p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
     return(p)
   })
+  
+  #---------------------------------------------------------------------------------
+  # Mixed fishery plots
+  mixpis_barbox_plot <- function(){
+    
+  }
+  
+  output$plot_box_mixpis_sbsbf0 <- renderPlot({
+      hcr_choices <- input$hcrchoice
+      betmp_choices <- input$betmpchoice
+      stock_choice <- input$betoryft
+      barbox_choice <- input$plotchoicebarbox # median_bar or box
+      if((length(hcr_choices) < 1) | (length(betmp_choices) < 1)){
+        return()
+      }
+      dat <- subset(mixpi_periodqs, period != "Rest" & area == "All regions" & pi == "sbsbf0" & stock == stock_choice)
+      
+      # SKJ HCR and BET MP colours
+      all_hcr_names <- unique(dat$skjhcrref)
+      all_betmp_names <- unique(dat$tll_ass_name)
+      dat <- dat[dat$hcrref %in% hcr_choices & dat$tll_assumption %in% betmp_choices,] 
+      hcr_cols <- get_hcr_colours(hcr_names=all_hcr_names, chosen_hcr_names=unique(dat$skjhcrref))
+      betmp_cols <- get_betmp_colours(mp_names=all_betmp_names, chosen_mp_names=unique(dat$tll_ass_name))
+      
+      # Option 1      
+      # Each facet is a TLL - 3 time periods in each facet - each bar as a Z - similar to existing
+      #fillvar = "hcrref" # Or "tll_ass_name"
+      if (input$facetskjorbet == "skjhcr"){
+        fillvar = "tll_ass_name"
+      } else {
+        fillvar = "skjhcrref"
+      }
+      p <- ggplot(dat, aes(x=period))
+      if (barbox_choice == "box"){
+        p <- p + geom_boxplot(aes_string(ymin="X5.", ymax="X95.", lower="X20.", upper="X80.", middle="X50.", fill=fillvar), stat="identity")
+      }
+      if (barbox_choice == "median_bar"){
+        p <- p + geom_bar(aes_string(y="X50.", fill=fillvar), stat="identity", position="dodge", colour="black", width=0.7)
+      }
+      p <- p + xlab("Time period")
+      if (fillvar == "skjhcrref"){
+        p <- p + scale_fill_manual(values=hcr_cols, name="SKJ HCR")
+        p <- p + facet_wrap(~tll_ass_name, scales="free")
+      }
+      if (fillvar == "tll_ass_name"){
+        p <- p + scale_fill_manual(values=betmp_cols, name="TLL assumption")
+        p <- p + facet_wrap(~skjhcrref, scales="free")
+      }
+      p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
+      p <- p + theme_bw()
+      p <- p + theme(legend.position="bottom")#, legend.title=element_blank())
+      p <- p + guides(fill = guide_legend(title.position = "top", title.hjust=0.5))
+      return(p)
+  }, 
+  
+  # Fix height function
+      height=function(){
+        otherbit <- height_per_pi
+        if(input$facetskjorbet == "skjhcr"){
+          otherbit <- height_per_pi * ceiling(length(input$hcrchoice)) / no_facets_row
+        }
+        if(input$facetskjorbet == "betmp"){
+          otherbit <- height_per_pi * ceiling(length(input$betmpchoice)) / no_facets_row
+        }
+        return(max(height_per_pi*1.5, otherbit))
+      }
+  )
 
   #-------------------------------------------------------------------
   # Comparison plots
