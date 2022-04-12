@@ -53,7 +53,7 @@ barboxplot <- function(dat, hcr_choices, plot_type="median_bar", quantiles=c(0.1
     lower <- quantiles_text[2]
     upper <- quantiles_text[3]
     p <- ggplot(dat, aes_string(x="period"))
-    p <- p + geom_boxplot(aes_string(ymin=ymin, ymax=ymax, lower=lower, upper=upper, middle="X50.", fill="hcrref"), stat="identity")
+    p <- p + geom_boxplot(aes_string(ymin=ymin, ymax=ymax, lower=lower, upper=upper, middle="X50.", fill="hcrref"), stat="identity", width=0.7)
   }
   p <- p + xlab("Time period")
   p <- p + scale_fill_manual(values=hcr_cols)
@@ -233,3 +233,56 @@ hcr_histo_plot <- function(hcr_choices, histodat){
 }
 
 
+
+mixpis_barbox_biol_plot <- function(dat, hcr_choices, betmp_choices, barbox_choice = "median_bar", stock_choice = stock_choice, facetskjorbet = "skjhcr"){
+  
+    # SKJ HCR and BET MP colours
+    all_hcr_names <- unique(dat$skjhcrref)
+    all_betmp_names <- unique(dat$tll_ass_name)
+    dat <- dat[dat$hcrref %in% hcr_choices & dat$tll_assumption %in% betmp_choices,] 
+    hcr_cols <- get_hcr_colours(hcr_names=all_hcr_names, chosen_hcr_names=unique(dat$skjhcrref))
+    betmp_cols <- get_betmp_colours(mp_names=all_betmp_names, chosen_mp_names=unique(dat$tll_ass_name))
+  
+    # Option 1      
+    # Each facet is a TLL - 3 time periods in each facet - each bar as a Z - similar to existing
+    #fillvar = "hcrref" # Or "tll_ass_name"
+    if (facetskjorbet == "skjhcr"){
+      fillvar = "tll_ass_name"
+    } else {
+      fillvar = "skjhcrref"
+    }
+    p <- ggplot(dat, aes(x=period))
+    if (barbox_choice == "box"){
+      p <- p + geom_boxplot(aes_string(ymin="X5.", ymax="X95.", lower="X20.", upper="X80.", middle="X50.", fill=fillvar), stat="identity")
+    }
+    if (barbox_choice == "median_bar"){
+      p <- p + geom_bar(aes_string(y="X50.", fill=fillvar), stat="identity", position="dodge", colour="black", width=0.7)
+    }
+    p <- p + xlab("Time period")
+    if (fillvar == "skjhcrref"){
+      p <- p + scale_fill_manual(values=hcr_cols, name="SKJ HCR")
+      p <- p + facet_wrap(~tll_ass_name, scales="free", ncol=no_mixfacets_row)
+    }
+    if (fillvar == "tll_ass_name"){
+      p <- p + scale_fill_manual(values=betmp_cols, name="TLL assumption")
+      p <- p + facet_wrap(~skjhcrref, scales="free", ncol=no_mixfacets_row)
+    }
+    p <- p + theme_bw()
+    p <- p + theme(legend.position="bottom")#, legend.title=element_blank())
+    p <- p + guides(fill = guide_legend(title.position = "top", title.hjust=0.5))
+    return(p)
+  
+  
+}
+
+
+mixpi_height <- function(){
+  otherbit <- height_per_pi
+  if(input$facetskjorbet == "skjhcr"){
+    otherbit <- height_per_pi * ceiling(length(input$hcrchoice) / no_mixfacets_row)
+  }
+  if(input$facetskjorbet == "betmp"){
+    otherbit <- height_per_pi * ceiling(length(input$betmpchoice) / no_mixfacets_row)
+  }
+  return(max(height_per_pi*1.5, otherbit))
+}
