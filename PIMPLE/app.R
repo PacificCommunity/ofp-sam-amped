@@ -65,6 +65,12 @@ colnames(skj_hcr_names)[colnames(skj_hcr_names) == "msectrl"] <- "Z"
 mixpi_periodqs <- merge(mixpi_periodqs, skj_hcr_names, by="Z")
 mixpiqs <- merge(mixpiqs, skj_hcr_names, by="Z")
 
+# Impact scenario names
+impact_names <- data.frame(impact_scenario_name = c("BET MP", "SKJ MP", "SPA MP"),
+                           impact_scenario = c("BET_MP", "SKJ_MP", "SPA_MP"))
+mixpi_periodqs <- merge(mixpi_periodqs, impact_names, all=TRUE)
+mixpiqs <- merge(mixpiqs, impact_names, all=TRUE)
+
 # Order by skjhcrref
 mixpi_periodqs <- mixpi_periodqs[order(mixpi_periodqs$skjhcrref),]
 mixpiqs <- mixpiqs[order(mixpiqs$skjhcrref),]
@@ -256,6 +262,14 @@ ui <- fluidPage(id="top",
       conditionalPanel(condition="(input.nvp == 'explorePIs') && (input.pitab== 'pi6') || (input.nvp == 'mixpis' && (input.mixpisid == 'mixss' || input.mixpisid == 'mixcatch'))",
         radioButtons(inputId = "plotchoicebarbox", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box"), selected="median_bar")
       ),
+      
+      # Box or ribbon for impact plots
+      conditionalPanel(condition="input.nvp == 'mixpis' && input.mixpisid == 'miximpact'",
+        radioButtons(inputId = "plotboxorribbon", label="Plot selection",choices = list("Stacked median ribbons" = "ribbon", "Box plot by period" ="box"), selected="ribbon"),
+        radioButtons(inputId = "skjhcrcolrow", label="SKJ HCR in rows or columns",choices = list("Columns" = "column", "Rows" ="row"), selected="column")
+      ),
+      
+      
       # Stability or variability
       conditionalPanel(condition="input.nvp == 'explorePIs' && input.pitab== 'pi6'",
         radioButtons(inputId = "stabvarchoice", label="Stability or variability",choices = list("Stability" = "stability", "Variability" ="variability"), selected="stability")
@@ -432,12 +446,13 @@ ui <- fluidPage(id="top",
             tabPanel("Catch",value="mixcatch",
                      column(12, fluidRow(
                        plotOutput("plot_box_mixpis_catch", height="auto") 
-                     )),
+                     ))
             ), # End of catch mixed fishery panel
             tabPanel("Impact",value="miximpact",
                      column(12, fluidRow(
-                       plotOutput("plot_box_mixpis_impact", height="auto") 
-            ),
+                       plotOutput("plot_mixpis_impact", height="auto") 
+                     ))
+            ), # End of impact panel
           ) # End of mixed fishery indicators tabsetPanel
         ), # End of mixed fishery indicators tab
         #------------------------------------------
@@ -479,6 +494,12 @@ ui <- fluidPage(id="top",
 #-------------------------------------------------
 
 server <- function(input, output, session) {
+  
+  # Plot settings
+  height_per_pi <- 300
+  height_per_area <- 300
+  no_facets_row <- 2
+  no_mixfacets_row <- 3 # For mixed fishery indicators
 
   #-------------------------------------------------------------------
   # Make the checkbox inputs match each other
@@ -549,6 +570,60 @@ server <- function(input, output, session) {
   
   #---------------------------------------------------------------------------------
   # Mixed fishery plots
+  output$plot_mixpis_impact <- renderPlot({
+    
+    hcr_choices <- input$hcrchoice
+    betmp_choices <- input$betmpchoice
+    stock_choice <- input$betoryft
+    facetskjorbet <- input$facetskjorbet
+    boxribbon_choice <- input$plotboxorribbon
+    skj_row_or_col <- input$skjhcrcolrow
+      
+    if((length(hcr_choices) < 1) | (length(betmp_choices) < 1)){
+      return()
+    }
+    
+    # Which data set are we using?
+    if(boxribbon_choice == "ribbon"){
+      dat <- mixpiqs
+    } else {
+      dat <- mixpi_periodqs
+    }
+    
+    dat <- subset(dat, area == "All regions" & period != "Rest" & pi == "impact" & stock == stock_choice)
+    dat <- subset(dat, hcrref %in% hcr_choices & tll_assumption %in% betmp_choices) 
+    
+    # Make a colour scheme for impact MP - blue SKJ, etc 
+    MPcols <- c("steelblue", "tomato", "forestgreen")
+    names(MPcols) <- c("SKJ MP", "BET MP", "SPA MP")
+    
+    if(boxribbon_choice == "ribbon"){
+      p <- ggplot(dat, aes(x=year))
+      p <- p + geom_area(aes(y=X50., fill=impact_scenario_name))
+      p <- p + theme_bw()
+      p <- p +  xlab("Year")
+    }
+    if(boxribbon_choice == "box"){
+      p <- ggplot(dat, aes_string(x="period"))
+      p <- p + geom_boxplot(aes_string(ymin="X5.", ymax="X95.", lower="X20.", upper="X80.", middle="X50.", fill="impact_scenario_name"), width=0.7, stat="identity")
+      p <- p + xlab("Time period")
+    }
+    if(skj_row_or_col == "row"){
+      p <- p + facet_grid(skjhcrref~tll_ass_name)
+    }
+    if(skj_row_or_col == "column"){
+      p <- p + facet_grid(tll_ass_name~skjhcrref)
+    }
+    p <- p + ylab(paste0("Impact on ", stock_choice, " %"))
+    p <- p + scale_fill_manual(name = "MP", values = MPcols)
+    p <- p + ylim(c(0, 100))
+    p <- p + theme_bw()
+    p <- p + theme(legend.position="bottom", legend.title=element_blank())
+    return(p)
+    
+  },
+  height = function(){return(900)}
+  )
   
   # Catches - complicated
   output$plot_box_mixpis_catch <- renderPlot({
@@ -605,29 +680,39 @@ server <- function(input, output, session) {
   
   # SB/SBF=0
   output$plot_box_mixpis_sbsbf0 <- renderPlot({
-      hcr_choices <- input$hcrchoice
-      betmp_choices <- input$betmpchoice
-      stock_choice <- input$betoryft
-      barbox_choice <- input$plotchoicebarbox # median_bar or box
-      facetskjorbet <- input$facetskjorbet
-      if((length(hcr_choices) < 1) | (length(betmp_choices) < 1)){
-        return()
-      }
-      dat <- subset(mixpi_periodqs, period != "Rest" & area == "All regions" & pi == "sbsbf0" & stock == stock_choice)
-      
-      
-      # Call plot function here
-      p <- mixpis_barbox_biol_plot(dat = dat, hcr_choices = hcr_choices,
-                                   betmp_choices = betmp_choices,
-                                   barbox_choice = barbox_choice,
-                                   stock_choice = stock_choice,
-                                   facetskjorbet = facetskjorbet)
-      p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
-      # Add 0.2 line
-      p <- p + geom_hline(aes(yintercept=0.2), linetype=2)
-      return(p)
+    hcr_choices <- input$hcrchoice
+    betmp_choices <- input$betmpchoice
+    stock_choice <- input$betoryft
+    barbox_choice <- input$plotchoicebarbox # median_bar or box
+    facetskjorbet <- input$facetskjorbet
+    if((length(hcr_choices) < 1) | (length(betmp_choices) < 1)){
+      return()
+    }
+    dat <- subset(mixpi_periodqs, period != "Rest" & area == "All regions" & pi == "sbsbf0" & stock == stock_choice)
+    
+    # Call plot function here
+    p <- mixpis_barbox_biol_plot(dat = dat, hcr_choices = hcr_choices,
+                                 betmp_choices = betmp_choices,
+                                 barbox_choice = barbox_choice,
+                                 stock_choice = stock_choice,
+                                 facetskjorbet = facetskjorbet,
+                                 no_mixfacets_row = no_mixfacets_row
+                                 )
+    p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
+    # Add 0.2 line
+    p <- p + geom_hline(aes(yintercept=0.2), linetype=2)
+    return(p)
   }, 
-    height= mixpi_height
+    height= function(){
+    otherbit <- height_per_pi
+    if(input$facetskjorbet == "skjhcr"){
+      otherbit <- height_per_pi * ceiling(length(input$hcrchoice) / no_mixfacets_row)
+    }
+    if(input$facetskjorbet == "betmp"){
+      otherbit <- height_per_pi * ceiling(length(input$betmpchoice) / no_mixfacets_row)
+    }
+    return(max(height_per_pi*1.5, otherbit))
+    }
   )
   
   output$plot_box_mixpis_problrp <- renderPlot({
@@ -646,20 +731,27 @@ server <- function(input, output, session) {
                                    betmp_choices = betmp_choices,
                                    barbox_choice = barbox_choice,
                                    stock_choice = stock_choice,
-                                   facetskjorbet = facetskjorbet)
+                                   facetskjorbet = facetskjorbet,
+                                   no_mixfacets_row = no_mixfacets_row)
       p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "Prob. > LRP", sep=" "))
       return(p)
   }, 
-    height= mixpi_height
+    height= function(){
+    otherbit <- height_per_pi
+    if(input$facetskjorbet == "skjhcr"){
+      otherbit <- height_per_pi * ceiling(length(input$hcrchoice) / no_mixfacets_row)
+    }
+    if(input$facetskjorbet == "betmp"){
+      otherbit <- height_per_pi * ceiling(length(input$betmpchoice) / no_mixfacets_row)
+    }
+    return(max(height_per_pi*1.5, otherbit))
+    }
   )
+  
 
   #-------------------------------------------------------------------
   # Comparison plots
-  no_facets_row <- 2
-  no_mixfacets_row <- 3 # For mixed fishery indicators
   
-  height_per_pi <- 300
-  height_per_area <- 300
 
   # Bar or box plot - facetting on PI
   plot_barbox_comparehcr <- function(plot_type="median_bar"){

@@ -234,7 +234,7 @@ hcr_histo_plot <- function(hcr_choices, histodat){
 
 
 
-mixpis_barbox_biol_plot <- function(dat, hcr_choices, betmp_choices, barbox_choice = "median_bar", stock_choice = stock_choice, facetskjorbet = "skjhcr"){
+mixpis_barbox_biol_plot <- function(dat, hcr_choices, betmp_choices, barbox_choice = "median_bar", stock_choice = stock_choice, facetskjorbet = "skjhcr", no_mixfacets_row=3){
   
     # SKJ HCR and BET MP colours
     all_hcr_names <- unique(dat$skjhcrref)
@@ -276,13 +276,3 @@ mixpis_barbox_biol_plot <- function(dat, hcr_choices, betmp_choices, barbox_choi
 }
 
 
-mixpi_height <- function(){
-  otherbit <- height_per_pi
-  if(input$facetskjorbet == "skjhcr"){
-    otherbit <- height_per_pi * ceiling(length(input$hcrchoice) / no_mixfacets_row)
-  }
-  if(input$facetskjorbet == "betmp"){
-    otherbit <- height_per_pi * ceiling(length(input$betmpchoice) / no_mixfacets_row)
-  }
-  return(max(height_per_pi*1.5, otherbit))
-}
