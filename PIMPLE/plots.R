@@ -270,6 +270,10 @@ mixpis_barbox_biol_plot <- function(dat, hcr_choices, betmp_choices, barbox_choi
     p <- p + theme_bw()
     p <- p + theme(legend.position="bottom")#, legend.title=element_blank())
     p <- p + guides(fill = guide_legend(title.position = "top", title.hjust=0.5))
+    
+    text_size <- 14
+    p <- p + theme(axis.text=element_text(size=text_size), axis.title=element_text(size=text_size), strip.text=element_text(size=text_size), legend.text=element_text(size=text_size))
+    
     return(p)
   
   

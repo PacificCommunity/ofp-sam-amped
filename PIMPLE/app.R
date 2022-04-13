@@ -619,6 +619,10 @@ server <- function(input, output, session) {
     p <- p + ylim(c(0, 100))
     p <- p + theme_bw()
     p <- p + theme(legend.position="bottom", legend.title=element_blank())
+    
+    text_size <- 14
+    p <- p + theme(axis.text=element_text(size=text_size), axis.title=element_text(size=text_size), strip.text=element_text(size=text_size), legend.text=element_text(size=text_size))
+    
     return(p)
     
   },
@@ -673,6 +677,10 @@ server <- function(input, output, session) {
       
       
       p <- p + ylab(paste(stock_choice, "Catch", sep=" ")) + ylim(c(0,NA))
+      
+      text_size <- 14
+      p <- p + theme(axis.text=element_text(size=text_size), axis.title=element_text(size=text_size), strip.text=element_text(size=text_size), legend.text=element_text(size=text_size))
+      
       return(p)
   }, 
     height=function(){return(max(height_per_pi * 1.5, height_per_pi * length(input$betyftfisherychoice)))}
