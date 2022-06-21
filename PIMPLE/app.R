@@ -230,7 +230,7 @@ ui <- fluidPage(id="top",
       )), # End of about condition
       # HCR selection - can select multiples
       # Only for the main Compare MPs tab, the MPs tab and SOME of the explorePIs tabs
-      conditionalPanel(condition="input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6')) || input.nvp == 'mps' || input.nvp == 'mixpis'",
+      conditionalPanel(condition="input.nvp == 'compareMPs' || (input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'pi6'|| input.pitab == 'vulnb')) || input.nvp == 'mps' || input.nvp == 'mixpis'",
         checkboxGroupInput(inputId = "hcrchoice", label="SKJ HCR selection", selected = unique(periodqs$hcrref), choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref))
       ),
       # PI choice - only shown in the compare PIs tab
@@ -252,7 +252,7 @@ ui <- fluidPage(id="top",
       ),
       
       # Select plot type by bar, box or time
-      conditionalPanel(condition="input.nvp == 'explorePIs' && input.pitab== 'pi3'",
+      conditionalPanel(condition="input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'vulnb')",
         radioButtons(inputId = "plotchoicebarboxtime", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar")
       ),
       # In Management Procedures tab, show the points and trajectories
@@ -432,7 +432,20 @@ ui <- fluidPage(id="top",
                 p(stabtext)
               ))
             ), # End of PI6 Catch stability tab
+            # *** Vulnerable biomass
+            # Separate panels for areas 1 - 4
+            tabPanel("Vulnerable biomass of pole and line fisheries", value="vulnb",
+              column(12, 
+                radioButtons(inputId = "vbscale", label="Same scale?",choiceNames=c("Yes", "No"), choiceValues=c("fixed", "free"), selected="fixed", inline=TRUE),
+                fluidRow(
+                  plotOutput("plot_vulnb",  height="600px")
+                  p(yearrangetext),
+                )
+              )
+            ), # End of vulnerable biomass
+           
             
+            # *** Kobe and Majuro
             tabPanel(title="Majuro and Kobe plots", value="majurokobeplot",
               fluidRow(column(12, 
                 p("Majuro or Kobe plots for a single HCR (chosen from the input menu on the left) in each time period." ),
@@ -1043,6 +1056,41 @@ server <- function(input, output, session) {
     if(input$plotchoicebarboxtime=="time"){return(max(height_per_area*1.5, (height_per_area * length(input$areachoice))))}
     if(input$plotchoicebarboxtime %in% c("median_bar","box")){return(max(height_per_area*1.5, (height_per_area * ceiling(length(input$areachoice) / no_facets_row))))}
   })
+  
+  # For exploring the vulnerable biomass to pole and line in different regions
+  output$plot_vulnb <- renderPlot({
+    # If no HCRs chosen just leave
+    hcr_choices <- input$hcrchoice
+    if(length(hcr_choices) < 1){
+      return()
+    }
+    vbscale <- input$vbscale
+    plot_choice <- input$plotchoicebarboxtime
+    ylabel <- "Vulnerable biomass to pole and line fisheries"
+
+    if (plot_choice %in% c("median_bar","box")){
+      dat <- subset(periodqs, period != "Rest" & pi=="vb") 
+      p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
+      p <- p + ylab(ylabel) + ylim(c(0,NA))
+      p <- p + facet_wrap(~area_name, ncol=no_facets_row, scales=vbscale)
+    }
+
+    if(plot_choice == "time"){
+      show_spaghetti <- input$showspag
+      dat <- subset(yearqs, pi=="vb") 
+      wormdat <- subset(worms, pi=="pi3" & iter %in% wormiters) 
+      p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, outer_percentile_range = outer_percentiles, inner_percentile_range = inner_percentiles)
+      p <- p + facet_grid(area_name ~ hcrref, scales=vbscale)#, ncol=1)
+      p <- p + ylab(ylabel)
+      p <- p +  ylim(c(0,NA))
+      # Axes limits set here or have tight?
+      p <- p + scale_x_continuous(expand = c(0, 0))
+      # Size of labels etc
+      p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+    }
+    return(p)
+  })
+
 
   output$plot_pi6 <- renderPlot({
     # If no HCRs chosen just leave
