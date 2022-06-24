@@ -476,6 +476,7 @@ ui <- fluidPage(id="top",
             
             tabPanel("Stock status", value="mixss",
               column(12, fluidRow(
+                h1(textOutput("print_ss_betoryft")), 
                 #plotOutput("plot_box_mixpis_sbsbf0", height="auto")
                 plotOutput("plot_mixpis_sbsbf0", height="auto")
                 #plotOutput("plot_mixpis_sbsbf0", height="auto")
@@ -483,6 +484,7 @@ ui <- fluidPage(id="top",
             ), # End of mixed fishery stock status tabpanel
             tabPanel("Prob. > LRP",value="mixplrp",
               column(12, fluidRow(
+                h1(textOutput("print_problrp_betoryft")), 
                 plotOutput("plot_box_mixpis_problrp", height="auto")
               ))
             ) # End of prob > LRP mixed fishery panel
@@ -979,6 +981,21 @@ server <- function(input, output, session) {
     }
   )
   
+  print_stock <- function(stock){
+    if(stock == "BET"){
+      output <- "Bigeye"
+    } else {
+      output <- "Yellowfin"
+    }
+    return(output)
+  }
+  
+  output$print_ss_betoryft <- renderText({
+    print_stock(input$betoryft)
+  })
+  output$print_problrp_betoryft <- renderText({
+    print_stock(input$betoryft)
+  })
 
   #-------------------------------------------------------------------
   # Comparison plots
