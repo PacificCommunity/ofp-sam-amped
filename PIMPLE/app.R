@@ -12,7 +12,6 @@
 # Stuff to add and check
 
 # In mixed fishery tabs, add picture of YFT or BET depending on stock selection. Or at least make it clearer what the stock is.
-# Violin plots instead of box plots? Requires full series of y - not precalced quantiles - might be slow
 # Mixed fishery catches should be relative in line with main page? Or is it more informative to see relative PSA / TLL etc?
 # Drop PS fishery (as small)
 # Check percentile ranges again
@@ -50,15 +49,11 @@ data_files <- load("data/SMD2022_results.Rdata")
 
 # Mixed fishery data
 # Needs to be redone
-#mix_data_files <- load("data/mf_indicator_data.Rdata")
-# Or keep as data.table? Might be quicker?
-#mixpiqs <- data.frame(mixpiqs)
-#mixpi_periodqs <- data.frame(mixpi_periodqs)
+mix_data_files <- load("data/mf_indicator_data.Rdata")
 
 #------------------------------------------------------------------------------------------------------
 
-# Additional data processing for mixed fishery - move to PI calculation
-# Do we turn these into data.frames? Or keep them as data.table?
+# Additional data processing
 
 # Bring in SKJ HCR names
 skj_hcr_names <- unique(periodqs[,c("msectrl", "hcrname", "hcrref")])
@@ -68,18 +63,19 @@ newlevels <- paste("SKJ", levels(skj_hcr_names$hcrref))
 skj_hcr_names[, skjhcrref := .(factor(newnames, levels=newlevels))]
 setnames(skj_hcr_names, old="msectrl", new="Z")
 
-#mixpi_periodqs <- merge(mixpi_periodqs, skj_hcr_names, by="Z")
-#mixpiqs <- merge(mixpiqs, skj_hcr_names, by="Z")
+mixpi_periodqs <- merge(mixpi_periodqs, skj_hcr_names, by="Z")
+mixpiqs <- merge(mixpiqs, skj_hcr_names, by="Z")
 
+# Not showing impact plots yet
 # Impact scenario names
-#impact_names <- data.frame(impact_scenario_name = c("BET MP", "SKJ MP", "SPA MP"),
-#                           impact_scenario = c("BET_MP", "SKJ_MP", "SPA_MP"))
-#mixpi_periodqs <- merge(mixpi_periodqs, impact_names, all=TRUE)
-#mixpiqs <- merge(mixpiqs, impact_names, all=TRUE)
+impact_names <- data.frame(impact_scenario_name = c("BET MP", "SKJ MP", "SPA MP"),
+                           impact_scenario = c("BET_MP", "SKJ_MP", "SPA_MP"))
+mixpi_periodqs <- merge(mixpi_periodqs, impact_names, all=TRUE, by="impact_scenario")
+mixpiqs <- merge(mixpiqs, impact_names, all=TRUE, by="impact_scenario")
 
 # Order by skjhcrref
-#mixpi_periodqs <- mixpi_periodqs[order(mixpi_periodqs$skjhcrref),]
-#mixpiqs <- mixpiqs[order(mixpiqs$skjhcrref),]
+mixpi_periodqs <- mixpi_periodqs[order(mixpi_periodqs$skjhcrref),]
+mixpiqs <- mixpiqs[order(mixpiqs$skjhcrref),]
 
 #------------------------------------------------------------------------------------------------------
 
@@ -151,8 +147,8 @@ setorder(yearqs, hcrref)
 setorder(worms, hcrref)
 setorder(hcr_points, hcrref)
 setorder(hcr_shape, hcrref)
-#majuro_summary_tabs <- lapply(majuro_summary_tabs, function(x) x[order(x$HCR),])
-#kobe_summary_tabs <- lapply(kobe_summary_tabs, function(x) x[order(x$HCR),])
+majuro_summary_tabs <- lapply(majuro_summary_tabs, function(x) x[order(x$HCR),])
+kobe_summary_tabs <- lapply(kobe_summary_tabs, function(x) x[order(x$HCR),])
 
 
 # Fix names of PI selector - used for selecting desired PIs - need to remove PS note
@@ -167,10 +163,11 @@ piselector <- as.list(pis_list)
 pis_text <- unlist(lapply(strsplit(pis_list,"\n"),'[',1))
 names(piselector) <- pis_text
 
-#betfisheryselector <- unique(mixpiqs$fishery_name)
-#betfisheryselector <-  betfisheryselector[!is.na(betfisheryselector)]
-#betfisheryselector <- as.list(betfisheryselector)
-#names(betfisheryselector) <-  unlist(betfisheryselector)
+# Not showing mixed fishery catches yet
+betfisheryselector <- unique(mixpiqs$fishery_name)
+betfisheryselector <-  betfisheryselector[!is.na(betfisheryselector)]
+betfisheryselector <- as.list(betfisheryselector)
+names(betfisheryselector) <-  unlist(betfisheryselector)
 
 # -------------------------------------------
 # General settings for app
@@ -191,7 +188,7 @@ longtext <- paste(long, collapse="-")
 yearrangetext <- paste("Short-term is: ", shorttext, ", medium-term is: ", mediumtext, " and long-term is: ", longtext,".",sep="")
 pi47text <- "Note that PIs 4 and 7 are for the purse seines in model areas 2, 3 and 5 only (excluding the associated purse seines in area 5.)"
 pi36text <- "The grouping for PIs 3 and 6 can be selected with the drop down menu on the left."
-biotext <- "PIs 1, 82 and SB/SBF=0 are calculated over all model areas."
+biotext <- "PIs 1, 8 and SB/SBF=0 are calculated over all model areas."
 relcatchtext <- "Note that the catches are relative to the average catch in that area grouping in the years 2013-2015."
 barchartplottext <- "The height of each bar shows the median expected value. Note that the bar charts do not show any uncertainty which can be important (see the box plots)."
 boxplottext <- "For box plots the box contains the 50th percentile, the whiskers show the 80th percentile and the horizontal line is the median. The wider the range, the less certain we are about the expected value."
@@ -252,7 +249,7 @@ ui <- fluidPage(id="top",
       ),
       
       # Select plot type by bar, box or time
-      conditionalPanel(condition="input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'vulnb')",
+      conditionalPanel(condition="(input.nvp == 'explorePIs' && (input.pitab == 'pi3' || input.pitab == 'vulnb')) || (input.nvp == 'mixpis' && (input.mixpisid == 'mixss' || input.mixpisid == 'mixcatch')) ",
         radioButtons(inputId = "plotchoicebarboxtime", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box", "Time series" = "time"), selected="median_bar")
       ),
       # In Management Procedures tab, show the points and trajectories
@@ -273,15 +270,16 @@ ui <- fluidPage(id="top",
       ),
       
       # The BET MP and BET / YFT stock options
-      #conditionalPanel(condition="input.nvp == 'mixpis'",
-      #  radioButtons(inputId = "betoryft", label="BET or YFT", selected = "BET", choiceNames = c("BET", "YFT"), choiceValues = c("BET", "YFT")),
-      #  checkboxGroupInput(inputId = "betmpchoice", label="TLL assumption", selected = unique(mixpi_periodqs$tll_assumption), choiceNames = as.character(unique(mixpi_periodqs$tll_ass_name)), choiceValues = unique(mixpi_periodqs$tll_assumption))),
+      conditionalPanel(condition="input.nvp == 'mixpis'",
+        radioButtons(inputId = "betoryft", label="BET or YFT", selected = "BET", choiceNames = c("BET", "YFT"), choiceValues = c("BET", "YFT")),
+        checkboxGroupInput(inputId = "betmpchoice", label="TLL scenario", selected = unique(mixpi_periodqs$tll_mult), choiceNames = as.character(unique(mixpi_periodqs$tll_ass_name)), choiceValues = unique(mixpi_periodqs$tll_mult))),
         
       conditionalPanel(condition = "input.nvp == 'mixpis' && (input.mixpisid == 'mixss' || input.mixpisid == 'mixplrp' || input.mixpisid == 'mixcatch')",
         radioButtons(inputId = "facetskjorbet", label="Panels by SKJ HCR or BET MP", selected = "betmp", choiceNames = c("BET MP", "SKJ HCR"), choiceValues = c("betmp", "skjhcr"))),
       
       # Select plot type by bar or box (Note - need to include the NVP input as the the pitab input still has value even if not seen)
-      conditionalPanel(condition="(input.nvp == 'explorePIs') && (input.pitab== 'pi6') || (input.nvp == 'mixpis' && (input.mixpisid == 'mixss' || input.mixpisid == 'mixcatch'))",
+      #conditionalPanel(condition="(input.nvp == 'explorePIs') && (input.pitab== 'pi6') || (input.nvp == 'mixpis' && (input.mixpisid == 'mixss' || input.mixpisid == 'mixcatch'))",
+      conditionalPanel(condition="(input.nvp == 'explorePIs') && (input.pitab== 'pi6')",
         radioButtons(inputId = "plotchoicebarbox", label="Plot selection",choices = list("Bar chart" = "median_bar", "Box plot" ="box"), selected="median_bar")
       ),
       
@@ -435,11 +433,13 @@ ui <- fluidPage(id="top",
             # *** Vulnerable biomass
             # Separate panels for areas 1 - 4
             tabPanel("Vulnerable biomass of pole and line fisheries", value="vulnb",
+                     
               column(12, 
+                p("Vulnerable biomass is the biomass that is exposed to a particular fishery through a combination of the biomass at size and the fishery selectivity. These plots show the vulnerable biomass to the pole and line fisheries in model areas 1 - 4."),
                 radioButtons(inputId = "vbscale", label="Same scale?",choiceNames=c("Yes", "No"), choiceValues=c("fixed", "free"), selected="fixed", inline=TRUE),
                 fluidRow(
-                  plotOutput("plot_vulnb",  height="600px")
-                  p(yearrangetext),
+                  plotOutput("plot_vulnb",  height="600px"),
+                  p(yearrangetext)
                 )
               )
             ), # End of vulnerable biomass
@@ -470,26 +470,33 @@ ui <- fluidPage(id="top",
         #------------------------------------------
         tabPanel(title="Mixed fishery indicators", value="mixpis",
           tabsetPanel(id="mixpisid",
+            # Information on the mixed fishery indicators
+            tabPanel("Mixed fishery indicators information", value="mixinfo"
+            ), # End of mixed fishery information tab
+            
             tabPanel("Stock status", value="mixss",
-                     column(12, fluidRow(
-                       plotOutput("plot_box_mixpis_sbsbf0", height="auto")
-                     ))
+              column(12, fluidRow(
+                #plotOutput("plot_box_mixpis_sbsbf0", height="auto")
+                plotOutput("plot_mixpis_sbsbf0", height="auto")
+                #plotOutput("plot_mixpis_sbsbf0", height="auto")
+              ))
             ), # End of mixed fishery stock status tabpanel
             tabPanel("Prob. > LRP",value="mixplrp",
-                     column(12, fluidRow(
-                       plotOutput("plot_box_mixpis_problrp", height="auto")
-                     ))
-            ), # End of prob > LRP mixed fishery panel
-            tabPanel("Catch",value="mixcatch",
-                     column(12, fluidRow(
-                       plotOutput("plot_box_mixpis_catch", height="auto") 
-                     ))
-            ), # End of catch mixed fishery panel
-            tabPanel("Impact",value="miximpact",
-                     column(12, fluidRow(
-                       plotOutput("plot_mixpis_impact", height="auto") 
-                     ))
-            ), # End of impact panel
+              column(12, fluidRow(
+                plotOutput("plot_box_mixpis_problrp", height="auto")
+              ))
+            ) # End of prob > LRP mixed fishery panel
+            # Don't show catches and impact yet
+            #tabPanel("Catch",value="mixcatch",
+            #         column(12, fluidRow(
+            #           plotOutput("plot_box_mixpis_catch", height="auto") 
+            #         ))
+            #), # End of catch mixed fishery panel
+            #tabPanel("Impact",value="miximpact",
+            #         column(12, fluidRow(
+            #           plotOutput("plot_mixpis_impact", height="auto") 
+            #         ))
+            #), # End of impact panel
           ) # End of mixed fishery indicators tabsetPanel
         ), # End of mixed fishery indicators tab
         #------------------------------------------
@@ -605,6 +612,7 @@ server <- function(input, output, session) {
   
   #---------------------------------------------------------------------------------
   # Mixed fishery plots
+  
   output$plot_mixpis_impact <- renderPlot({
     
     hcr_choices <- input$hcrchoice
@@ -626,7 +634,7 @@ server <- function(input, output, session) {
     }
     
     dat <- subset(dat, area == "All regions" & period != "Rest" & pi == "impact" & stock == stock_choice)
-    dat <- subset(dat, hcrref %in% hcr_choices & tll_assumption %in% betmp_choices) 
+    dat <- subset(dat, hcrref %in% hcr_choices & tll_mult %in% betmp_choices) 
     
     # Make a colour scheme for impact MP - blue SKJ, etc 
     MPcols <- c("steelblue", "tomato", "forestgreen")
@@ -681,7 +689,7 @@ server <- function(input, output, session) {
       # SKJ HCR and BET MP colours
       all_hcr_names <- unique(dat$skjhcrref)
       all_betmp_names <- unique(dat$tll_ass_name)
-      dat <- dat[dat$hcrref %in% hcr_choices & dat$tll_assumption %in% betmp_choices,] 
+      dat <- dat[dat$hcrref %in% hcr_choices & dat$tll_mult %in% betmp_choices,] 
       hcr_cols <- get_hcr_colours(hcr_names=all_hcr_names, chosen_hcr_names=unique(dat$skjhcrref))
       betmp_cols <- get_betmp_colours(mp_names=all_betmp_names, chosen_mp_names=unique(dat$tll_ass_name))
       
@@ -703,7 +711,7 @@ server <- function(input, output, session) {
         p <- p + facet_grid(fishery_name~tll_ass_name)#, scales="free")
       }
       if (fillvar == "tll_ass_name"){
-        p <- p + scale_fill_manual(values=betmp_cols, name="TLL assumption")
+        p <- p + scale_fill_manual(values=betmp_cols, name="TLL scenario")
         p <- p + facet_grid(fishery_name~skjhcrref)#, scales="free")
       }
       p <- p + theme_bw()
@@ -721,42 +729,221 @@ server <- function(input, output, session) {
     height=function(){return(max(height_per_pi * 1.5, height_per_pi * length(input$betyftfisherychoice)))}
   )
   
-  # SB/SBF=0
-  output$plot_box_mixpis_sbsbf0 <- renderPlot({
+  #output$plot_timeseries_mixpis_sbsbf0 <- renderPlot({
+  #  hcr_choices <- input$hcrchoice
+  #  betmp_choices <- input$betmpchoice
+  #  stock_choice <- input$betoryft
+  #  barbox_choice <- input$plotchoicebarbox # median_bar or box
+  #  facetskjorbet <- input$facetskjorbet
+  #  if((length(hcr_choices) < 1) | (length(betmp_choices) < 1)){
+  #    return()
+  #  }
+  #  #dat <- subset(mixpiqs, area == "All regions" & pi == "sbsbf0" & stock == "BET")
+  #  dat <- subset(mixpiqs, area == "All regions" & pi == "sbsbf0" & stock == stock_choice)
+  #  
+  #  # SKJ HCR and BET MP colours
+  #  all_hcr_names <- unique(dat$skjhcrref)
+  #  all_betmp_names <- unique(dat$tll_ass_name)
+  #  dat <- dat[dat$hcrref %in% hcr_choices & dat$tll_mult %in% betmp_choices,] 
+  #  hcr_cols <- get_hcr_colours(hcr_names=all_hcr_names, chosen_hcr_names=unique(dat$skjhcrref))
+  #  betmp_cols <- get_betmp_colours(mp_names=all_betmp_names, chosen_mp_names=unique(dat$tll_ass_name))
+  #
+  #  if (facetskjorbet == "skjhcr"){
+  #    fillvar = "tll_ass_name"
+  #  } else {
+  #    fillvar = "skjhcrref"
+  #  }
+  #  
+  #  inner_ynames <- paste0("X", inner_percentiles, ".")
+  #  outer_ynames <- paste0("X", outer_percentiles, ".")
+  #  # Chop out NA rows
+  #  dat <- dat[!is.na(dat$X50.),]
+  #  # Start the plot
+  #  p <- ggplot(dat, aes(x=year))
+  #  # The ribbon - colour by either SKJ or BET MP
+  #  p <- p + geom_ribbon(aes_string(ymin=outer_ynames[1], ymax=outer_ynames[2], fill=fillvar), alpha=0.5)
+  #  p <- p + geom_ribbon(aes_string(ymin=inner_ynames[1], ymax=inner_ynames[2], fill=fillvar))
+  #  # Add median line
+  #  p <- p + geom_line(aes_string(y="X50.", group=fillvar), colour="black", linetype=2, size=rel(0.5))
+  #  p <- p + xlab("Year")
+  #  # Add worms
+  #  #if (!is.null(wormdat) & show_spaghetti==TRUE){
+  #  #  wormdat <- subset(wormdat, hcrref %in% hcr_choices)
+  #  #  wormdat <- wormdat[!is.na(wormdat$value),]
+  #  #  # Put a black background on the line to help
+  #  #  p <- p + geom_line(data=wormdat, aes(x=year, y=value, group=wormid), colour="black", linetype=linetype_worm, size=size_worm*1.2)
+  #  #}
+  #  # Colours
+  #  if (fillvar == "skjhcrref"){
+  #    p <- p + scale_fill_manual(values=hcr_cols, name="SKJ HCR")
+  #    p <- p + facet_grid(tll_ass_name ~ skjhcrref, scales="free")
+  #  }
+  #  if (fillvar == "tll_ass_name"){
+  #    p <- p + scale_fill_manual(values=betmp_cols, name="TLL scenario")
+  #    p <- p + facet_grid(skjhcrref ~ tll_ass_name, scales="free")
+  #  }
+  #  # Add vertical line at start of MSE
+  #  p <- p + geom_vline(aes(xintercept=min(short_term)-3), linetype=2)
+  #  # Time period lines?
+  #  p <- p + geom_vline(aes(xintercept=min(short_term)), linetype=2)
+  #  p <- p + geom_vline(aes(xintercept=min(medium_term)), linetype=2)
+  #  p <- p + geom_vline(aes(xintercept=min(long_term)), linetype=2)
+  #
+  #  p <- p + theme_bw()
+  #  p <- p + theme(legend.position="bottom", legend.title=element_blank())
+  #  p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
+  #  # Add 0.2 line
+  #  p <- p + geom_hline(aes(yintercept=0.2), linetype=2)
+  #  return(p)
+  #})
+
+  
+  output$plot_mixpis_sbsbf0 <- renderPlot({
     hcr_choices <- input$hcrchoice
     betmp_choices <- input$betmpchoice
     stock_choice <- input$betoryft
-    barbox_choice <- input$plotchoicebarbox # median_bar or box
+    barboxtime_choice <- input$plotchoicebarboxtime # median_bar or box
     facetskjorbet <- input$facetskjorbet
     if((length(hcr_choices) < 1) | (length(betmp_choices) < 1)){
       return()
     }
-    dat <- subset(mixpi_periodqs, period != "Rest" & area == "All regions" & pi == "sbsbf0" & stock == stock_choice)
     
-    # Call plot function here
-    p <- mixpis_barbox_biol_plot(dat = dat, hcr_choices = hcr_choices,
-                                 betmp_choices = betmp_choices,
-                                 barbox_choice = barbox_choice,
-                                 stock_choice = stock_choice,
-                                 facetskjorbet = facetskjorbet,
-                                 no_mixfacets_row = no_mixfacets_row
-                                 )
-    p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
-    # Add 0.2 line
-    p <- p + geom_hline(aes(yintercept=0.2), linetype=2)
+    # Time series plot
+    if(barboxtime_choice == "time"){
+      dat <- subset(mixpiqs, area == "All regions" & pi == "sbsbf0" & stock == stock_choice)
+      # SKJ HCR and BET MP colours
+      all_hcr_names <- unique(dat$skjhcrref)
+      all_betmp_names <- unique(dat$tll_ass_name)
+      dat <- dat[dat$hcrref %in% hcr_choices & dat$tll_mult %in% betmp_choices,] 
+      hcr_cols <- get_hcr_colours(hcr_names=all_hcr_names, chosen_hcr_names=unique(dat$skjhcrref))
+      betmp_cols <- get_betmp_colours(mp_names=all_betmp_names, chosen_mp_names=unique(dat$tll_ass_name))
+    
+      if (facetskjorbet == "skjhcr"){
+        fillvar = "tll_ass_name"
+      } else {
+        fillvar = "skjhcrref"
+      }
+      
+      inner_ynames <- paste0("X", inner_percentiles, ".")
+      outer_ynames <- paste0("X", outer_percentiles, ".")
+      # Chop out NA rows
+      dat <- dat[!is.na(dat$X50.),]
+      # Start the plot
+      p <- ggplot(dat, aes(x=year))
+      # The ribbon - colour by either SKJ or BET MP
+      p <- p + geom_ribbon(aes_string(ymin=outer_ynames[1], ymax=outer_ynames[2], fill=fillvar), alpha=0.5)
+      p <- p + geom_ribbon(aes_string(ymin=inner_ynames[1], ymax=inner_ynames[2], fill=fillvar))
+      # Add median line
+      p <- p + geom_line(aes_string(y="X50.", group=fillvar), colour="black", linetype=2, size=rel(0.5))
+      p <- p + xlab("Year")
+      # Add worms
+      #if (!is.null(wormdat) & show_spaghetti==TRUE){
+      #  wormdat <- subset(wormdat, hcrref %in% hcr_choices)
+      #  wormdat <- wormdat[!is.na(wormdat$value),]
+      #  # Put a black background on the line to help
+      #  p <- p + geom_line(data=wormdat, aes(x=year, y=value, group=wormid), colour="black", linetype=linetype_worm, size=size_worm*1.2)
+      #}
+      # Colours
+      if (fillvar == "skjhcrref"){
+        p <- p + scale_fill_manual(values=hcr_cols, name="SKJ HCR")
+        p <- p + facet_grid(tll_ass_name ~ skjhcrref, scales="free")
+      }
+      if (fillvar == "tll_ass_name"){
+        p <- p + scale_fill_manual(values=betmp_cols, name="TLL scenario")
+        p <- p + facet_grid(skjhcrref ~ tll_ass_name, scales="free")
+      }
+      # Add vertical line at start of MSE
+      p <- p + geom_vline(aes(xintercept=min(short_term)-3), linetype=2)
+      # Time period lines?
+      p <- p + geom_vline(aes(xintercept=min(short_term)), linetype=2)
+      p <- p + geom_vline(aes(xintercept=min(medium_term)), linetype=2)
+      p <- p + geom_vline(aes(xintercept=min(long_term)), linetype=2)
+    
+      p <- p + theme_bw()
+      p <- p + theme(legend.position="bottom", legend.title=element_blank())
+      p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
+      # Add 0.2 line
+      p <- p + geom_hline(aes(yintercept=0.2), linetype=2)
+    }
+    # Bar or box plot
+    else{
+      dat <- subset(mixpi_periodqs, period != "Rest" & area == "All regions" & pi == "sbsbf0" & stock == stock_choice)
+      # Call plot function here
+      p <- mixpis_barbox_biol_plot(dat = dat, hcr_choices = hcr_choices,
+                                   betmp_choices = betmp_choices,
+                                   barbox_choice = barboxtime_choice,
+                                   stock_choice = stock_choice,
+                                   facetskjorbet = facetskjorbet,
+                                   no_mixfacets_row = no_mixfacets_row
+                                   )
+      p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
+      # Add 0.2 line
+      p <- p + geom_hline(aes(yintercept=0.2), linetype=2)
+    }
     return(p)
+    
+    
   }, 
     height= function(){
-    otherbit <- height_per_pi
-    if(input$facetskjorbet == "skjhcr"){
-      otherbit <- height_per_pi * ceiling(length(input$hcrchoice) / no_mixfacets_row)
-    }
-    if(input$facetskjorbet == "betmp"){
-      otherbit <- height_per_pi * ceiling(length(input$betmpchoice) / no_mixfacets_row)
-    }
-    return(max(height_per_pi*1.5, otherbit))
+      otherbit <- height_per_pi
+      if(input$plotchoicebarboxtime != "time"){
+        if(input$facetskjorbet == "skjhcr"){
+          otherbit <- height_per_pi * ceiling(length(input$hcrchoice) / no_mixfacets_row)
+        }
+        if(input$facetskjorbet == "betmp"){
+          otherbit <- height_per_pi * ceiling(length(input$betmpchoice) / no_mixfacets_row)
+        }
+      } else {
+        # This is really weird...
+        # When SKJ HCRs is in rows, the height is much bigger...
+        if(input$facetskjorbet == "skjhcr"){
+          otherbit <- height_per_pi * 0.5 * length(input$hcrchoice)
+        }
+        if(input$facetskjorbet == "betmp"){
+          otherbit <- height_per_pi * length(input$betmpchoice)
+        }
+      }
+      return(min(max(height_per_pi*1.5, otherbit), 1000))
     }
   )
+
+  # SB/SBF=0
+  #output$plot_box_mixpis_sbsbf0 <- renderPlot({
+  #  hcr_choices <- input$hcrchoice
+  #  betmp_choices <- input$betmpchoice
+  #  stock_choice <- input$betoryft
+  #  barbox_choice <- input$plotchoicebarbox # median_bar or box
+  #  facetskjorbet <- input$facetskjorbet
+  #  if((length(hcr_choices) < 1) | (length(betmp_choices) < 1)){
+  #    return()
+  #  }
+  #  dat <- subset(mixpi_periodqs, period != "Rest" & area == "All regions" & pi == "sbsbf0" & stock == stock_choice)
+  #  
+  #  
+  #  # Call plot function here
+  #  p <- mixpis_barbox_biol_plot(dat = dat, hcr_choices = hcr_choices,
+  #                               betmp_choices = betmp_choices,
+  #                               barbox_choice = barbox_choice,
+  #                               stock_choice = stock_choice,
+  #                               facetskjorbet = facetskjorbet,
+  #                               no_mixfacets_row = no_mixfacets_row
+  #                               )
+  #  p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
+  #  # Add 0.2 line
+  #  p <- p + geom_hline(aes(yintercept=0.2), linetype=2)
+  #  return(p)
+  #}, 
+  #  height= function(){
+  #  otherbit <- height_per_pi
+  #  if(input$facetskjorbet == "skjhcr"){
+  #    otherbit <- height_per_pi * ceiling(length(input$hcrchoice) / no_mixfacets_row)
+  #  }
+  #  if(input$facetskjorbet == "betmp"){
+  #    otherbit <- height_per_pi * ceiling(length(input$betmpchoice) / no_mixfacets_row)
+  #  }
+  #  return(max(height_per_pi*1.5, otherbit))
+  #  }
+  #)
   
   output$plot_box_mixpis_problrp <- renderPlot({
       hcr_choices <- input$hcrchoice
@@ -777,6 +964,7 @@ server <- function(input, output, session) {
                                    facetskjorbet = facetskjorbet,
                                    no_mixfacets_row = no_mixfacets_row)
       p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "Prob. > LRP", sep=" "))
+      p <- p + geom_hline(aes(yintercept=0.8), linetype=2)
       return(p)
   }, 
     height= function(){

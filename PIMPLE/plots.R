@@ -122,10 +122,9 @@ time_series_plot <- function(dat, hcr_choices, wormdat=NULL,
   # These look bad - hard to see the colours
   if (!is.null(wormdat) & show_spaghetti==TRUE){
     wormdat <- subset(wormdat, hcrref %in% hcr_choices)
-    wormdat <- wormdat[!is.na(wormdat$data),]
+    wormdat <- wormdat[!is.na(wormdat$value),]
     # Put a black background on the line to help
-    p <- p + geom_line(data=wormdat, aes(x=year, y=data, group=wormid), colour="black", linetype=linetype_worm, size=size_worm*1.2)
-    #p <- p + geom_line(data=wormdat, aes(x=year, y=data, group=wormid, colour=hcrref), linetype=linetype_worm, size=size_worm)
+    p <- p + geom_line(data=wormdat, aes(x=year, y=value, group=wormid), colour="black", linetype=linetype_worm, size=size_worm*1.2)
   }
   # Colours
   p <- p + scale_fill_manual(values=hcr_cols)
@@ -239,7 +238,7 @@ mixpis_barbox_biol_plot <- function(dat, hcr_choices, betmp_choices, barbox_choi
     # SKJ HCR and BET MP colours
     all_hcr_names <- unique(dat$skjhcrref)
     all_betmp_names <- unique(dat$tll_ass_name)
-    dat <- dat[dat$hcrref %in% hcr_choices & dat$tll_assumption %in% betmp_choices,] 
+    dat <- dat[dat$hcrref %in% hcr_choices & dat$tll_mult %in% betmp_choices,] 
     hcr_cols <- get_hcr_colours(hcr_names=all_hcr_names, chosen_hcr_names=unique(dat$skjhcrref))
     betmp_cols <- get_betmp_colours(mp_names=all_betmp_names, chosen_mp_names=unique(dat$tll_ass_name))
   
@@ -253,7 +252,7 @@ mixpis_barbox_biol_plot <- function(dat, hcr_choices, betmp_choices, barbox_choi
     }
     p <- ggplot(dat, aes(x=period))
     if (barbox_choice == "box"){
-      p <- p + geom_boxplot(aes_string(ymin="X5.", ymax="X95.", lower="X20.", upper="X80.", middle="X50.", fill=fillvar), stat="identity")
+      p <- p + geom_boxplot(aes_string(ymin="X10.", ymax="X90.", lower="X25.", upper="X75.", middle="X50.", fill=fillvar), stat="identity")
     }
     if (barbox_choice == "median_bar"){
       p <- p + geom_bar(aes_string(y="X50.", fill=fillvar), stat="identity", position="dodge", colour="black", width=0.7)
@@ -264,7 +263,7 @@ mixpis_barbox_biol_plot <- function(dat, hcr_choices, betmp_choices, barbox_choi
       p <- p + facet_wrap(~tll_ass_name, scales="free", ncol=no_mixfacets_row)
     }
     if (fillvar == "tll_ass_name"){
-      p <- p + scale_fill_manual(values=betmp_cols, name="TLL assumption")
+      p <- p + scale_fill_manual(values=betmp_cols, name="TLL scenario")
       p <- p + facet_wrap(~skjhcrref, scales="free", ncol=no_mixfacets_row)
     }
     p <- p + theme_bw()
