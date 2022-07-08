@@ -14,25 +14,12 @@
 # In mixed fishery tabs, add picture of YFT or BET depending on stock selection. Or at least make it clearer what the stock is.
 # Mixed fishery catches should be relative in line with main page? Or is it more informative to see relative PSA / TLL etc?
 # Drop PS fishery (as small)
-# Check percentile ranges again
 # Add table of Prob > LRP to mixed fishery
 # Drop mixed fishery impact and catch plots
 # Check impact plots match those in the BET and YFT report
-# Add 0.8 line to prob. LRP plot
 # YFT and BEt should be at 'recent levels' see CMM text
-# Add time series of SB/SBF0 for YFT and BET
 
 #--------------------------------------------------------------
-
-#rsconnect::deployApp("C:/Work/ShinyMSE/ofp-sam-amped/PIMPLE") 
-# Load packages
-
-# Drop AMPLE - make independent
-# Note: get AMPLE this from github - then comment out before uploading to server
-# Make sure that the branch is correct
-#devtools::install_github("PacificCommunity/ofp-sam-amped/AMPLE", ref="SC17dev")
-#library(AMPLE)
-
 
 # Move to data.table if any of the processes are taking too long?
 library(shiny)
@@ -40,16 +27,30 @@ library(ggplot2)
 library(RColorBrewer)
 library(markdown)
 library(data.table)
+library(tidyr)
+
 
 source("funcs.R")
 source("plots.R")
 
 # Load the indicator data - including Kobe and Majuro data
-data_files <- load("data/SMD2022_results.Rdata")
+#data_files <- load("data/SMD2022_results_Z11.Rdata")
+#data_files <- load("data/SMD2022_results_Z12.Rdata") # Unfinished Z12
+#data_files <- load("data/SMD2022_results_Z12_skinny.Rdata") # Unfinished Z12, dropped some HCR 2s
+data_files <- load("data/SMD2022_results.Rdata") # Unfinished Z12, dropped some HCR 2s
+
+# Drop out one of the HCRs
+#unique(periodqs$hcrname)
+#drophcr <- "HCR 2 (+- 10% limit, 5% min. change)" 
+#periodqs <- periodqs[hcrname != drophcr]
 
 # Mixed fishery data
 # Needs to be redone
 mix_data_files <- load("data/mf_indicator_data.Rdata")
+
+# Chop off impact data
+#mixpiqs <- mixpiqs[pi != "impact"]
+#mixpi_periodqs <- mixpi_periodqs[pi != "impact"]
 
 #------------------------------------------------------------------------------------------------------
 
@@ -204,7 +205,7 @@ sbsbf02012text <- "On the SB/SBF=0 plot, the lower dashed line is the Limit Refe
 # Navbarpage inside a fluidpage?
 # Pretty nasty but it means we get the power of the navparPage and can have common side panel
 ui <- fluidPage(id="top",
-  tags$head(includeHTML("google-analytics.html")),  # google analytics
+  #tags$head(includeHTML("google-analytics.html")),  # google analytics
   #titlePanel("Performance Indicators and Management Procedures Explorer"),
   sidebarLayout(
     sidebarPanel(width=side_panel_width,
@@ -254,8 +255,8 @@ ui <- fluidPage(id="top",
       ),
       # In Management Procedures tab, show the points and trajectories
       # Change false to true to show performance options (can hide from users)
-      conditionalPanel(condition="((input.nvp == 'mps') && true)",
-      #conditionalPanel(condition="((input.nvp == 'mps') && false)",
+      #conditionalPanel(condition="((input.nvp == 'mps') && true)",
+      conditionalPanel(condition="((input.nvp == 'mps') && false)",
         p("Secret HCR performance options"),
         radioButtons(inputId="hcrperformance", label="HCR performance options", choices=list("Show nothing" = "shownothing", "Show points" = "showpoints", "Show paths" = "showpaths"), selected="shownothing"), 
         conditionalPanel(condition="input.hcrperformance == 'showpaths'",
@@ -266,7 +267,7 @@ ui <- fluidPage(id="top",
       #conditionalPanel(condition="input.nvp == 'majurokobeplot'",
       conditionalPanel(condition="input.nvp == 'explorePIs' & input.pitab == 'majurokobeplot'",
         radioButtons(inputId = "hcrchoicekobe", label="HCR selection", selected = unique(periodqs$hcrref)[1], choiceNames = as.character(unique(periodqs$hcrname)), choiceValues = unique(periodqs$hcrref)),
-        radioButtons(inputId = "majurokobe", label="Kobe or Majuro plot", selected = "Kobe", choiceNames = c("Kobe", "Majuro"), choiceValues = c("Kobe", "Majuro"))
+        radioButtons(inputId = "majurokobe", label="Majuro or Kobe plot", selected = "Majuro", choiceNames = c("Majuro", "Kobe"), choiceValues = c("Majuro", "Kobe"))
       ),
       
       # The BET MP and BET / YFT stock options
@@ -438,7 +439,7 @@ ui <- fluidPage(id="top",
                 p("Vulnerable biomass is the biomass that is exposed to a particular fishery through a combination of the biomass at size and the fishery selectivity. These plots show the vulnerable biomass to the pole and line fisheries in model areas 1 - 4."),
                 radioButtons(inputId = "vbscale", label="Same scale?",choiceNames=c("Yes", "No"), choiceValues=c("fixed", "free"), selected="fixed", inline=TRUE),
                 fluidRow(
-                  plotOutput("plot_vulnb",  height="600px"),
+                  plotOutput("plot_vulnb",  height="800px"),
                   p(yearrangetext)
                 )
               )
@@ -471,7 +472,8 @@ ui <- fluidPage(id="top",
         tabPanel(title="Mixed fishery indicators", value="mixpis",
           tabsetPanel(id="mixpisid",
             # Information on the mixed fishery indicators
-            tabPanel("Mixed fishery indicators information", value="mixinfo"
+            tabPanel("Mixed fishery indicators information", value="mixinfo",
+              includeMarkdown("introtext/mix_introduction.md")
             ), # End of mixed fishery information tab
             
             tabPanel("Stock status", value="mixss",
@@ -575,7 +577,7 @@ server <- function(input, output, session) {
     dat$hcrname <- as.character(dat$hcrname)
     dat$hcrref <- as.character(dat$hcrref)
     p <- barboxplot(dat=dat, hcr_choices=demo_hcr_choices, plot_type="median_bar")
-    p <- p + ggplot2::ylim(0,NA)
+    #p <- p + ggplot2::ylim(0,NA)
     p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
     return(p)
   })
@@ -589,7 +591,7 @@ server <- function(input, output, session) {
     dat$hcrname <- as.character(dat$hcrname)
     dat$hcrref <- as.character(dat$hcrref)
     p <- barboxplot(dat=dat, hcr_choices=demo_hcr_choices, plot_type="box")
-    p <- p + ggplot2::ylim(0,NA)
+    #p <- p + ggplot2::ylim(0,NA)
     p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
     return(p)
   })
@@ -602,7 +604,7 @@ server <- function(input, output, session) {
     dat <- dplyr::filter(yearqs, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
     wormdat <- dplyr::filter(worms, pi %in% pi_choices & metric %in% metric_choices & area %in% area_choices)
     p <- time_series_plot(dat=dat, hcr_choices=demo_hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=FALSE, outer_percentile_range = outer_percentiles, inner_percentile_range = inner_percentiles)
-    p <- p + ggplot2::ylim(c(0,NA))
+    #p <- p + ggplot2::ylim(c(0,NA))
     # Axes limits set here or have tight?
     p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
     p <- p + ggplot2::ylab("PI 3: Catch (rel. to 2013-2015)")
@@ -663,7 +665,7 @@ server <- function(input, output, session) {
     p <- p + scale_fill_manual(name = "MP", values = MPcols)
     p <- p + ylim(c(0, 100))
     p <- p + theme_bw()
-    p <- p + theme(legend.position="bottom", legend.title=element_blank())
+    p <- p + theme(legend.position="top", legend.title=element_blank())
     
     text_size <- 14
     p <- p + theme(axis.text=element_text(size=text_size), axis.title=element_text(size=text_size), strip.text=element_text(size=text_size), legend.text=element_text(size=text_size))
@@ -717,11 +719,12 @@ server <- function(input, output, session) {
         p <- p + facet_grid(fishery_name~skjhcrref)#, scales="free")
       }
       p <- p + theme_bw()
-      p <- p + theme(legend.position="bottom")#, legend.title=element_blank())
+      p <- p + theme(legend.position="top")#, legend.title=element_blank())
       p <- p + guides(fill = guide_legend(title.position = "top", title.hjust=0.5))
       
       
-      p <- p + ylab(paste(stock_choice, "Catch", sep=" ")) + ylim(c(0,NA))
+      p <- p + ylab(paste(stock_choice, "Catch", sep=" "))
+      #p <- p + ylim(c(0,NA))
       
       text_size <- 14
       p <- p + theme(axis.text=element_text(size=text_size), axis.title=element_text(size=text_size), strip.text=element_text(size=text_size), legend.text=element_text(size=text_size))
@@ -848,11 +851,11 @@ server <- function(input, output, session) {
       # Colours
       if (fillvar == "skjhcrref"){
         p <- p + scale_fill_manual(values=hcr_cols, name="SKJ HCR")
-        p <- p + facet_grid(tll_ass_name ~ skjhcrref, scales="free")
+        p <- p + facet_grid(tll_ass_name ~ skjhcrref)#, scales="free")
       }
       if (fillvar == "tll_ass_name"){
         p <- p + scale_fill_manual(values=betmp_cols, name="TLL scenario")
-        p <- p + facet_grid(skjhcrref ~ tll_ass_name, scales="free")
+        p <- p + facet_grid(skjhcrref ~ tll_ass_name)#, scales="free")
       }
       # Add vertical line at start of MSE
       p <- p + geom_vline(aes(xintercept=min(short_term)-3), linetype=2)
@@ -862,8 +865,9 @@ server <- function(input, output, session) {
       p <- p + geom_vline(aes(xintercept=min(long_term)), linetype=2)
     
       p <- p + theme_bw()
-      p <- p + theme(legend.position="bottom", legend.title=element_blank())
-      p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
+      p <- p + theme(legend.position="top", legend.title=element_blank())
+      #p <- p + ylim(c(0,1))
+      p <- p + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
       # Add 0.2 line
       p <- p + geom_hline(aes(yintercept=0.2), linetype=2)
     }
@@ -878,7 +882,8 @@ server <- function(input, output, session) {
                                    facetskjorbet = facetskjorbet,
                                    no_mixfacets_row = no_mixfacets_row
                                    )
-      p <- p + ylim(c(0,1)) + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
+      #p <- p + ylim(c(0,1))
+      p <- p + ylab(paste(stock_choice, "SB/SBF=0", sep=" "))
       # Add 0.2 line
       p <- p + geom_hline(aes(yintercept=0.2), linetype=2)
     }
@@ -1030,7 +1035,13 @@ server <- function(input, output, session) {
       #}
 
       p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-      p <- p + ggplot2::ylim(0,NA)
+      #************************
+      # Do we fix axis at 0?
+      #************************
+      #p <- p + ggplot2::ylim(0,NA)
+      # Coord cartesian to zoom
+      #p <- p + coord_cartesian(ylim=c(0.5,NA)) # Fixes barcharts - all of them at 0.5
+      # How to get different ones
       p <- p + ggplot2::ylab("Value") + ggplot2::xlab("Time period")
       # Add LRP and TRP lines
       # Only if SB/SBF=0 is in dat
@@ -1079,7 +1090,9 @@ server <- function(input, output, session) {
     # Facet by PI
     p <- p + facet_grid(piname ~ hcrref, scales="free")#, ncol=1)
     #p <- p + ylab("Catch")
-    p <- p + ggplot2::ylim(c(0,NA))
+    #***********************************
+    #p <- p + ggplot2::ylim(c(0,NA))
+    #***********************************
     # Axes limits set here or have tight?
     p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
     p <- p + ggplot2::ylab("Value")
@@ -1103,7 +1116,7 @@ server <- function(input, output, session) {
     }
     catch_area_choice <- input$catchareachoice
     dat <- subset(periodqs, hcrref %in% hcr_choices & period == period_choice & area %in% c("all", catch_area_choice, "ps678x") & piname %in% pi_choices & metric != "catch stability")
-    tabdat <- pitable(dat, percentile_range = inner_percentiles)
+    tabdat <- pitable(dat, percentile_range = outer_percentiles)
     return(tabdat)
   }
 
@@ -1238,7 +1251,8 @@ server <- function(input, output, session) {
     if (plot_choice %in% c("median_bar","box")){
       dat <- subset(periodqs, period != "Rest" & pi=="pi3" & area %in% area_choice & metric == catch_rel_choice) 
       p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
-      p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
+      p <- p + ggplot2::ylab(ylabel)
+      #p <- p + ggplot2::ylim(c(0,NA))
       p <- p + ggplot2::facet_wrap(~area_name, ncol=no_facets_row)
     }
 
@@ -1249,7 +1263,7 @@ server <- function(input, output, session) {
       p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, outer_percentile_range = outer_percentiles, inner_percentile_range = inner_percentiles)
       p <- p + facet_grid(area_name ~ hcrref, scales="free")#, ncol=1)
       p <- p + ggplot2::ylab(ylabel)
-      p <- p + ggplot2:: ylim(c(0,NA))
+      #p <- p + ggplot2:: ylim(c(0,NA))
       # Axes limits set here or have tight?
       p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
       # Size of labels etc
@@ -1276,7 +1290,8 @@ server <- function(input, output, session) {
     if (plot_choice %in% c("median_bar","box")){
       dat <- subset(periodqs, period != "Rest" & pi=="vb") 
       p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
-      p <- p + ylab(ylabel) + ylim(c(0,NA))
+      p <- p + ylab(ylabel)
+      #p <- p + ylim(c(0,NA))
       p <- p + facet_wrap(~area_name, ncol=no_facets_row, scales=vbscale)
     }
 
@@ -1287,7 +1302,7 @@ server <- function(input, output, session) {
       p <- time_series_plot(dat=dat, hcr_choices=hcr_choices, wormdat=wormdat, last_plot_year=last_plot_year, short_term = short_term, medium_term = medium_term, long_term = long_term, show_spaghetti=show_spaghetti, outer_percentile_range = outer_percentiles, inner_percentile_range = inner_percentiles)
       p <- p + facet_grid(area_name ~ hcrref, scales=vbscale)#, ncol=1)
       p <- p + ylab(ylabel)
-      p <- p +  ylim(c(0,NA))
+      #p <- p +  ylim(c(0,NA))
       # Axes limits set here or have tight?
       p <- p + scale_x_continuous(expand = c(0, 0))
       # Size of labels etc
@@ -1318,7 +1333,8 @@ server <- function(input, output, session) {
     ylabel <- paste("PI 6: ",   paste0(toupper(substr(stabvar_choice, 1, 1)), substr(stabvar_choice, 2, nchar(stabvar_choice))), " of relative catch", sep="")
     dat <- subset(periodqs, period != "Rest" & pi=="pi6" & area %in% area_choice & metric == metric_choice) 
     p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_choice)
-    p <- p + ggplot2::ylab(ylabel) + ggplot2::ylim(c(0,NA))
+    p <- p + ggplot2::ylab(ylabel)
+    #p <- p + ggplot2::ylim(c(0,NA))
     p <- p + ggplot2::facet_wrap(~area_name, ncol=no_facets_row)
     return(p)
 
@@ -1370,7 +1386,7 @@ server <- function(input, output, session) {
 
   # Bar and box plot 
   # PI 7: Effort variability and stability
-  plot_barbox_pi7varstab <- function(plot_type="median_bar", metric_choice="relative effort variability", ylab="PI 7: Relative effort variability", ylim=c(0,NA)){
+  plot_barbox_pi7varstab <- function(plot_type="median_bar", metric_choice="relative effort variability", ylab="PI 7: Relative effort variability"){#}, ylim=c(0,NA)){
     rPlot <- renderPlot({
       hcr_choices <- input$hcrchoice
       if(length(hcr_choices) < 1){
@@ -1379,16 +1395,17 @@ server <- function(input, output, session) {
       # Choose if relative to year X
       dat <- subset(periodqs, period != "Rest" & pi=="pi7" & metric==metric_choice) 
       p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-      p <- p + ggplot2::ylab(ylab) + ggplot2::ylim(ylim)
+      p <- p + ggplot2::ylab(ylab)
+      #p <- p + ggplot2::ylim(ylim)
       return(p)
     })
     return(rPlot)
   }
 
-  output$plot_bar_pi7var <- plot_barbox_pi7varstab(plot_type="median_bar", metric_choice="relative effort variability", ylab="PI 7: Variability of relative effort", ylim=c(0,NA))
-  output$plot_box_pi7var <- plot_barbox_pi7varstab(plot_type="box", metric_choice="relative effort variability", ylab="PI 7: Variability of relative effort", ylim=c(0,NA))
-  output$plot_bar_pi7stab <- plot_barbox_pi7varstab(plot_type="median_bar", metric_choice="relative effort stability", ylab="PI 7: Stability", ylim=c(0,1))
-  output$plot_box_pi7stab <- plot_barbox_pi7varstab(plot_type="box", metric_choice="relative effort stability", ylab="PI 7: Stability", ylim=c(0,1))
+  output$plot_bar_pi7var <- plot_barbox_pi7varstab(plot_type="median_bar", metric_choice="relative effort variability", ylab="PI 7: Variability of relative effort")#, ylim=c(0,NA))
+  output$plot_box_pi7var <- plot_barbox_pi7varstab(plot_type="box", metric_choice="relative effort variability", ylab="PI 7: Variability of relative effort")#, ylim=c(0,NA))
+  output$plot_bar_pi7stab <- plot_barbox_pi7varstab(plot_type="median_bar", metric_choice="relative effort stability", ylab="PI 7: Stability")#, ylim=c(0,1))
+  output$plot_box_pi7stab <- plot_barbox_pi7varstab(plot_type="box", metric_choice="relative effort stability", ylab="PI 7: Stability")#, ylim=c(0,1))
 
   # Plot the HCR shapes and the bits that were active
   output$plot_hcrshape <- renderPlot({

@@ -30,14 +30,16 @@ spc_about <- function(){
 # Added signif argument to be added to AMPLE
 pitable <- function(dat, percentile_range = c(10,90), signif=3){
   # Rows are the PIs, columns are the HCRs
-  percentile_min <- dat[,paste("X",percentile_range[1],".",sep="")]
-  percentile_max <- dat[,paste("X",percentile_range[2],".",sep="")]
+  colmin <- paste("X",percentile_range[1],".",sep="")
+  colmax <- paste("X",percentile_range[2],".",sep="")
+  percentile_min <- dat[, get(colmin)]
+  percentile_max <- dat[, get(colmax)]
   dat$value <- paste(signif(dat$X50.,signif), " (", signif(percentile_min, signif), ",", signif(percentile_max, signif), ")", sep="")
   # Fix pi1
   dat[dat$pi=="pi1", "value"] <- signif(dat[dat$pi=="pi1", "X50."],signif)
   tabdat <- dat[,c("hcrref", "piname", "value")]
   tabdat[tabdat$name=="Biomass","piname"] <- "SB/SBF=0"
-  tabdat <- as.data.frame(tidyr::spread(tabdat, key="hcrref", value="value"))
+  tabdat <- as.data.frame(spread(tabdat, key="hcrref", value="value"))
   # Have rownames?
   #rnames <- tabdat[,1]
   #tabdat <- tabdat[,-1]
