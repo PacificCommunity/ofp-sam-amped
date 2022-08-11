@@ -205,7 +205,7 @@ sbsbf02012text <- "On the SB/SBF=0 plot, the lower dashed line is the Limit Refe
 # Navbarpage inside a fluidpage?
 # Pretty nasty but it means we get the power of the navparPage and can have common side panel
 ui <- fluidPage(id="top",
-  #tags$head(includeHTML("google-analytics.html")),  # google analytics
+  tags$head(includeHTML("google-analytics.html")),  # google analytics
   #titlePanel("Performance Indicators and Management Procedures Explorer"),
   sidebarLayout(
     sidebarPanel(width=side_panel_width,
