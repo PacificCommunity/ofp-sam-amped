@@ -78,6 +78,29 @@ mixpiqs <- merge(mixpiqs, impact_names, all=TRUE, by="impact_scenario")
 mixpi_periodqs <- mixpi_periodqs[order(mixpi_periodqs$skjhcrref),]
 mixpiqs <- mixpiqs[order(mixpiqs$skjhcrref),]
 
+# Processing HCR scaler output
+# Quantiles for plotting etc - note long whiskers
+quantiles <- c(0.025, 0.25, 0.50, 0.75, 0.975)
+# Stupid quantile naming for later
+qnames <- paste("X",quantiles*100,".",sep="")
+# Useful quantile function for more useful names
+myquantile <- function(data, probs, na.rm=TRUE, qnames){
+  out <- quantile(data, probs=probs, na.rm=TRUE, names=FALSE)
+  names(out) <- qnames
+  return(out)
+}
+
+# Careful - diff has to be by MSE ctrl etc
+setorder(hcr_points,year)
+scaler_diff <- hcr_points[, .(year = c(NA, year[-1]), scaler_diff = c(NA, abs(diff(scaler)))), by=.(iter, msectrl, hcrref, hcrname)]
+#scaler_diff[hcrref=="HCR 4" & iter ==89]
+#hcr_points[hcrref=="HCR 4" & iter ==89]
+hcr_points <- merge(hcr_points, scaler_diff, all.x = TRUE)
+
+scaler <- hcr_points[,as.list(myquantile(scaler, probs=quantiles, na.rm=TRUE, qnames=qnames)), by=.(msectrl, year, period, hcrref, hcrname)]
+# Need to pad out first year? Add 0s?
+scaler_diff <- hcr_points[,as.list(myquantile(scaler_diff, probs=quantiles, na.rm=TRUE, qnames=qnames)),by=.(msectrl, year, period, hcrref, hcrname)]
+
 #------------------------------------------------------------------------------------------------------
 
 # Additional data processing
@@ -512,14 +535,21 @@ ui <- fluidPage(id="top",
               p("Currently all the candidate skipjack management procedures have the same estimation method (an 8-region MULTIFAN-CL stock assessment model)."),
               p("This means that we are only comparing the performance of the HCRs. However, this may not always be the case."),
               p("The current HCRs use a value of estimated depletion (SB/SBF=0) to set a multiplier. This multipler is applied to the catch or effort in 2012 for each fishery to set a new catch or effort limit for the next time period."),
-            #tags$span(title="Shape of the  HCRs under consideration",
-              plotOutput("plot_hcrshape",  height="600px")),
-        #    tags$span(title="Histograms of which parts of the HCRs were active during the evaluations",
-              fluidRow(
-                p("The histograms below shows how often each HCR set a particular value for the catch or effort scalar in each time period."),
-              # Uncomment the following line to show the histograms
-                plotOutput("plot_hcrhistograms")
-              )
+              plotOutput("plot_hcrshape",  height="600px"),
+            )
+          ),
+            #fluidRow(
+            #  p("The histograms below shows how often each HCR set a particular value for the catch or effort scalar in each time period."),
+            ## Uncomment the following line to show the histograms
+            #  plotOutput("plot_hcrhistograms",  height="600px"))
+          fluidRow(
+            p("The distribution of HCR output in each management period. The box and whiskers show the 50th and 95th percentiles respectively."),
+            p("Note that the minimum y-limit is not fixed at 0."),
+            plotOutput("plot_hcr_op",  height="600px")
+          ),
+          fluidRow(
+            p("The distribution of absolute change in HCR output in each management period. The box and whiskers show the 50th and 95th percentiles respectively."),
+            plotOutput("plot_hcr_op_diff",  height="600px")
           )
         ), # End of MPs tab
         
@@ -1494,6 +1524,46 @@ server <- function(input, output, session) {
   output$plot_kobe_ptables_long <- majuro_kobe_plot(period="Long")
   output$plot_kobe_ptables_medium <- majuro_kobe_plot(period="Medium")
   output$plot_kobe_ptables_short <- majuro_kobe_plot(period="Short")
+  
+  hcr_op_plots <- function(type="op"){
+    hcr_choices <- input$hcrchoice
+    if(length(hcr_choices) < 1){
+      return()
+    }
+    if(type=="op"){
+      pdat <- subset(scaler, hcrref %in% hcr_choices)
+      ylabel <- ("Catch or effort multiplier")
+      miny <- min(pdat[,"X2.5."]) * 0.9
+      ylims <- c(miny, NA)
+    }
+    if(type=="diff"){
+      pdat <- subset(scaler_diff, hcrref %in% hcr_choices)
+      ylabel <- ("Absolute change in catch or effort multiplier")
+      ylims <- c(0, NA)
+    }
+    
+    all_hcr_names <- sort(unique(scaler$hcrref))
+    hcr_cols <- get_hcr_colours(hcr_names=all_hcr_names, chosen_hcr_names=hcr_choices)
+    
+    p <- ggplot(pdat, aes(x=as.factor(year)))
+    p <- p + geom_boxplot(aes(ymin=X2.5., ymax=X97.5., lower=X25., upper=X75., middle=X50., fill=hcrref), stat="identity", width=0.7)
+    p <- p + ylab(ylabel)
+    p <- p + xlab("Management period start year")
+    p <- p + scale_fill_manual(values=hcr_cols)
+    p <- p + ylim(ylims)
+    p <- p + theme_bw()
+    p <- p + theme(axis.text=element_text(size=16), axis.title=element_text(size=16), strip.text=element_text(size=16), legend.text=element_text(size=16))
+    p <- p + theme(legend.position="bottom", legend.title=element_blank(), axis.text.x = element_text(angle = 45, vjust=0.5))
+    return(p)
+  }
+  
+  output$plot_hcr_op <- renderPlot({
+    return(hcr_op_plots(type="op"))
+  })
+  
+  output$plot_hcr_op_diff <- renderPlot({
+    return(hcr_op_plots(type="diff"))
+  })
 
 } # end of server
 
