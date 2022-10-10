@@ -29,7 +29,6 @@ library(markdown)
 library(data.table)
 library(tidyr)
 
-
 source("funcs.R")
 source("plots.R")
 
@@ -51,6 +50,10 @@ mix_data_files <- load("data/mf_indicator_data.Rdata")
 # Chop off impact data
 #mixpiqs <- mixpiqs[pi != "impact"]
 #mixpi_periodqs <- mixpi_periodqs[pi != "impact"]
+
+# Fix relative SBSBF0 piname
+periodqs[pi=="relTRP", piname := .("SB/SBF=0 relative to 2012")]
+yearqs[pi=="relTRP", piname := .("SB/SBF=0 relative to 2012")]
 
 #------------------------------------------------------------------------------------------------------
 
@@ -78,30 +81,49 @@ mixpiqs <- merge(mixpiqs, impact_names, all=TRUE, by="impact_scenario")
 mixpi_periodqs <- mixpi_periodqs[order(mixpi_periodqs$skjhcrref),]
 mixpiqs <- mixpiqs[order(mixpiqs$skjhcrref),]
 
-# Processing HCR scaler output
-# Quantiles for plotting etc - note long whiskers
-quantiles <- c(0.025, 0.25, 0.50, 0.75, 0.975)
-# Stupid quantile naming for later
-qnames <- paste("X",quantiles*100,".",sep="")
-# Useful quantile function for more useful names
-myquantile <- function(data, probs, na.rm=TRUE, qnames){
-  out <- quantile(data, probs=probs, na.rm=TRUE, names=FALSE)
-  names(out) <- qnames
-  return(out)
-}
+## Processing HCR scaler output
+## Quantiles for plotting etc - note long whiskers
+#quantiles <- c(0.025, 0.25, 0.50, 0.75, 0.975)
+## Stupid quantile naming for later
+#qnames <- paste("X",quantiles*100,".",sep="")
+## Useful quantile function for more useful names
+#myquantile <- function(data, probs, na.rm=TRUE, qnames){
+#  out <- quantile(data, probs=probs, na.rm=TRUE, names=FALSE)
+#  names(out) <- qnames
+#  return(out)
+#}
 
-# Careful - diff has to be by MSE ctrl etc
-setorder(hcr_points,year)
-scaler_diff <- hcr_points[, .(year = c(NA, year[-1]), scaler_diff = c(NA, abs(diff(scaler)))), by=.(iter, msectrl, hcrref, hcrname)]
-#scaler_diff[hcrref=="HCR 4" & iter ==89]
-#hcr_points[hcrref=="HCR 4" & iter ==89]
-hcr_points <- merge(hcr_points, scaler_diff, all.x = TRUE)
+# Moved to PI calculation
+## Careful - diff has to be by MSE ctrl etc
+#setorder(hcr_points,year)
+#scaler_diff <- hcr_points[, .(year = c(NA, year[-1]), scaler_diff = c(NA, abs(diff(scaler)))), by=.(iter, msectrl, hcrref, hcrname)]
+####scaler_diff[hcrref=="HCR 4" & iter ==89]
+####hcr_points[hcrref=="HCR 4" & iter ==89]
+#hcr_points <- merge(hcr_points, scaler_diff, all.x = TRUE)
+#
+#pdat <- hcr_points[hcrref %in% c("HCR 2", "HCR 2 (+- 10%)") & iter==1]
 
-scaler <- hcr_points[,as.list(myquantile(scaler, probs=quantiles, na.rm=TRUE, qnames=qnames)), by=.(msectrl, year, period, hcrref, hcrname)]
-# Need to pad out first year? Add 0s?
-scaler_diff <- hcr_points[,as.list(myquantile(scaler_diff, probs=quantiles, na.rm=TRUE, qnames=qnames)),by=.(msectrl, year, period, hcrref, hcrname)]
 
-#------------------------------------------------------------------------------------------------------
+##scaler <- hcr_points[,as.list(myquantile(scaler, probs=quantiles, na.rm=TRUE, qnames=qnames)), by=.(msectrl, year, period, hcrref, hcrname)]
+### Need to pad out first year? Add 0s?
+##scaler_diff <- hcr_points[,as.list(myquantile(scaler_diff, probs=quantiles, na.rm=TRUE, qnames=qnames)),by=.(msectrl, year, period, hcrref, hcrname)]
+#
+## Add 0s in the first period to avoid warning of NAs?
+##scaler_diff[year==2021, c("X2.5.", "X25.", "X50.", "X75.", "X97.5.") := .(0)]
+#
+## Does this make sense?
+#pdat <- hcr_points[hcrref %in% c("HCR 2", "HCR 2 (+- 10%)") & year == 2036]
+#p <- ggplot(pdat, aes(x=scaler))
+#p <- p + geom_histogram()
+#p <- p + facet_wrap(~hcrref, ncol=1)
+#p
+# Point is without constraint - long tails, values between 0.8 to 1.0
+# With constraint, long tails are squashed in, so all values between 0.9 and 1.0
+
+# But this is not scaler_diff - this is scaler
+
+
+  #------------------------------------------------------------------------------------------------------
 
 # Additional data processing
 
@@ -150,14 +172,15 @@ yearqs <- yearqs[year %in% first_plot_year:last_plot_year]
 worms <- worms[year %in% first_plot_year:last_plot_year]
 
 # For the worms - same worms for all plots
-nworms <- 5
+nworms <- 3
 set.seed(95)
 wormiters <- sample(unique(worms$iter), nworms)
 
 # Careful with these - they are only used for plotting lines, NOT for calculating the indicators
 lrp <- 0.2
 trp1 <- 0.5
-trp2 <- 0.425 # SB/SBF0 TRP from the 2019 assessment
+#trp2 <- 0.425 # SB/SBF0 TRP from the 2019 assessment
+trp2 <- 0.4545289 
 
 # Find common iters between HCRs - used for HCR plots so we can directly compare
 # All HCRs have 960 iters but some are incomplete - need to sample only from full ones
@@ -178,7 +201,7 @@ kobe_summary_tabs <- lapply(kobe_summary_tabs, function(x) x[order(x$HCR),])
 # Fix names of PI selector - used for selecting desired PIs - need to remove PS note
 # piselector is the one used in the main comparison tab
 # i.e. not used in the more detailed analysis
-pis_list <- unique(periodqs[,piname])
+pis_list <- sort(unique(periodqs[,piname]))
 # Drop the variability ones (they point the wrong way and are alternatives to the stability indicators)
 pis_list <- pis_list[!grepl("variability", pis_list)]
 # Also drop SB, SBSBF0latest, the Proximity 0.5 one until we fix the TRP selector, only look at relative catches
@@ -376,10 +399,11 @@ ui <- fluidPage(id="top",
         #----------------------------------------------------------------------------
         tabPanel("Compare performance", value="compareMPs",
           tabsetPanel(id="comptab",
+                      
             tabPanel("Bar charts", value="bar",
               fluidRow(column(12,
                 p(barchartplottext),
-                plotOutput("plot_bar_comparehcr", height="auto") # Needs function in the plotOutput() function
+                plotOutput("plot_bar_comparehcr", height="auto") 
               )),
               fluidRow(column(12,
                 p(yearrangetext),
@@ -389,10 +413,11 @@ ui <- fluidPage(id="top",
                 p(sbsbf02012text)
               ))
             ),
+            
             tabPanel("Box plots", value="box",
               fluidRow(column(12,
                 p(boxplottext),
-                plotOutput("plot_box_comparehcr", height="auto") # Needs function in the plotOutput() function
+                plotOutput("plot_box_comparehcr", height="auto") 
               )),
               fluidRow(column(12,
                 p(yearrangetext),
@@ -402,6 +427,8 @@ ui <- fluidPage(id="top",
                 p(sbsbf02012text)
               ))
             ),
+            
+            
             tabPanel("Time series plots", value="timeseries",
               fluidRow(column(12,
                 p("Note that not all indicators have time series plots."),
@@ -456,7 +483,7 @@ ui <- fluidPage(id="top",
             ), # End of PI6 Catch stability tab
             # *** Vulnerable biomass
             # Separate panels for areas 1 - 4
-            tabPanel("Vulnerable biomass of pole and line fisheries", value="vulnb",
+            tabPanel("Vulnerable biomass under pole and line fisheries", value="vulnb",
                      
               column(12, 
                 p("Vulnerable biomass is the biomass that is exposed to a particular fishery through a combination of the biomass at size and the fishery selectivity. These plots show the vulnerable biomass to the pole and line fisheries in model areas 1 - 4."),
@@ -1044,8 +1071,8 @@ server <- function(input, output, session) {
       if((length(hcr_choices) < 1) | (length(pi_choices) < 1)){
         return()
       }
-      # There are 7 panels
-      # pi1, pi3, pi4, pi6, pi7, pi8, sbsbf0
+      # There are 8 panels
+      # pi1, pi3, pi4, pi6, pi7, pi8, sbsbf0, sbsbf0 relative to TRP
       # They have different groupings based on metric and area
       # pi1: metric = SBSBF0, area = 1-8, all
       # pi3: area = 1-8, total, ps678, pl_jp
@@ -1065,9 +1092,7 @@ server <- function(input, output, session) {
       #}
 
       p <- barboxplot(dat=dat, hcr_choices=hcr_choices, plot_type=plot_type)
-      #************************
       # Do we fix axis at 0?
-      #************************
       #p <- p + ggplot2::ylim(0,NA)
       # Coord cartesian to zoom
       #p <- p + coord_cartesian(ylim=c(0.5,NA)) # Fixes barcharts - all of them at 0.5
@@ -1076,8 +1101,12 @@ server <- function(input, output, session) {
       # Add LRP and TRP lines
       # Only if SB/SBF=0 is in dat
       if ("SB/SBF=0" %in% pi_choices){
-        p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp,piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+        p <- p + ggplot2::geom_hline(data=data.frame(yint=lrp, piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
         p <- p + ggplot2::geom_hline(data=data.frame(yint=trp2, piname="SB/SBF=0"), ggplot2::aes(yintercept=yint), linetype=2)
+      }
+      # Add 1.0 line for relative to TRP plot
+      if ("SB/SBF=0 relative to 2012" %in% pi_choices){
+        p <- p + ggplot2::geom_hline(data=data.frame(yint=1.0, piname="SB/SBF=0 relative to 2012"), ggplot2::aes(yintercept=yint), linetype=2)
       }
       # Must have a probability of at least 0.8 above LRP
       if ("PI 1: Prob. above LRP" %in% pi_choices){
